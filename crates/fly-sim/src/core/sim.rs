@@ -8,6 +8,7 @@
 use crate::core::format::{GraphFile, NeuronsFile};
 use crate::core::lif::{integrate_one, LifParams, LifState};
 use crate::core::rng::SplitMix64;
+use crate::core::roles::Roles;
 
 #[derive(Clone, Copy, Debug)]
 pub struct SimConfig {
@@ -46,6 +47,8 @@ pub struct SimCore {
     input_cur: Vec<f32>,
     input_next: Vec<f32>,
     activity: Vec<f32>,
+
+    roles: Roles,
 }
 
 impl SimCore {
@@ -80,6 +83,7 @@ impl SimCore {
             input_cur: vec![0.0; n],
             input_next: vec![0.0; n],
             activity: vec![0.0; n],
+            roles: Roles::new(),
         }
     }
 
@@ -108,6 +112,32 @@ impl SimCore {
     }
     pub fn spikes(&self) -> &[u8] {
         &self.state.spike
+    }
+
+    pub fn define_input_role(&mut self, name: &str, neurons: &[u32]) -> u32 {
+        self.roles.define_input(name, neurons)
+    }
+    pub fn define_readout_role(&mut self, name: &str, neurons: &[u32]) -> u32 {
+        self.roles.define_readout(name, neurons)
+    }
+    pub fn inject(&mut self, role_id: u32, value: f32) {
+        for &i in self.roles.input_neurons(role_id) {
+            let i = i as usize;
+            if i < self.n {
+                self.input_cur[i] += value;
+            }
+        }
+    }
+    pub fn readout(&self, role_id: u32) -> f32 {
+        let ids = self.roles.readout_neurons(role_id);
+        if ids.is_empty() {
+            return 0.0;
+        }
+        let sum: f32 = ids.iter().map(|&i| self.activity[i as usize]).sum();
+        sum / ids.len() as f32
+    }
+    pub fn activity_snapshot(&self) -> Vec<f32> {
+        self.activity[..self.active].to_vec()
     }
 
     #[cfg(test)]
@@ -165,6 +195,7 @@ impl SimCore {
 mod tests {
     use super::*;
     use crate::core::format::{GraphFile, NeuronsFile};
+    use crate::core::format::{GraphFile as GF, NeuronsFile as NF};
 
     // Build a tiny hand-made pair of files: 3 neurons (index 0 core), edges
     // 0->1 and 0->2. `flags0` is neuron 0's flag byte (bit1 = inhibitory);
@@ -358,5 +389,64 @@ mod tests {
             g.extend(0u32.to_le_bytes());
         }
         g
+    }
+
+    fn fixture_core() -> SimCore {
+        let nb = std::fs::read(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../pipeline/out/fixture/neurons.bin"
+        ))
+        .expect("run python pipeline/gen_fixture.py");
+        let gb = std::fs::read(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../pipeline/out/fixture/graph.bin"
+        ))
+        .unwrap();
+        let nf = NF::parse(&nb).unwrap();
+        let gf = GF::parse(&gb).unwrap();
+        let mut cfg = SimConfig::default();
+        cfg.params.noise_sigma = 0.0;
+        SimCore::new(&nf, &gf, cfg)
+    }
+
+    #[test]
+    fn snapshot_length_tracks_active_count() {
+        let mut s = fixture_core();
+        s.set_active_count(120);
+        s.step(1);
+        assert_eq!(s.activity_snapshot().len(), 120);
+    }
+
+    #[test]
+    fn readout_is_zero_before_any_activity() {
+        let mut s = fixture_core();
+        let escape = s.define_readout_role("escape", &(24u32..32).collect::<Vec<_>>());
+        s.step(5);
+        assert_eq!(s.readout(escape), 0.0);
+    }
+
+    #[test]
+    fn sustained_looming_injection_drives_escape_readout() {
+        let mut s = fixture_core();
+        let looming = s.define_input_role("looming", &(0u32..8).collect::<Vec<_>>());
+        let escape = s.define_readout_role("escape", &(24u32..32).collect::<Vec<_>>());
+        for _ in 0..400 {
+            s.inject(looming, 1.5);
+            s.step(1);
+        }
+        assert!(
+            s.readout(escape) > 0.5,
+            "escape readout was {}",
+            s.readout(escape)
+        );
+    }
+
+    #[test]
+    fn injection_into_role_not_addressed_is_ignored() {
+        let mut s = fixture_core();
+        let _looming = s.define_input_role("looming", &(0u32..8).collect::<Vec<_>>());
+        s.inject(99, 5.0); // no such role
+        s.step(1);
+        assert!(s.activity_snapshot().iter().all(|&a| a == 0.0));
     }
 }
