@@ -1,0 +1,33 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  js:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: npm ci
+      - run: npm run test
+      - run: npm run typecheck
+      - run: npm run build
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: wasm32-unknown-unknown }
+      - uses: taiki-e/install-action@v2
+        with: { tool: wasm-pack }
+      - run: cargo test -p fly-sim
+      - run: cargo fmt --check
+      - run: cargo clippy -p fly-sim -- -D warnings
+      - run: wasm-pack build crates/fly-sim --target web --dev
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -e "pipeline[dev]" || pip install numpy pytest
+      - run: python -m pytest pipeline -q

@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/fly-sim"]
+resolver = "2"
