@@ -83,14 +83,15 @@ w_sim = w_raw / W_NORM        # W_NORM chosen in pipeline, ~= median in-degree-w
 
 ### `neurons.bin`
 
-Header (`manifest.json` carries the authoritative counts; header is a
+Header (16 bytes; `manifest.json` carries the authoritative counts, header is a
 cross-check):
 
 ```
-magic      u32   "FLYN" = 0x4E594C46
-version    u32
-count      u32   number of neurons N
-core_count u32   neurons [0, core_count) are the behavioural core
+off  field       type  note
+0    magic       u32   "FLYN" = 0x4E594C46
+4    version     u32   = 1
+8    count       u32   number of neurons N
+12   core_count  u32   neurons [0, core_count) are the behavioural core
 ```
 
 Then `count` records, **sorted**: core neurons first (in a fixed curated order),
@@ -108,16 +109,28 @@ _pad      u8
 
 ### `graph.bin` — CSR, rows aligned to `neurons.bin` order
 
+Header (32 bytes, padded for 8-byte alignment of `n_edges`):
+
 ```
-magic     u32   "FLYG" = 0x47594C46
-version   u32
-n_nodes   u32   == neurons.bin count
-n_edges   u64
-w_norm    f32   dequant scale: w_sim = w_q * w_norm
+off  field    type   note
+0    magic    u32    "FLYG" = 0x47594C46
+4    version  u32    = 1
+8    n_nodes  u32    == neurons.bin count
+12   _pad     u32    = 0
+16   n_edges  u64
+24   w_norm   f32    dequant scale: w_sim = weights * w_norm
+28   _pad     u32    = 0
+```
+
+Then, contiguous:
+
+```
 offsets   u32[n_nodes + 1]      # row i is targets[offsets[i] .. offsets[i+1]]
 targets   u32[n_edges]          # postsynaptic neuron index (into neurons.bin order)
 weights   i16[n_edges]          # quantised; w_sim = weights * w_norm
 ```
+
+Header padding authoritative in `docs/superpowers/plans/2026-09-09-fly-playground-01-foundations.md`.
 
 Edges are pruned in the pipeline: below a confidence threshold
 (`minconf-0.5` source already applied) and below a weight floor, dropped. Target

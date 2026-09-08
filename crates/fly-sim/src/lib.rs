@@ -1,5 +1,7 @@
 use wasm_bindgen::prelude::*;
 
+mod core;
+
 #[wasm_bindgen]
 pub fn sim_abi_version() -> u32 {
     1
