@@ -166,19 +166,17 @@ mod tests {
     use super::*;
     use crate::core::format::{GraphFile, NeuronsFile};
 
-    // Build a tiny hand-made pair of files: 3 neurons, edge 0->1 (+w), edge 0->2 (-w).
-    fn tiny() -> (Vec<u8>, Vec<u8>) {
+    // Build a tiny hand-made pair of files: 3 neurons (index 0 core), edges
+    // 0->1 and 0->2. `flags0` is neuron 0's flag byte (bit1 = inhibitory);
+    // `weights` are the two raw i16 edge weights (w_norm is fixed at 0.01).
+    fn tiny_with(flags0: u8, weights: [i16; 2]) -> (Vec<u8>, Vec<u8>) {
         // neurons.bin: count=3, core_count=1
         let mut n = Vec::new();
         n.extend(0x4E59_4C46u32.to_le_bytes());
         n.extend(1u32.to_le_bytes());
         n.extend(3u32.to_le_bytes());
         n.extend(1u32.to_le_bytes());
-        for (idx, flags) in [
-            (1u64, 0b0100u8 /*sensory-input, excitatory*/),
-            (2, 0),
-            (3, 0),
-        ] {
+        for (idx, flags) in [(1u64, flags0), (2, 0), (3, 0)] {
             n.extend(idx.to_le_bytes());
             n.extend(0f32.to_le_bytes());
             n.extend(0f32.to_le_bytes());
@@ -187,7 +185,7 @@ mod tests {
             n.push(flags);
             n.push(0);
         }
-        // graph.bin: n_nodes=3, edges: 0->1 w=+60, 0->2 w=-60 ; w_norm=0.01
+        // graph.bin: n_nodes=3, edges 0->1 and 0->2 with the given weights ; w_norm=0.01
         let mut g = Vec::new();
         g.extend(0x4759_4C46u32.to_le_bytes());
         g.extend(1u32.to_le_bytes());
@@ -202,10 +200,20 @@ mod tests {
         for t in [1u32, 2] {
             g.extend(t.to_le_bytes());
         }
-        for w in [60i16, -60] {
+        for w in weights {
             g.extend(w.to_le_bytes());
         }
         (n, g)
+    }
+
+    // Default fixture: neuron 0 is a non-inhibitory sensory-input neuron
+    // (flags 0b0100 => sign = +1.0), edge 0->1 carries +60 and edge 0->2
+    // carries -60. Exercises "a negative `weights_sim` entry propagates a
+    // negative contribution"; `inhibitory_source_flips_propagation_sign`
+    // covers the orthogonal "inhibitory flag flips an otherwise-positive
+    // weight" path.
+    fn tiny() -> (Vec<u8>, Vec<u8>) {
+        tiny_with(0b0100, [60, -60])
     }
 
     fn core_from(nb: &[u8], gb: &[u8], seed: u64) -> SimCore {
@@ -226,7 +234,9 @@ mod tests {
     }
 
     #[test]
-    fn injected_input_makes_source_fire_then_propagates_with_sign() {
+    fn injected_input_makes_source_fire_then_propagates_signed_weights() {
+        // Excitatory source (sign[0] = +1.0); the downstream signs come purely
+        // from the edge weights: 0->1 is +60, 0->2 is -60.
         let (nb, gb) = tiny();
         let mut s = core_from(&nb, &gb, 1);
         s.add_input(0, 2.0); // above threshold
@@ -235,6 +245,22 @@ mod tests {
         s.step(1); // tick B: neuron 1 gets +60*0.01, neuron 2 gets -60*0.01
                    // neuron 1 should have positive v, neuron 2 negative
         assert!(s.debug_v(1) > 0.0);
+        assert!(s.debug_v(2) < 0.0);
+    }
+
+    #[test]
+    fn inhibitory_source_flips_propagation_sign() {
+        // neuron 0: core + INHIBITORY (flags 0b0110); edges 0->1 (+100), 0->2 (+100).
+        // Both edge weights are POSITIVE, but sign[0] = -1.0 (built by
+        // `SimCore::new` from the inhibitory flag and multiplied in by `step`),
+        // so both targets must receive a NEGATIVE contribution.
+        let (nb, gb) = tiny_with(0b0110, [100, 100]);
+        let mut s = core_from(&nb, &gb, 1);
+        s.add_input(0, 2.0);
+        s.step(1); // neuron 0 fires
+        assert_eq!(s.spikes()[0], 1);
+        s.step(1); // propagate: 1 and 2 each get 100 * w_norm * sign[0](-1)
+        assert!(s.debug_v(1) < 0.0);
         assert!(s.debug_v(2) < 0.0);
     }
 
@@ -277,6 +303,36 @@ mod tests {
             s.activity().to_vec()
         };
         assert_eq!(run(42), run(42));
+    }
+
+    #[test]
+    fn deterministic_with_noise_end_to_end() {
+        // Same scripted input, `noise_sigma > 0` so `step` draws from the
+        // seeded SplitMix64 every tick: equal seed => bit-identical activity
+        // trace; different seed => a different trace.
+        let (nb, gb) = tiny();
+        let run = |seed| {
+            let nf = NeuronsFile::parse(&nb).unwrap();
+            let gf = GraphFile::parse(&gb).unwrap();
+            let cfg = SimConfig {
+                seed,
+                params: LifParams {
+                    noise_sigma: 0.03,
+                    ..LifParams::default()
+                },
+                ..SimConfig::default()
+            };
+            let mut s = SimCore::new(&nf, &gf, cfg);
+            for t in 0..90 {
+                if t % 3 == 0 {
+                    s.add_input(0, 1.0); // parked at threshold: noise decides firing
+                }
+                s.step(1);
+            }
+            s.activity().to_vec()
+        };
+        assert_eq!(run(7), run(7), "equal seed + inputs must be bit-identical");
+        assert_ne!(run(7), run(9), "different seed must diverge");
     }
 
     #[test]
