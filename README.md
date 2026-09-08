@@ -13,8 +13,11 @@ projects that inspired this and the data it is built on.
 
 ## Status
 
-Design phase. Nothing is built yet. The full design lives in
-[`docs/2026-09-09-design.md`](docs/2026-09-09-design.md).
+Plan 01 (foundations + sim core) complete: repo toolchain, synthetic fixture,
+Rust + TypeScript decoders, and a deterministic Rust→WASM LIF `Sim`
+(`crates/fly-sim`) that steps the fixture with inject / readout / snapshot and a
+golden-trace lock. Next: Plan 02 (app shell — worker bridge, brainviz, body,
+world, sensing, UI, audio).
 
 ## What it does (target)
 

@@ -6,4 +6,5 @@ pipeline/.venv/
 pipeline/out/*
 !pipeline/out/fixture/
 __pycache__/
+*.egg-info/
 .vitest/

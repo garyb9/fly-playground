@@ -21,7 +21,7 @@ jobs:
         with: { tool: wasm-pack }
       - run: cargo test -p fly-sim
       - run: cargo fmt --check
-      - run: cargo clippy -p fly-sim -- -D warnings
+      - run: cargo clippy -p fly-sim --all-targets -- -D warnings
       - run: wasm-pack build crates/fly-sim --target web --dev
   python:
     runs-on: ubuntu-latest
@@ -31,3 +31,5 @@ jobs:
         with: { python-version: "3.11" }
       - run: pip install -e "pipeline[dev]"
       - run: python -m pytest pipeline -q || [ $? -eq 5 ]
+      - run: python pipeline/gen_fixture.py
+      - run: git diff --exit-code pipeline/out/fixture

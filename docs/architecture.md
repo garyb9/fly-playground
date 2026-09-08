@@ -69,6 +69,8 @@ messages.
 
 ## Modules (main thread)
 
+Implemented in Plan 01: `crates/fly-sim/src/core/{format,lif,rng,sim,roles}.rs`, `crates/fly-sim/src/lib.rs` (`Sim`), `src/formats/*.ts`, `pipeline/gen_fixture.py`.
+
 ### `body/`
 6DOF rigid body: `position: Vec3`, `orientation: Quat`, `vel: Vec3`,
 `angVel: Vec3`. Per frame maps readouts → wrench:
