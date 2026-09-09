@@ -6,17 +6,19 @@ import { encodeState } from "./protocol";
 import { buildRoleTable, roleNeuronLists } from "../sim/roles";
 import { parseGroups } from "../formats/groups";
 import { WorkerCore } from "./worker-core";
+import { RingLayout, writeOutput, readInput } from "./ring";
 import { CONFIG } from "../app/config";
 
 let core: WorkerCore | null = null;
 let running = false;
 let lastTs = 0;
+let views: ReturnType<RingLayout["views"]> | null = null;
 
 function post(m: FromWorker, transfer: Transferable[] = []) {
   (self as DedicatedWorkerGlobalScope).postMessage(m, transfer);
 }
 
-async function onInit(msg: Extract<ToWorker, { t: "init" }>) {
+async function onInit(msg: Extract<ToWorker, { t: "init" }> & { sab?: SharedArrayBuffer }) {
   await initWasm(wasmUrl);
   const sim = new Sim(
     new Uint8Array(msg.assets.neurons),
@@ -40,6 +42,10 @@ async function onInit(msg: Extract<ToWorker, { t: "init" }>) {
     { ...CONFIG.worker, snapMax: msg.config.snapMax, coreFloor: CONFIG.sim.coreFloor },
   );
   core.setActiveCount(sim.neuron_count());
+  if (msg.sab) {
+    const layout = new RingLayout(rt.inputOrder.length, rt.readoutOrder.length, msg.config.snapMax);
+    views = layout.views(msg.sab);
+  }
   post({
     t: "ready",
     nNeurons: sim.neuron_count(),
@@ -57,9 +63,13 @@ function loop() {
   const elapsed = now - lastTs;
   lastTs = now;
   if (running) {
-    const f = core.frame(elapsed);
-    const enc = encodeState(f);
-    post(enc.payload, enc.transfer);
+    if (views) {
+      core.setStimulus(readInput(views));
+      writeOutput(views, { ...core.frame(elapsed), paused: running ? 0 : 1 });
+    } else {
+      const enc = encodeState(core.frame(elapsed));
+      post(enc.payload, enc.transfer);
+    }
   }
   setTimeout(loop, 0);
 }
@@ -78,6 +88,7 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
     else if (m.t === "dispose") {
       running = false;
       core = null;
+      views = null;
     }
   } catch (err) {
     post({ t: "error", message: String(err) });

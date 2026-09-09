@@ -1,5 +1,6 @@
 import type { RoleTable } from "../sim/roles";
 import { PmBridge } from "./pm-bridge";
+import { SabBridge } from "./sab-bridge";
 
 /** Config passed to the worker on init. */
 export interface SimInitConfig {
@@ -51,6 +52,7 @@ export interface SimLike {
 }
 
 export function createSimBridge(workerFactory: () => Worker): SimBridge {
-  // Task 6 replaces this with: return globalThis.crossOriginIsolated ? new SabBridge(workerFactory) : new PmBridge(workerFactory);
-  return new PmBridge(workerFactory);
+  return globalThis.crossOriginIsolated
+    ? new SabBridge(workerFactory)
+    : new PmBridge(workerFactory);
 }
