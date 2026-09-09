@@ -156,13 +156,15 @@ export const CONFIG = {
     PROX_MAX: 20, EPS: 0.05, LOOM_CONE_DEG: 50,
     TAU_PROX: 0.08, TAU_LOOM: 0.06,
   },
-  camera: { OFFSET: { x: -3.2, y: 1.4, z: 0 }, LOOKAHEAD: 2.5, omega: 6 },
+  camera: { OFFSET: { x: -3.2, y: 1.4, z: 0 }, LOOKAHEAD: 2.5, omega: 14 },
   aesthetic: {
     BASE_SIZE: 2.2, CORE_SIZE: 4.5, ACT_SWELL: 1.6, POINT_SCALE: 340,
+    FLAP_MIN: 8, FLAP_MAX: 34, FLAP_AMP: 0.9,
     grid: true, grain: false,
   },
 } as const;
 ```
+(`FLAP_*` live here from the start — Task 11's `fly.ts` consumes them; no later task edits `CONFIG`.)
 
 - [ ] **Step 5: Vite isolation headers + wasm ordering**
 
@@ -544,7 +546,7 @@ git commit -m "feat: SAB ring layout + pure 200Hz step accumulator with per-tick
 - Produces:
   - `protocol.ts`: `type ToWorker = { t: "init"; assets; config } | { t: "setActiveCount"; n } | { t: "setParams"; p } | { t: "pause" } | { t: "resume" } | { t: "reset" } | { t: "dispose" }`; `type FromWorker = { t: "ready"; nNeurons; coreCount; groups } | { t: "state"; readouts; activity; simHz; tick } | { t: "error"; message }`.
   - `sim-bridge.ts`: `SimBridge` (Shared types), `createSimBridge(): SimBridge` — returns `SabBridge` when `globalThis.crossOriginIsolated`, else `PmBridge` (Task 6 adds the SAB branch; this task: always `PmBridge`).
-  - `worker-core.ts`: `class WorkerCore` — transport-agnostic engine. `constructor(sim: SimLike, roleTable: RoleTable, inputRoleIds: number[], readoutRoleIds: number[], cfg)`; `frame(elapsedMs): { readouts: Float32Array; activity: Float32Array; simHz: number; tick: number }`; `setStimulus(v)`, `setActiveCount(n)`, `pause()`, `resume()`, `reset(reseed)`. Holds the latched stimulus + `AccState`; `frame` calls `stepAccumulator` then samples readouts + strided snapshot.
+  - `worker-core.ts`: `class WorkerCore` — transport-agnostic engine. `constructor(sim: SimLike, roleTable: RoleTable, inputRoleIds: number[], readoutRoleIds: number[], cfg)`; `frame(elapsedMs): { readouts: Float32Array; activity: Float32Array; simHz: number; tick: number; nSnapshot: number; activeCount: number }` (the last two are for Task 5's SAB `writeOutput`; `encodeState` ignores them); `setStimulus(v)`, `setActiveCount(n)`, `pause()`, `resume()`, `reset(reseed)`. Holds the latched stimulus + `AccState`; `frame` calls `stepAccumulator` then samples readouts + strided snapshot.
   - `pm-bridge.ts`: `class PmBridge implements SimBridge` taking a `workerFactory: () => Worker` (real factory in `main.ts`; a `FakeWorker` in tests).
 
 - [ ] **Step 1: Write the failing protocol test**
@@ -695,7 +697,7 @@ export class WorkerCore {
     const stride = Math.max(1, Math.ceil((this.activeCount || snap.length) / nSnapshot));
     const activity = new Float32Array(nSnapshot);
     for (let i = 0; i < nSnapshot; i++) activity[i] = snap[i * stride] ?? 0;
-    return { readouts, activity, simHz: this.acc.hzEma, tick: this.acc.tick };
+    return { readouts, activity, simHz: this.acc.hzEma, tick: this.acc.tick, nSnapshot, activeCount: this.activeCount };
   }
 }
 ```
@@ -1828,19 +1830,25 @@ git commit -m "feat: body/ — sphere-AABB collision, soft bounds, Body orchestr
 
 ---
 
-## Task 10: `viz/palette.ts` + `viz/builders.ts` (+ resolve `three` under node)
+## Task 10: `viz/` geometry + palette + `scene.config.ts` + builders (+ resolve `three` under node)
 
 **Files:**
+- Create: `src/scene.config.ts` (scene data + `SceneConfig`/`SceneObject`/`SceneLight` types — no `three`, only `Vec3`/`Aabb` from `body/types.ts`)
 - Create: `src/viz/palette.ts`
 - Create: `src/viz/geometry.ts`, `src/viz/geometry.test.ts` (pure, `three`-free math)
+- Create: `src/viz/brain-material.ts` (the `THREE.ShaderMaterial` for the point cloud)
 - Create: `src/viz/builders.ts` (thin `three` wrappers; **not** imported by any `.test.ts` unless Step 1 proves `three` loads under node)
 
+> **Preflight ruling carried in:** `brain-material.ts` and `scene.config.ts` moved here from Tasks 11/12 so `builders.ts` (which imports both) and its `tsc` gate are satisfied at this task's boundary. Task 11 no longer creates `brain-material.ts`; Task 12 no longer creates `scene.config.ts`.
+
 **Interfaces:**
-- Consumes: `NeuronsFile` / `GraphFile` (Plan 01 `src/formats`); `CONFIG.aesthetic`.
+- Consumes: `NeuronsFile` / `GraphFile` (Plan 01 `src/formats`); `Vec3` / `Aabb` (`src/body/types.ts`, Task 7); `CONFIG.aesthetic`; `PALETTE`.
 - Produces:
+  - `scene.config.ts`: `interface SceneObject { kind: "box" | "sphere" | "torus"; position: Vec3; rotation: Vec3; scale: Vec3; material: string }`; `interface SceneLight { position: Vec3; color: number; intensity: number }`; `interface SceneConfig { bounds: Aabb; objects: SceneObject[]; lights: SceneLight[]; fly: { start: Vec3; heading: number } }`; `export const SCENE: SceneConfig`.
   - `geometry.ts` (pure): `brainPositions(neurons: NeuronsFile, scaleFactor: number): Float32Array` (`count*3`); `coreFlags(neurons: NeuronsFile): Float32Array` (`count`, 1 for core); `coreEdgePairs(graph: GraphFile, coreCount: number): Float32Array` (endpoint index pairs flattened, only `src<coreCount && dst<coreCount`, each edge once); `activityColour(t: number): [number, number, number]` (0→cold, 1→hot, linear in a perceptually-ok ramp; monotone per channel toward hot).
   - `palette.ts`: `PALETTE` (named hex numbers: `bg, pointCold, pointHot, coreTint, edge, clay, sage, ochre, flyBody, flyAccent, ground, bounds`); `material(key: string): THREE.MeshStandardMaterial` (`roughness 0.9, metalness 0, flatShading true`); `material` is the only `three`-touching export here.
-  - `builders.ts`: `buildBrainPoints(neurons, scaleFactor)`, `buildCoreEdges(graph, coreCount)`, `buildWorld(cfg: SceneConfig)` — return `THREE.Points` / `THREE.LineSegments` / `THREE.Group`.
+  - `brain-material.ts`: `makeBrainMaterial(): THREE.ShaderMaterial` — attributes `aCore`, `aActivity`; uniforms `uBaseSize, uCoreSize, uSwell, uScale, uCold, uHot` defaulted from `CONFIG.aesthetic` + `PALETTE.pointCold/pointHot` (as `THREE.Color`); `transparent: true`, `blending: THREE.AdditiveBlending`, `depthWrite: false`. Vertex: `gl_PointSize = (aCore > 0.5 ? uCoreSize : uBaseSize) * (1.0 + uSwell * aActivity) * (uScale / -mvPosition.z);`. Fragment: `if (length(gl_PointCoord - 0.5) > 0.5) discard;` then `gl_FragColor = vec4(mix(uCold, uHot, aActivity), 1.0);`.
+  - `builders.ts`: `buildBrainPoints(neurons: NeuronsFile, scaleFactor: number): THREE.Points` (geometry from `geometry.ts` as `BufferAttribute`s + `makeBrainMaterial()`), `buildCoreEdges(graph: GraphFile, coreCount: number): THREE.LineSegments`, `buildWorld(scene: SceneConfig): THREE.Group` — iterates `scene.objects` → `Box/Sphere/TorusGeometry` + `material(key)`, `scene.lights` → `THREE.PointLight` + a small emissive marker `Mesh`, adds one warm `DirectionalLight` + a `HemisphereLight`.
 
 - [ ] **Step 1: Probe — does `three` import under vitest node?**
 
@@ -1941,33 +1949,39 @@ export function material(key: string): THREE.MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({ color: MAT[key] ?? PALETTE.clay, roughness: 0.9, metalness: 0, flatShading: true });
 }
 ```
-`builders.ts` — `buildBrainPoints` / `buildCoreEdges` use `geometry.ts` outputs as `BufferAttribute`s; `buildBrainPoints` attaches the `ShaderMaterial` from Task 11 (import it). `buildWorld` iterates `SceneConfig.objects` → `BoxGeometry|SphereGeometry|TorusGeometry` + `material(key)`, `SceneConfig.lights` → `THREE.PointLight` + a small `Mesh` marker, adds one `DirectionalLight` + `HemisphereLight`. (SceneConfig type lands in Task 12; for now type the param as `import("../scene.config").SceneConfig`.)
+`brain-material.ts` — `makeBrainMaterial()` per the Interfaces block (inline GLSL strings, uniforms from `CONFIG.aesthetic` + `PALETTE`).
 
-- [ ] **Step 5: Green + commit**
+`builders.ts` — `buildBrainPoints` / `buildCoreEdges` use `geometry.ts` outputs as `THREE.BufferAttribute`s; `buildBrainPoints` calls `makeBrainMaterial()` from `./brain-material`. `buildWorld(scene: SceneConfig)` (import the type from `../scene.config`) iterates `scene.objects` → `BoxGeometry|SphereGeometry|TorusGeometry` + `material(key)`, `scene.lights` → `THREE.PointLight` + a small emissive `Mesh` marker, adds one warm `DirectionalLight` + a `HemisphereLight`.
+
+- [ ] **Step 5: Write `src/scene.config.ts`**
+
+Types per the Interfaces block, then `export const SCENE: SceneConfig` — a small scene: `bounds ≈ { min: v(-16, 0, -16), max: v(16, 14, 16) }`; `fly: { start: v(0, 4, 0), heading: 0 }` (faces +X); `objects`: a `box` at `v(9, 4, 0)` scale `v(1.2, 1.2, 1.2)` `material: "clay"` **squarely on the +X cruise path** (the escape trigger); a `torus` at `v(3, 3, -5)` scale `v(1, 0.35, 1)` `material: "sage"`; a `sphere` at `v(-4, 6, 4)` scale `v(1, 1, 1)` `material: "ochre"`. `lights`: `{ position: v(6, 10, 6), color: 0xfff1d0, intensity: 60 }`, `{ position: v(-8, 7, -6), color: 0xcfe0ff, intensity: 35 }`. Import `v` from `./body/types`.
+
+- [ ] **Step 6: Green + commit**
 
 Run: `npx tsc --noEmit && npx vitest run src/viz`
-Expected: `geometry` tests PASS; typecheck clean.
+Expected: `geometry` tests PASS; typecheck clean (the `_probe` from Step 1 already deleted). If `three` failed the probe, `builders.ts` / `brain-material.ts` still typecheck (they are not imported by any test) — they are covered by the manual checklist.
 ```bash
-git add src/viz
-git commit -m "feat: viz/ geometry math + palette + scene builders"
+git add src/viz src/scene.config.ts
+git commit -m "feat: viz/ geometry math, palette, brain shader, scene config + builders"
 ```
 
 ---
 
-## Task 11: `viz/renderer.ts` + `brain.ts` + `fly.ts` + `follow-camera.ts`
+## Task 11: `viz/renderer.ts` + `fly.ts` + `follow-camera.ts`
 
 **Files:**
-- Create: `src/viz/brain-material.ts` (the `ShaderMaterial` + `activityColour` GLSL twin)
 - Create: `src/viz/follow-camera.ts`, `src/viz/follow-camera.test.ts`
 - Create: `src/viz/fly.ts`, `src/viz/fly.test.ts` (only the pure `flapFrequency`; the mesh build is manual-checklist)
 - Create: `src/viz/renderer.ts`
 
+> **Preflight ruling carried in:** `brain-material.ts` was moved to Task 10 (it is imported by Task 10's `builders.ts`). This task does not create it.
+
 **Interfaces:**
-- Consumes: `Pose`, `Vec3` (types); `CONFIG.camera`, `CONFIG.aesthetic`; `PALETTE` (Task 10); `SimState` (bridge).
+- Consumes: `Pose`, `Vec3` (types); `qRotate` (`src/body/quat.ts`, Task 8); `CONFIG.camera`, `CONFIG.aesthetic`; `PALETTE` (Task 10).
 - Produces:
-  - `follow-camera.ts` (pure-ish): `updateFollowCamera(camPos: Vec3, pose: Pose, dt: number): { position: Vec3; lookAt: Vec3 }` — critically-damped spring (`omega = CONFIG.camera.omega`, `zeta = 1`) toward `pose.position + rotate(OFFSET into pose frame)`; `lookAt = pose.position + pose.forward * LOOKAHEAD`.
-  - `fly.ts`: `flapFrequency(readouts: { wing_l: number; wing_r: number }): number` (Hz, in `[FLAP_MIN, FLAP_MAX]`); `class Fly { object3d: THREE.Group; update(readouts, pose, dt): void }`.
-  - `brain-material.ts`: `makeBrainMaterial(): THREE.ShaderMaterial` with attributes `aCore`, `aActivity`; uniforms `uBaseSize, uCoreSize, uSwell, uScale, uCold, uHot`.
+  - `follow-camera.ts` (pure): `updateFollowCamera(camPos: Vec3, pose: Pose, dt: number): { position: Vec3; lookAt: Vec3 }` — overshoot-free exponential approach (`e = exp(-omega·dt)`, factor `e·(1 + omega·dt)`) toward `pose.position + qRotate(pose.orientation, OFFSET)`; `lookAt = pose.position + pose.forward · LOOKAHEAD`.
+  - `fly.ts`: `flapFrequency(readouts: { wing_l: number; wing_r: number }): number` (Hz, in `[FLAP_MIN, FLAP_MAX]`); `class Fly { object3d: THREE.Group; update(readouts: Readouts, pose: Pose, dt: number): void }`.
   - `renderer.ts`: `createRenderer(canvas: HTMLCanvasElement): { scene: THREE.Scene; camera: THREE.PerspectiveCamera; render(): void; resize(w, h): void; three: typeof THREE }` — **module has no side effects at import**; nothing here runs under vitest.
 
 - [ ] **Step 1: Write the failing `follow-camera` test**
@@ -1981,16 +1995,20 @@ import { qIdentity } from "../body/quat";
 
 const pose: Pose = { position: v(0, 0, 0), orientation: qIdentity(), forward: v(1, 0, 0), up: v(0, 1, 0) };
 
-test("camera converges toward the offset target and stops (no overshoot at zeta=1)", () => {
+test("camera converges toward the offset target and stops (no overshoot — diff only shrinks)", () => {
   let cam = v(0, 0, 0);
-  let prev = Infinity;
-  for (let i = 0; i < 400; i++) {
+  let prevDiff = Infinity;
+  const targetX = -3.2; // OFFSET.x rotated by identity
+  for (let i = 0; i < 800; i++) {
     const r = updateFollowCamera(cam, pose, 1 / 60);
+    const diff = Math.hypot(r.position.x - targetX, r.position.y - 1.4, r.position.z - 0);
+    expect(diff).toBeLessThanOrEqual(prevDiff + 1e-9); // monotone decrease, never overshoots
+    prevDiff = diff;
     cam = r.position;
   }
   const settled = updateFollowCamera(cam, pose, 1 / 60);
   const d = Math.hypot(settled.position.x - cam.x, settled.position.y - cam.y, settled.position.z - cam.z);
-  expect(d).toBeLessThan(1e-3); // at rest
+  expect(d).toBeLessThan(5e-3); // effectively at rest after 800 steps at omega=14
   expect(settled.lookAt.x).toBeCloseTo(pose.position.x + pose.forward.x * 2.5); // LOOKAHEAD
 });
 test("lookAt leads the fly along its forward axis", () => {
@@ -2019,7 +2037,7 @@ export function updateFollowCamera(camPos: Vec3, pose: Pose, dt: number): { posi
   return { position, lookAt };
 }
 ```
-(Add `FLAP_MIN`/`FLAP_MAX` to `CONFIG.aesthetic` now: `FLAP_MIN: 8, FLAP_MAX: 34`.)
+(`FLAP_MIN`/`FLAP_MAX`/`FLAP_AMP` and `camera.omega = 14` are already in `CONFIG` from Task 1.)
 
 - [ ] **Step 3: `fly.ts` failing test → impl**
 
@@ -2038,38 +2056,38 @@ test("flap frequency scales with mean wing readout and stays in range", () => {
   expect(flapFrequency({ wing_l: 9, wing_r: 9 })).toBeLessThanOrEqual(CONFIG.aesthetic.FLAP_MAX); // clamped
 });
 ```
-`fly.ts` — `flapFrequency` = `lerp(FLAP_MIN, FLAP_MAX, clamp01((wing_l + wing_r) / 2))`. `class Fly` builds the `THREE.Group` (thorax/abdomen `SphereGeometry` scaled, head sphere, two `PlaneGeometry` wings pivoted at the root); `update` sets wing rotation `= FLAP_AMP * sin(elapsed * 2π * flapFrequency(readouts))`, applies `pose.position` / `pose.orientation` to the group, adds a small pitch from `readouts.thrust`. Add `FLAP_AMP: 0.9` to `CONFIG.aesthetic`.
+`fly.ts` — `flapFrequency` = `lerp(FLAP_MIN, FLAP_MAX, clamp01((wing_l + wing_r) / 2))`. `class Fly` builds the `THREE.Group` (thorax/abdomen `SphereGeometry` scaled, head sphere, two `PlaneGeometry` wings pivoted at the root); `update` sets wing rotation `= CONFIG.aesthetic.FLAP_AMP * sin(elapsed * 2π * flapFrequency(readouts))`, applies `pose.position` / `pose.orientation` to the group, adds a small pitch from `readouts.thrust`. (`FLAP_*` already in `CONFIG` from Task 1.)
 
-- [ ] **Step 4: `brain-material.ts` + `renderer.ts`** (no tests — manual checklist)
+- [ ] **Step 4: `fly.ts` `class Fly` + `renderer.ts`** (no tests — manual checklist)
 
-`brain-material.ts` — `THREE.ShaderMaterial`, `transparent: true`, `blending: THREE.AdditiveBlending`, `depthWrite: false`. Vertex shader: `gl_PointSize = (aCore > 0.5 ? uCoreSize : uBaseSize) * (1.0 + uSwell * aActivity) * (uScale / -mvPosition.z);`. Fragment: circular mask via `length(gl_PointCoord - 0.5) > 0.5 → discard`; `vec3 col = mix(uCold, uHot, aActivity)`; `gl_FragColor = vec4(col, 1.0)`. Uniform defaults from `CONFIG.aesthetic` + `PALETTE.pointCold/pointHot` (as `THREE.Color`).
+`class Fly` — builds the `THREE.Group` (thorax/abdomen `SphereGeometry` scaled, head sphere, two `PlaneGeometry` wings pivoted at the root, `material` from `PALETTE.flyBody`/`flyAccent`, wings `transparent` low opacity). `update(readouts, pose, dt)`: advance an internal `elapsed += dt`; wing rotation `= CONFIG.aesthetic.FLAP_AMP * Math.sin(elapsed * 2π * flapFrequency(readouts))` (mirror on the two wings); set `group.position` from `pose.position`, `group.quaternion` from `pose.orientation`; add a small pitch from `readouts.thrust`.
 
 `renderer.ts` — `createRenderer(canvas)`: `new THREE.WebGLRenderer({ canvas, antialias: true })`, `outputColorSpace = THREE.SRGBColorSpace`, `scene.background = new THREE.Color(PALETTE.bg)`, optional `scene.fog`, a `PerspectiveCamera`; `render()` = `renderer.render(scene, camera)`; `resize(w,h)` updates renderer size + camera aspect. Nothing at module scope constructs anything.
 
 - [ ] **Step 5: Green + commit**
 
 Run: `npx tsc --noEmit && npx vitest run src/viz`
-Expected: `geometry`, `follow-camera`, `fly` tests PASS; typecheck clean.
+Expected: `follow-camera`, `fly` tests PASS (plus `geometry` from Task 10); typecheck clean.
 ```bash
 git add src/viz
-git commit -m "feat: viz/ — brain shader material, procedural fly, follow camera, renderer shell"
+git commit -m "feat: viz/ — procedural fly, follow camera, renderer shell"
 ```
 
 ---
 
-## Task 12: `scene.config.ts` + `app/loop.ts` + `main.ts` + `index.html`
+## Task 12: `app/loop.ts` + `app/world-query.ts` + `main.ts` + `index.html`
 
 **Files:**
-- Create: `src/scene.config.ts`
 - Create: `src/app/loop.ts`, `src/app/loop.test.ts`
-- Rewrite: `src/main.ts`, `index.html`
 - Create: `src/app/world-query.ts`, `src/app/world-query.test.ts`
+- Rewrite: `src/main.ts`, `index.html`
+
+> **Preflight ruling carried in:** `src/scene.config.ts` was created in Task 10. This task consumes `SCENE` / `SceneConfig` from it and does not modify it. Do not touch `src/viz/builders.ts` here — it is complete as of Task 10; if integration reveals a real gap in it, fix it and note it in the report.
 
 **Interfaces:**
-- Consumes: everything above.
+- Consumes: `SimBridge` + `createSimBridge` (Tasks 4–5); `Body` (Task 9); `sensing.sample` (Task 7); `RoleTable` (Task 2); `WorldQuery` / `Readouts` / `Pose` (`body/types.ts`); `SCENE` / `SceneConfig` (`src/scene.config.ts`, Task 10); `buildBrainPoints` / `buildCoreEdges` / `buildWorld` (Task 10); `createRenderer` / `Fly` / `updateFollowCamera` (Task 11); `activityColour` (Task 10); `CONFIG`.
 - Produces:
-  - `scene.config.ts`: `interface SceneObject { kind: "box" | "sphere" | "torus"; position: Vec3; rotation: Vec3; scale: Vec3; material: string }`; `interface SceneLight { position: Vec3; color: number; intensity: number }`; `interface SceneConfig { bounds: Aabb; objects: SceneObject[]; lights: SceneLight[]; fly: { start: Vec3; heading: number } }`; `export const SCENE: SceneConfig`.
-  - `world-query.ts`: `worldQuery(scene: SceneConfig): WorldQuery` — converts each `SceneObject` to a world AABB (box/sphere/torus → axis-aligned bounding box from `position` ± `scale`; torus outer radius = `scale.x + scale.z`).
+  - `world-query.ts`: `worldQuery(scene: SceneConfig): WorldQuery` — converts each `SceneObject` to a world AABB (box/sphere/torus → axis-aligned bounding box from `position` ± half-extents; torus outer radius = `scale.x + scale.z`).
   - `loop.ts`: `class Loop { constructor(deps: LoopDeps); frameOnce(nowMs: number): void; start(): void; stop(): void }` where `LoopDeps = { bridge: SimBridge; body: Body; sensing: { sample: typeof import("../sensing/sensing").sample }; roleTable: RoleTable; world: WorldQuery; onFrame(view: FrameView): void }` and `FrameView = { pose: Pose; readouts: Readouts; activity: Float32Array; simHz: number }`. `frameOnce`: compute `dt` (clamp to `CONFIG.loop.MAX_FRAME_DT`), `sensing.sample` → add pending `contact` startle to the `proximity` slot → `bridge.setStimulus` → `bridge.readState` → build `Readouts` view from `readouts` + `roleTable.readoutOrder` → `body.step` (stash `contact` for next frame) → `onFrame`.
 
 - [ ] **Step 1: `world-query.ts` failing test → impl**
@@ -2095,13 +2113,9 @@ test("box object → an AABB centered on its position", () => {
   expect(wq.bounds).toEqual(scene.bounds);
 });
 ```
-Impl: half-extents = `scale` for `box`; `v(scale.x, scale.x, scale.x)` for `sphere`; `v(scale.x + scale.z, scale.z, scale.x + scale.z)` for `torus`. AABB = `position ± halfExtents`.
+Impl: half-extents = `scale` for `box`; `v(scale.x, scale.x, scale.x)` for `sphere`; `v(scale.x + scale.z, scale.z, scale.x + scale.z)` for `torus`. AABB = `position ± halfExtents`. (`scene.config.ts` already exists from Task 10 — just `import type { SceneConfig } from "../scene.config"`.)
 
-- [ ] **Step 2: `scene.config.ts`**
-
-Ship a small scene: `bounds` ≈ `{min:(-16,0,-16), max:(16,14,16)}`; `fly.start = (0, 4, 0)`, `heading = 0` (faces +X); `objects`: a `box` at `(9, 4, 0)` scale `(1.2,1.2,1.2)` `material:"clay"` **squarely on the +X cruise path** (the escape trigger), a `torus` at `(3, 3, -5)` `material:"sage"`, a `sphere` at `(-4, 6, 4)` `material:"ochre"`; `lights`: one at `(6, 10, 6)` warm, one at `(-8, 7, -6)` cooler.
-
-- [ ] **Step 3: `loop.ts` failing test**
+- [ ] **Step 2: `loop.ts` failing test**
 
 `src/app/loop.test.ts`:
 ```ts
@@ -2133,10 +2147,11 @@ test("frameOnce feeds sensing→bridge and builds a named Readouts view for the 
   let seen: any;
   const loop = new Loop({ bridge: fb.obj as any, body: new Body(v(0, 4, 0), 0), sensing, roleTable: rt, world,
     onFrame: (fv) => (seen = fv) });
-  loop.frameOnce(0);
+  loop.frameOnce(0);   // first call only seeds the clock — no pipeline, no push
   loop.frameOnce(16);
-  expect(fb.stim.length).toBe(2);
-  expect(fb.stim[1]!.length).toBe(6);
+  loop.frameOnce(32);
+  expect(fb.stim.length).toBe(2);           // two real frames
+  expect(fb.stim[1]!.length).toBe(6);       // stimulus vector = nInputRoles
   expect(seen.readouts.wing_l).toBe(0.3);   // Float32Array → named view
   expect(seen.pose.position).toBeDefined();
 });
@@ -2188,8 +2203,8 @@ Run: `yarn dev`, open the browser. Expected: point cloud visible and pulsing; fl
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/scene.config.ts src/app/loop.ts src/app/loop.test.ts src/app/world-query.ts src/app/world-query.test.ts src/main.ts index.html src/viz/builders.ts
-git commit -m "feat: scene config, RAF loop, boot — the fly flies on the fixture"
+git add src/app/loop.ts src/app/loop.test.ts src/app/world-query.ts src/app/world-query.test.ts src/main.ts index.html
+git commit -m "feat: RAF loop, world query, boot — the fly flies on the fixture"
 ```
 
 ---
