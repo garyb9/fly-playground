@@ -39,11 +39,17 @@ export const CONFIG = {
     BASE_SIZE: 2.2,
     CORE_SIZE: 4.5,
     ACT_SWELL: 1.6,
-    POINT_SCALE: 340,
+    POINT_SCALE: 90,
+    POINT_MAX: 22,
     FLAP_MIN: 8,
     FLAP_MAX: 34,
     FLAP_AMP: 0.9,
     grid: true,
     grain: false,
+    // Brain point cloud lives as one big fixed object in the world. The centre
+    // sits on the fly's cruise line between its start (0,4,0) and the escape
+    // block (9,4,0), so the fly flies through the connectome.
+    brainScale: 10,
+    brainCenter: { x: 6, y: 5, z: 0 },
   },
 } as const;

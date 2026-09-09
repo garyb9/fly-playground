@@ -22,6 +22,7 @@ import { updateFollowCamera } from "./viz/follow-camera";
 import { CONFIG } from "./app/config";
 import { worldQuery } from "./app/world-query";
 import { Loop, type FrameView } from "./app/loop";
+import * as THREE from "three";
 import type { BufferAttribute } from "three";
 
 async function fetchBuffer(url: string): Promise<ArrayBuffer> {
@@ -67,9 +68,20 @@ async function main(): Promise<void> {
   // cloud's position buffer so the LineSegments actually renders.
   edges.geometry.setAttribute("position", points.geometry.getAttribute("position"));
 
+  // Brain point cloud + core edges share one position buffer, so they must
+  // inherit one world transform — wrap them in a Group placed as a big fixed
+  // object on the fly's cruise line (see CONFIG.aesthetic.brainCenter/Scale).
+  const brain = new THREE.Group();
+  brain.add(points, edges);
+  const { brainCenter, brainScale } = CONFIG.aesthetic;
+  brain.position.set(brainCenter.x, brainCenter.y, brainCenter.z);
+  brain.scale.setScalar(brainScale);
+  // 500 points — never worth culling, and culling was half of why it went missing.
+  points.frustumCulled = false;
+
   const world3d = buildWorld(SCENE);
   const fly = new Fly();
-  renderer.scene.add(points, edges, world3d, fly.object3d);
+  renderer.scene.add(brain, world3d, fly.object3d);
 
   const aActivity = points.geometry.getAttribute("aActivity") as BufferAttribute;
   const aActivityArr = aActivity.array as Float32Array;

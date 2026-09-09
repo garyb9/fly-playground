@@ -16,4 +16,5 @@ test("CONFIG is fully populated and sane", () => {
   expect(CONFIG.sim.snapMax).toBeGreaterThanOrEqual(CONFIG.sim.coreFloor);
   expect(CONFIG.loop.MAX_FRAME_DT).toBeGreaterThan(0);
   expect(CONFIG.worker.MAX_CATCHUP_MS).toBeGreaterThanOrEqual(CONFIG.worker.TICK_MS);
+  expect(CONFIG.aesthetic.brainScale).toBeGreaterThanOrEqual(1);
 });
