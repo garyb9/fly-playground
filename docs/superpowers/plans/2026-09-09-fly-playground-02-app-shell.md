@@ -121,12 +121,17 @@ test("CONFIG is fully populated and sane", () => {
 Run: `npx vitest run src/app/config.test.ts`
 Expected: FAIL — cannot resolve `./config`.
 
-- [ ] **Step 3: Delete the shim, add deps**
+- [ ] **Step 3: Delete the shim, add deps, add ambient Vite types**
 
 ```bash
 git rm src/formats/node-env.d.ts
 yarn add three
 yarn add -D @types/node
+yarn rs:wasm            # generate crates/fly-sim/pkg/*.d.ts so `typecheck` can resolve the worker's wasm import
+```
+Create `src/vite-env.d.ts` (one line — gives `?url` / `?worker` / `import.meta.env` typing so `tsc` accepts them):
+```ts
+/// <reference types="vite/client" />
 ```
 Then `npx tsc --noEmit`. If it reports missing types for `three`, also run `yarn add -D @types/three` at the version `yarn` resolved for `three` (check `yarn list --pattern three`). Pin exact versions: edit `package.json` so `three` (and `@types/three` if added) have no `^`/`~`.
 
@@ -192,11 +197,12 @@ Add scripts (keep existing ones):
 "rs:wasm:node": "wasm-pack build crates/fly-sim --target nodejs --dev --out-dir pkg-node",
 "rs:smoke": "yarn rs:wasm:node && node examples/smoke.mjs",
 ```
-Change `ci` and `prep` to run `yarn rs:wasm:node` immediately before `yarn test`:
+Rewrite `ci` and `prep` so a **web** wasm build precedes `typecheck` (the worker imports `crates/fly-sim/pkg/fly_sim.js`, whose `.d.ts` must exist) and a **node** wasm build precedes `test` (the integration test in Task 6):
 ```jsonc
-"prep": "yarn format && yarn lint:fix && yarn rs:fmt && yarn typecheck && yarn rs:lint && yarn rs:wasm:node && yarn build",
-"ci": "yarn format:check && yarn lint && yarn rs:fmt:check && yarn typecheck && yarn rs:lint && yarn rs:test && yarn rs:wasm:node && yarn test && yarn build && yarn rs:wasm && yarn py:test && yarn py:fixture-check",
+"prep": "yarn format && yarn lint:fix && yarn rs:fmt && yarn rs:wasm && yarn typecheck && yarn rs:lint && yarn rs:wasm:node && yarn build",
+"ci": "yarn format:check && yarn lint && yarn rs:fmt:check && yarn rs:wasm && yarn typecheck && yarn rs:lint && yarn rs:test && yarn rs:wasm:node && yarn test && yarn build && yarn py:test && yarn py:fixture-check",
 ```
+(`build` already runs `yarn rs:wasm` via `prebuild`, so it is not repeated at the end.)
 `.gitignore` — add:
 ```
 crates/fly-sim/pkg/
@@ -1073,7 +1079,7 @@ git commit -m "feat: SharedArrayBuffer bridge transport + boot-time transport pi
 - [ ] **Step 1: Build the node wasm**
 
 Run: `yarn rs:wasm:node`
-Expected: `crates/fly-sim/pkg-node/fly_sim.js` + `fly_sim_bg.wasm` exist (gitignored).
+Expected: `crates/fly-sim/pkg-node/fly_sim.js` + `fly_sim_bg.wasm` exist (gitignored). `--target nodejs` emits a **CommonJS** module that loads the `.wasm` synchronously at `require` time — there is **no** `init()` to call and **no** default export; `Sim` is a direct named export. Load it with `createRequire`, not `import`. Verify: `node -e "const {createRequire}=require('module'); const r=createRequire(process.cwd()+'/'); console.log(typeof r('./crates/fly-sim/pkg-node/fly_sim.js').Sim)"` prints `function`.
 
 - [ ] **Step 2: Write `examples/smoke.mjs`**
 
@@ -1082,14 +1088,16 @@ Expected: `crates/fly-sim/pkg-node/fly_sim.js` + `fly_sim_bg.wasm` exist (gitign
 // Run: yarn rs:smoke
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import init, { Sim } from "../crates/fly-sim/pkg-node/fly_sim.js";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const { Sim } = require("../crates/fly-sim/pkg-node/fly_sim.js"); // CJS, wasm auto-loaded, no init()
 
 const dir = fileURLToPath(new URL("../pipeline/out/fixture/", import.meta.url));
 const neurons = readFileSync(dir + "neurons.bin");
 const graph = readFileSync(dir + "graph.bin");
 const groups = JSON.parse(readFileSync(dir + "groups.json", "utf8"));
 
-await init();
 const sim = new Sim(new Uint8Array(neurons), new Uint8Array(graph), 42n);
 const looming = sim.define_input_role("looming", Uint32Array.from(groups.roles.input.looming));
 const escape = sim.define_readout_role("escape", Uint32Array.from(groups.roles.readout.escape));
@@ -1124,8 +1132,9 @@ const pkg = fileURLToPath(new URL("../../crates/fly-sim/pkg-node/fly_sim.js", im
 const havePkg = existsSync(pkg);
 
 test.runIf(havePkg)("looming ramp drives escape across threshold via the real wasm", async () => {
-  const { default: init, Sim } = await import(/* @vite-ignore */ pkg);
-  await init();
+  const { createRequire } = await import("node:module");
+  const require = createRequire(import.meta.url);
+  const { Sim } = require(pkg) as { Sim: new (n: Uint8Array, g: Uint8Array, seed: bigint) => SimLike & Record<string, Function> };
   const groups = parseGroups(fixtureJson("groups.json"));
   const rt = buildRoleTable(groups);
   const lists = roleNeuronLists(groups, rt);
