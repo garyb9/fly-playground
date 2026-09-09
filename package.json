@@ -5,7 +5,9 @@
   "packageManager": "yarn@1.22.22",
   "scripts": {
     "dev": "vite",
+    "predev": "yarn rs:wasm",
     "build": "vite build",
+    "prebuild": "yarn rs:wasm",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "format": "prettier --write \"src/**/*.{ts,js}\" \"*.{json,md}\" \"eslint.config.js\"",
@@ -17,18 +19,24 @@
     "rs:lint": "cargo clippy -p fly-sim --all-targets -- -D warnings",
     "rs:test": "cargo test -p fly-sim",
     "rs:wasm": "wasm-pack build crates/fly-sim --target web --dev",
+    "rs:wasm:node": "wasm-pack build crates/fly-sim --target nodejs --dev --out-dir pkg-node",
+    "rs:smoke": "yarn rs:wasm:node && node examples/smoke.mjs",
     "py:test": "python -m pytest pipeline -q || [ $? -eq 5 ]",
     "py:fixture-check": "python pipeline/gen_fixture.py && git diff --exit-code pipeline/out/fixture",
-    "prep": "yarn format && yarn lint:fix && yarn rs:fmt && yarn typecheck && yarn rs:lint && yarn build",
-    "ci": "yarn format:check && yarn lint && yarn rs:fmt:check && yarn typecheck && yarn rs:lint && yarn rs:test && yarn test && yarn build && yarn rs:wasm && yarn py:test && yarn py:fixture-check"
+    "prep": "yarn format && yarn lint:fix && yarn rs:fmt && yarn rs:wasm && yarn typecheck && yarn rs:lint && yarn rs:wasm:node && yarn build",
+    "ci": "yarn format:check && yarn lint && yarn rs:fmt:check && yarn rs:wasm && yarn typecheck && yarn rs:lint && yarn rs:test && yarn rs:wasm:node && yarn test && yarn build && yarn py:test && yarn py:fixture-check"
   },
   "devDependencies": {
     "@eslint/js": "^9",
+    "@types/node": "^26.5.0",
     "eslint": "^9",
     "prettier": "^3.9.6",
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.70.0",
     "vite": "^5.4.0",
     "vitest": "^2.1.0"
+  },
+  "dependencies": {
+    "three": "0.186.0"
   }
 }

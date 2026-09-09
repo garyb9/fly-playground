@@ -2,6 +2,7 @@ node_modules/
 dist/
 target/
 crates/fly-sim/pkg/
+crates/fly-sim/pkg-node/
 pipeline/.venv/
 pipeline/out/*
 !pipeline/out/fixture/
