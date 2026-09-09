@@ -6,7 +6,14 @@ import type { SceneConfig } from "../scene.config";
 const scene: SceneConfig = {
   bounds: { min: v(-10, 0, -10), max: v(10, 10, 10) },
   objects: [
-    { kind: "box", position: v(3, 1, 0), rotation: v(), scale: v(1, 1, 1), material: "clay" },
+    {
+      id: "obj-0",
+      kind: "box",
+      position: v(3, 1, 0),
+      rotation: v(),
+      scale: v(1, 1, 1),
+      material: "clay",
+    },
   ],
   lights: [],
   fly: { start: v(0, 2, 0), heading: 0 },

@@ -14,7 +14,9 @@ import * as sensing from "./sensing/sensing";
 import { Body } from "./body/body";
 import type { Vec3 } from "./body/types";
 import { v } from "./body/types";
-import { SCENE } from "./scene.config";
+import { SCENE, type SceneConfig } from "./scene.config";
+import { createSceneStore } from "./world/scene-store";
+import { loadScene, saveScene } from "./world/scene-persist";
 import { parseNeurons } from "./formats/neurons";
 import { parseGraph } from "./formats/graph";
 import { buildBrainPoints, buildCoreEdges, buildWorld } from "./viz/builders";
@@ -73,6 +75,15 @@ async function main(): Promise<void> {
     { seed: CONFIG.sim.seed, snapMax: CONFIG.sim.snapMax },
   );
 
+  // --- Plan 02b: world editing ---
+  // The static `SCENE` is now runtime-mutable. A persisted scene (localStorage)
+  // wins over the compiled default; `store` mutations flow through `subscribe`
+  // below (rebuild world3d + collision query + HUD editor, then debounced save).
+  const initialScene: SceneConfig = loadScene() ?? SCENE;
+  const store = createSceneStore(initialScene);
+  const saveDebounced = debounce((s: SceneConfig) => saveScene(s), 300);
+  // --- end Plan 02b: world editing ---
+
   // --- Plan 02b: HUD ---
   // Edge-instrument DOM overlay. Only `setActiveCount` / `setPaused` are wired
   // this plan; the rest are no-op stubs until Tasks 8/9/10 implement them.
@@ -91,7 +102,7 @@ async function main(): Promise<void> {
     nNeurons,
     groups,
     lif: CONFIG.lif,
-    scene: SCENE,
+    scene: initialScene,
     theme: savedTheme ?? CONFIG.aesthetic.theme,
     reservedRect: CONFIG.hud.reservedRect,
   };
@@ -124,13 +135,29 @@ async function main(): Promise<void> {
     setGroupVisible: (g, vis) => panelHandle.current?.setGroupVisible(g, vis),
     setMuted: (b) => audio.setMuted(b),
     setVolume: (v) => audio.setVolume(v),
-    addObject: () => {}, // Task 10
-    updateObject: () => {}, // Task 10
-    removeObject: () => {}, // Task 10
-    updateLight: () => {}, // Task 10
-    resetScene: () => {}, // Task 10
+    addObject: (spec) => {
+      const p = body.pose().position;
+      store.addObject({
+        ...spec,
+        position: { x: p.x, y: p.y, z: p.z },
+        rotation: v(0, 0, 0),
+        scale: v(1, 1, 1),
+      });
+    },
+    updateObject: (id, patch) => store.updateObject(id, patch),
+    removeObject: (id) => store.removeObject(id),
+    updateLight: (i, patch) => store.updateLight(i, patch),
+    resetScene: () => {
+      store.reset();
+      try {
+        localStorage.removeItem("fly-playground.scene.v1");
+      } catch {
+        /* storage unavailable */
+      }
+    },
   };
   const hud = new Hud(document.getElementById("hud")!, controls, hudModel);
+  hud.syncScene(initialScene);
   // --- end Plan 02b: HUD ---
 
   // 5. Renderer + brainviz + world + fly.
@@ -153,7 +180,7 @@ async function main(): Promise<void> {
   // 500 points — never worth culling, and culling was half of why it went missing.
   points.frustumCulled = false;
 
-  const world3d = buildWorld(SCENE);
+  let world3d = buildWorld(initialScene);
   const fly = new Fly();
   renderer.scene.add(brain, world3d, fly.object3d);
 
@@ -161,14 +188,14 @@ async function main(): Promise<void> {
   const aActivityArr = aActivity.array as Float32Array;
 
   // 6. Body + collision world.
-  const body = new Body(SCENE.fly.start, SCENE.fly.heading);
-  const world = worldQuery(SCENE);
+  const body = new Body(initialScene.fly.start, initialScene.fly.heading);
+  const world = worldQuery(initialScene);
 
   // 7. Per-frame view sink.
   let camPos: Vec3 = v(
-    SCENE.fly.start.x + CONFIG.camera.OFFSET.x,
-    SCENE.fly.start.y + CONFIG.camera.OFFSET.y,
-    SCENE.fly.start.z + CONFIG.camera.OFFSET.z,
+    initialScene.fly.start.x + CONFIG.camera.OFFSET.x,
+    initialScene.fly.start.y + CONFIG.camera.OFFSET.y,
+    initialScene.fly.start.z + CONFIG.camera.OFFSET.z,
   );
   let lastFrameMs = performance.now();
 
@@ -203,6 +230,25 @@ async function main(): Promise<void> {
   };
 
   const loop = new Loop({ bridge, body, sensing, roleTable, world, onFrame });
+
+  // --- Plan 02b: world editing (live rebuild) ---
+  // Every store mutation: swap world3d (disposing the old geometry/materials),
+  // recompute the collision query, refresh the HUD editor, debounce-persist.
+  store.subscribe((s) => {
+    renderer.scene.remove(world3d);
+    world3d.traverse((o) => {
+      if (o instanceof THREE.Mesh) {
+        o.geometry.dispose();
+        (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
+      }
+    });
+    world3d = buildWorld(s);
+    renderer.scene.add(world3d);
+    loop.setWorld(worldQuery(s));
+    hud.syncScene(s);
+    saveDebounced(s);
+  });
+  // --- end Plan 02b: world editing (live rebuild) ---
 
   // 8. Size to the viewport.
   const resize = (): void => renderer.resize(window.innerWidth, window.innerHeight);

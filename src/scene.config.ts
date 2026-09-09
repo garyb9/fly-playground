@@ -6,6 +6,7 @@ import type { Vec3, Aabb } from "./body/types";
 import { v } from "./body/types";
 
 export interface SceneObject {
+  id: string;
   kind: "box" | "sphere" | "torus";
   position: Vec3;
   rotation: Vec3;
@@ -32,6 +33,7 @@ export const SCENE: SceneConfig = {
   objects: [
     // Squarely on the +X cruise path — the escape trigger.
     {
+      id: "obj-0",
       kind: "box",
       position: v(9, 4, 0),
       rotation: v(0, 0, 0),
@@ -39,6 +41,7 @@ export const SCENE: SceneConfig = {
       material: "clay",
     },
     {
+      id: "obj-1",
       kind: "torus",
       position: v(3, 3, -5),
       rotation: v(0, 0, 0),
@@ -46,6 +49,7 @@ export const SCENE: SceneConfig = {
       material: "sage",
     },
     {
+      id: "obj-2",
       kind: "sphere",
       position: v(-4, 6, 4),
       rotation: v(0, 0, 0),

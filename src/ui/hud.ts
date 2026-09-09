@@ -6,8 +6,9 @@
 // internals beyond the type-only `HudControls`/`HudModel`/`HudFrame` contract.
 
 import type { HudControls, HudFrame, HudModel, Theme } from "./controls";
-import type { SceneConfig } from "../scene.config";
+import type { SceneConfig, SceneObject } from "../scene.config";
 import type { LifParams } from "../bridge/sim-bridge";
+import { v } from "../body/types";
 import {
   countToSlider,
   lifSlider,
@@ -100,11 +101,15 @@ export class Hud {
   private readonly pauseButton: HTMLButtonElement;
   private readonly meters: MeterRefs[] = [];
   private readonly onKeyDown: (e: KeyboardEvent) => void;
+  private readonly controls: HudControls;
+  private readonly sceneEditor: HTMLFieldSetElement;
+  private readonly sceneLegend: HTMLLegendElement;
   private paused = false;
   private collapsed = false;
 
   constructor(root: HTMLElement, controls: HudControls, model: HudModel) {
     this.root = root;
+    this.controls = controls;
     root.id = "hud";
     root.dataset.theme = model.theme;
 
@@ -230,7 +235,8 @@ export class Hud {
     });
     lifPanel.append(lifReset);
 
-    // Scene editor — empty shell; `syncScene` (Task 10) fills the body.
+    // Scene editor — legend + collapse wiring here; `syncScene` (re)builds the
+    // body on every store mutation. main.ts calls it once at boot.
     const sceneEditor = el("fieldset", "hud-scene");
     sceneEditor.dataset.role = "scene-editor";
     sceneEditor.dataset.collapsed = "true";
@@ -239,6 +245,8 @@ export class Hud {
       sceneEditor.dataset.collapsed = sceneEditor.dataset.collapsed === "true" ? "false" : "true";
     });
     sceneEditor.append(sceneLegend, el("div", "hud-scene__body"));
+    this.sceneEditor = sceneEditor;
+    this.sceneLegend = sceneLegend;
 
     leftStack.append(lifPanel, sceneEditor);
 
@@ -304,9 +312,157 @@ export class Hud {
     this.root.dataset.theme = theme;
   }
 
+  // Rebuild the scene-editor body from scratch each call (a handful of elements).
+  // Zero business logic: range values map straight to `controls.*` calls; a small
+  // trailing debounce coalesces continuous `input` streams. main.ts calls this
+  // once at boot and again on every store mutation.
   syncScene(scene: SceneConfig): void {
-    // Task 10 fills this in (runtime scene edits -> HUD scene panel on this.body).
-    void scene;
+    for (const child of [...this.sceneEditor.children]) {
+      if (child !== this.sceneLegend) child.remove();
+    }
+    const wrap = el("div", "hud-scene__body");
+
+    const bmin = scene.bounds.min;
+    const bmax = scene.bounds.max;
+
+    const range = (min: number, max: number, step: number, value: number): HTMLInputElement => {
+      const r = el("input", "hud-scene__range");
+      r.type = "range";
+      r.min = String(min);
+      r.max = String(max);
+      r.step = String(step);
+      r.value = String(value);
+      return r;
+    };
+    const field = (label: string, control: HTMLElement): HTMLElement => {
+      const row = el("label", "hud-scene__field");
+      row.append(el("span", "hud-scene__field-label", label), control);
+      return row;
+    };
+    const select = (options: string[]): HTMLSelectElement => {
+      const s = el("select", "hud-scene__select");
+      for (const opt of options) {
+        const o = el("option");
+        o.value = opt;
+        o.textContent = opt;
+        s.append(o);
+      }
+      return s;
+    };
+
+    // --- add row: kind + material + "add at fly" -------------------------------
+    const kindSel = select(["box", "sphere", "torus"]);
+    const matSel = select(["clay", "sage", "ochre"]);
+    const addBtn = el("button", "hud-scene__btn", "add at fly");
+    addBtn.type = "button";
+    addBtn.addEventListener("click", () => {
+      this.controls.addObject({
+        kind: kindSel.value as SceneObject["kind"],
+        material: matSel.value,
+      });
+    });
+    const addRow = el("div", "hud-scene__row");
+    addRow.append(field("kind", kindSel), field("mat", matSel), addBtn);
+    wrap.append(addRow);
+
+    // --- object editor: pick an id, drag position / uniform scale, delete ------
+    if (scene.objects.length > 0) {
+      const objSel = select(scene.objects.map((o) => o.id));
+      const ox = range(bmin.x - 2, bmax.x + 2, 0.1, 0);
+      const oy = range(bmin.y - 2, bmax.y + 2, 0.1, 0);
+      const oz = range(bmin.z - 2, bmax.z + 2, 0.1, 0);
+      const os = range(0.1, 5, 0.1, 1);
+      const delBtn = el("button", "hud-scene__btn", "delete");
+      delBtn.type = "button";
+
+      const loadObj = (): void => {
+        const o = scene.objects.find((x) => x.id === objSel.value);
+        if (!o) return;
+        ox.value = String(o.position.x);
+        oy.value = String(o.position.y);
+        oz.value = String(o.position.z);
+        os.value = String(o.scale.x);
+      };
+      loadObj();
+      objSel.addEventListener("change", loadObj);
+
+      const pushPos = debounce(() => {
+        this.controls.updateObject(objSel.value, {
+          position: v(Number(ox.value), Number(oy.value), Number(oz.value)),
+        });
+      }, 120);
+      const pushScale = debounce(() => {
+        this.controls.updateObject(objSel.value, {
+          scale: v(Number(os.value), Number(os.value), Number(os.value)),
+        });
+      }, 120);
+      for (const r of [ox, oy, oz]) r.addEventListener("input", pushPos);
+      os.addEventListener("input", pushScale);
+      delBtn.addEventListener("click", () => this.controls.removeObject(objSel.value));
+
+      const objRow = el("div", "hud-scene__row");
+      objRow.append(
+        field("obj", objSel),
+        field("x", ox),
+        field("y", oy),
+        field("z", oz),
+        field("scale", os),
+        delBtn,
+      );
+      wrap.append(objRow);
+    }
+
+    // --- light editor: pick an index, drag position / intensity / colour ------
+    if (scene.lights.length > 0) {
+      const lightSel = select(scene.lights.map((_, i) => String(i)));
+      const lx = range(bmin.x - 2, bmax.x + 2, 0.1, 0);
+      const ly = range(bmin.y - 2, bmax.y + 2, 0.1, 0);
+      const lz = range(bmin.z - 2, bmax.z + 2, 0.1, 0);
+      const li = range(0, 200, 1, 0);
+      const colour = el("input", "hud-scene__colour");
+      colour.type = "color";
+
+      const loadLight = (): void => {
+        const l = scene.lights[Number(lightSel.value)];
+        if (!l) return;
+        lx.value = String(l.position.x);
+        ly.value = String(l.position.y);
+        lz.value = String(l.position.z);
+        li.value = String(l.intensity);
+        colour.value = `#${l.color.toString(16).padStart(6, "0")}`;
+      };
+      loadLight();
+      lightSel.addEventListener("change", loadLight);
+
+      const pushLight = debounce(() => {
+        this.controls.updateLight(Number(lightSel.value), {
+          position: v(Number(lx.value), Number(ly.value), Number(lz.value)),
+          intensity: Number(li.value),
+          color: parseInt(colour.value.slice(1), 16),
+        });
+      }, 120);
+      for (const r of [lx, ly, lz, li]) r.addEventListener("input", pushLight);
+      colour.addEventListener("input", pushLight);
+
+      const lightRow = el("div", "hud-scene__row");
+      lightRow.append(
+        field("light", lightSel),
+        field("x", lx),
+        field("y", ly),
+        field("z", lz),
+        field("int", li),
+        field("col", colour),
+      );
+      wrap.append(lightRow);
+    }
+
+    // --- reset scene --------------------------------------------------------
+    const resetBtn = el("button", "hud-scene__reset", "reset scene");
+    resetBtn.type = "button";
+    resetBtn.addEventListener("click", () => this.controls.resetScene());
+    wrap.append(resetBtn);
+
+    this.sceneEditor.append(wrap);
   }
 
   dispose(): void {
