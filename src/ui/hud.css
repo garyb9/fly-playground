@@ -200,3 +200,131 @@
   color: var(--hud-bright);
   border-color: var(--hud-bright);
 }
+
+/* ---- fieldset reset: hairline legend, no chrome, collapse hides the body --- */
+
+#hud fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+  pointer-events: auto;
+}
+
+#hud legend {
+  display: block;
+  inline-size: 100%;
+  padding: 0 0 4px;
+  border-block-end: 1px solid var(--hud-line);
+  cursor: pointer;
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hud-text);
+}
+
+#hud legend:hover,
+#hud legend:focus-visible {
+  color: var(--hud-bright);
+  border-color: var(--hud-bright);
+  outline: none;
+}
+
+#hud legend::before {
+  content: "▾ ";
+}
+
+#hud fieldset[data-collapsed="true"] > legend::before {
+  content: "▸ ";
+}
+
+#hud fieldset[data-collapsed="true"] > :not(legend) {
+  display: none;
+}
+
+/* ---- left-edge tuning stack: LIF panel + scene editor --------------------
+   Sits right of the thin depth slider, below the Plan 2c reservedRect card
+   region, clear of the centre. Scrolls internally if a panel is expanded. */
+
+.hud-left-stack {
+  position: fixed;
+  left: 64px;
+  top: 384px;
+  bottom: 56px;
+  inline-size: 224px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  pointer-events: none;
+}
+
+.hud-lif__row {
+  display: grid;
+  grid-template-columns: 68px 1fr 46px;
+  align-items: center;
+  gap: 8px;
+  margin-block-start: 6px;
+}
+
+.hud-lif__label {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: var(--hud-text);
+}
+
+.hud-lif__input {
+  inline-size: 100%;
+  accent-color: var(--hud-fill);
+  background: transparent;
+}
+
+.hud-lif__value {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--hud-text);
+  text-align: right;
+}
+
+.hud-lif__reset {
+  margin-block-start: 10px;
+}
+
+/* ---- bottom-right toggle cluster: theme / mute / volume ------------------ */
+
+.hud-cluster {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+}
+
+.hud-cluster__theme {
+  min-inline-size: 46px;
+  text-transform: lowercase;
+}
+
+.hud-cluster__mute {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--hud-text);
+  cursor: pointer;
+}
+
+.hud-cluster__mute input,
+.hud-cluster__volume {
+  accent-color: var(--hud-fill);
+}
+
+.hud-cluster__volume {
+  inline-size: 72px;
+  background: transparent;
+}

@@ -7,7 +7,15 @@
 
 import type { HudControls, HudFrame, HudModel, Theme } from "./controls";
 import type { SceneConfig } from "../scene.config";
-import { countToSlider, meterFraction, sliderToCount, type MeterKind } from "./scale";
+import type { LifParams } from "../bridge/sim-bridge";
+import {
+  countToSlider,
+  lifSlider,
+  lifSliderPos,
+  meterFraction,
+  sliderToCount,
+  type MeterKind,
+} from "./scale";
 
 type MeterSource = "readouts" | "sensory";
 
@@ -31,6 +39,33 @@ const METERS: readonly MeterSpec[] = [
   { label: "wind L", source: "sensory", key: "wind_l", kind: "wind" },
   { label: "wind R", source: "sensory", key: "wind_r", kind: "wind" },
 ];
+
+// Slider order for the LIF tuning panel — one row per `keyof LifParams`.
+const LIF_KEYS = [
+  "dtMs",
+  "tauMMs",
+  "vThreshold",
+  "vReset",
+  "refracMs",
+  "noiseSigma",
+] as const satisfies readonly (keyof LifParams)[];
+
+// Trailing-edge debounce — the LIF range inputs fire `oninput` continuously; the
+// sim only needs the settled value. main.ts debounces again before the worker
+// hop; both layers are cheap and harmless.
+function debounce<A extends unknown[]>(fn: (...args: A) => void, ms: number): (...args: A) => void {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return (...args: A): void => {
+    if (timer !== undefined) clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  };
+}
+
+// Compact readout for a LIF value span. Display only — the value actually sent
+// to the sim stays the raw `lifSlider` output, never this rounded string.
+function fmtLif(value: number): string {
+  return value >= 10 ? value.toFixed(1) : value.toFixed(3);
+}
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -138,7 +173,107 @@ export class Hud {
     };
     window.addEventListener("keydown", this.onKeyDown);
 
-    body.append(header, depth, meters, pauseButton);
+    // --- left-edge tuning stack: LIF panel + (empty) scene editor -----------
+    // Placed right of the thin depth slider, below the Plan 2c reservedRect
+    // card region and clear of the centre. Both fieldsets start collapsed.
+    const leftStack = el("div", "hud-left-stack");
+
+    // LIF tuning panel. Zero math here: `lifSlider` / `lifSliderPos` own every
+    // number; each row only forwards the mapped value through a 50 ms trailing
+    // debounce and paints its span.
+    const setParamsDebounced = debounce((p: Partial<LifParams>) => controls.setParams(p), 50);
+
+    const lifPanel = el("fieldset", "hud-lif");
+    lifPanel.dataset.collapsed = "true";
+    const lifLegend = el("legend", "hud-lif__legend", "lif tuning");
+    lifLegend.addEventListener("click", () => {
+      lifPanel.dataset.collapsed = lifPanel.dataset.collapsed === "true" ? "false" : "true";
+    });
+    lifPanel.append(lifLegend);
+
+    interface LifRow {
+      input: HTMLInputElement;
+      value: HTMLElement;
+      param: (typeof LIF_KEYS)[number];
+    }
+    const lifRows: LifRow[] = [];
+
+    for (const param of LIF_KEYS) {
+      const row = el("div", "hud-lif__row");
+      const label = el("label", "hud-lif__label", param);
+      const input = el("input", "hud-lif__input");
+      input.type = "range";
+      input.min = "0";
+      input.max = "1";
+      input.step = "0.001";
+      input.value = String(lifSliderPos(param, model.lif.defaults[param], model.lif.ranges));
+      input.setAttribute("aria-label", `LIF ${param}`);
+      const value = el("span", "hud-lif__value", fmtLif(model.lif.defaults[param]));
+      input.addEventListener("input", () => {
+        const mapped = lifSlider(param, Number(input.value), model.lif.ranges);
+        value.textContent = fmtLif(mapped);
+        setParamsDebounced({ [param]: mapped });
+      });
+      row.append(label, input, value);
+      lifPanel.append(row);
+      lifRows.push({ input, value, param });
+    }
+
+    const lifReset = el("button", "hud-lif__reset", "reset");
+    lifReset.type = "button";
+    lifReset.addEventListener("click", () => {
+      for (const { input, value, param } of lifRows) {
+        input.value = String(lifSliderPos(param, model.lif.defaults[param], model.lif.ranges));
+        value.textContent = fmtLif(model.lif.defaults[param]);
+      }
+      controls.setParams({ ...model.lif.defaults });
+    });
+    lifPanel.append(lifReset);
+
+    // Scene editor — empty shell; `syncScene` (Task 10) fills the body.
+    const sceneEditor = el("fieldset", "hud-scene");
+    sceneEditor.dataset.role = "scene-editor";
+    sceneEditor.dataset.collapsed = "true";
+    const sceneLegend = el("legend", "hud-scene__legend", "scene");
+    sceneLegend.addEventListener("click", () => {
+      sceneEditor.dataset.collapsed = sceneEditor.dataset.collapsed === "true" ? "false" : "true";
+    });
+    sceneEditor.append(sceneLegend, el("div", "hud-scene__body"));
+
+    leftStack.append(lifPanel, sceneEditor);
+
+    // --- bottom-right toggle cluster: theme / mute / volume ----------------
+    const cluster = el("div", "hud-cluster");
+
+    let currentTheme: Theme = model.theme;
+    const themeButton = el("button", "hud-cluster__theme", currentTheme);
+    themeButton.type = "button";
+    themeButton.addEventListener("click", () => {
+      currentTheme = currentTheme === "dark" ? "light" : "dark";
+      themeButton.textContent = currentTheme;
+      controls.setTheme(currentTheme);
+      this.setTheme(currentTheme);
+    });
+
+    const muteLabel = el("label", "hud-cluster__mute");
+    const muteBox = el("input");
+    muteBox.type = "checkbox";
+    muteBox.checked = true; // audio starts muted
+    muteBox.addEventListener("change", () => controls.setMuted(muteBox.checked));
+    muteLabel.append(muteBox, document.createTextNode("mute"));
+
+    const volume = el("input", "hud-cluster__volume");
+    volume.type = "range";
+    volume.min = "0";
+    volume.max = "1";
+    volume.step = "0.01";
+    volume.value = "0.6";
+    volume.setAttribute("aria-label", "master volume");
+    volume.addEventListener("input", () => controls.setVolume(Number(volume.value)));
+
+    cluster.append(themeButton, muteLabel, volume);
+
+    body.append(header, depth, meters, pauseButton, leftStack, cluster);
     root.append(body);
   }
 

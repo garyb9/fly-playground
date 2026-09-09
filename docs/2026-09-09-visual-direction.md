@@ -338,7 +338,7 @@ status and reality never drift. `docs/manual-checklist.md` has the matching
 | A5 | fly: `emissive: ember` + parented warm `PointLight` + fly & light on the bloom layer | §6.5 | `todo` |
 | A6 | world: cool key light (drop the warm "sun"), `buoy` material + Fresnel rims, grid → radial ground disc, dim bounds hairline | §2.4, §6.6 | `todo` |
 | A7 | core edges `pathway` colour, opacity ~0.15 at rest; escape pulse travels them | §2.3, §6.4 | `todo` |
-| A8 | `src/ui/` built to the §3 type split + §4 layout; `index.html` mono-everything stub retired | §3, §4 | `todo` |
+| A8 | `src/ui/` built to the §3 type split + §4 layout; `index.html` mono-everything stub retired | §3, §4 | `done` — §3 type split + §4 layout landed; region-filter checkboxes render in the Plan 2c panel (Task 8) |
 | A9 | `prefers-reduced-motion` branch | §5 | `todo` |
 | A10 | load sequence: points converge → banner types in → fly ignites → HUD fades in last | §5 | `todo` |
 | A11 | escape burst treatment: white bloom + pathway pulse + camera kick, decays ~0.3 s | §5 | `todo` |

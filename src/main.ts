@@ -9,7 +9,7 @@ import manifestJson from "../pipeline/out/fixture/manifest.json";
 
 import "./ui/hud.css";
 
-import { createSimBridge } from "./bridge/sim-bridge";
+import { createSimBridge, type LifParams } from "./bridge/sim-bridge";
 import * as sensing from "./sensing/sensing";
 import { Body } from "./body/body";
 import type { Vec3 } from "./body/types";
@@ -33,6 +33,16 @@ async function fetchBuffer(url: string): Promise<ArrayBuffer> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`failed to load ${url}: ${res.status}`);
   return res.arrayBuffer();
+}
+
+// Trailing-edge debounce — coalesces the LIF sliders' continuous `oninput`
+// stream into one worker `setParams` hop after the drag settles.
+function debounce<A extends unknown[]>(fn: (...a: A) => void, ms: number): (...a: A) => void {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return (...a: A): void => {
+    if (timer !== undefined) clearTimeout(timer);
+    timer = setTimeout(() => fn(...a), ms);
+  };
 }
 
 async function main(): Promise<void> {
@@ -67,31 +77,54 @@ async function main(): Promise<void> {
   // this plan; the rest are no-op stubs until Tasks 8/9/10 implement them.
   const groups = [...new Set(neuronsFile.groupId)].sort((a, b) => a - b);
   let currentActiveCount = nNeurons;
+  const savedTheme = (() => {
+    try {
+      const t = localStorage.getItem("fly-playground.theme");
+      return t === "dark" || t === "light" ? t : null;
+    } catch {
+      return null;
+    }
+  })();
   const hudModel: HudModel = {
     coreCount,
     nNeurons,
     groups,
     lif: CONFIG.lif,
     scene: SCENE,
-    theme: CONFIG.aesthetic.theme,
+    theme: savedTheme ?? CONFIG.aesthetic.theme,
     reservedRect: CONFIG.hud.reservedRect,
   };
+  // Plan 2c's docked panel sets `panelHandle.current`; a safe no-op until then.
+  // A holder object (not a bare `let`) so the `setGroupVisible` closure keeps the
+  // handle branch — an effectively-const `let` narrows its capture to null.
+  const panelHandle: { current: { setGroupVisible(g: number, v: boolean): void } | null } = {
+    current: null,
+  };
+  const setParamsDebounced = debounce((p: Partial<LifParams>) => bridge.setParams(p), 50);
   const controls: HudControls = {
     setActiveCount: (n) => {
       currentActiveCount = n;
       bridge.setActiveCount(n);
     },
     setPaused: (p) => (p ? bridge.pause() : bridge.resume()),
-    setTheme: () => {}, // Task 8/9/10
-    setParams: () => {}, // Task 8/9/10
-    setGroupVisible: () => {}, // Task 8/9/10
-    setMuted: () => {}, // Task 8/9/10
-    setVolume: () => {}, // Task 8/9/10
-    addObject: () => {}, // Task 8/9/10
-    updateObject: () => {}, // Task 8/9/10
-    removeObject: () => {}, // Task 8/9/10
-    updateLight: () => {}, // Task 8/9/10
-    resetScene: () => {}, // Task 8/9/10
+    setTheme: (t) => {
+      hud.setTheme(t);
+      try {
+        localStorage.setItem("fly-playground.theme", t);
+      } catch {
+        /* storage unavailable */
+      }
+      // renderer.setTheme(t) — wired in Task 11
+    },
+    setParams: (p) => setParamsDebounced(p),
+    setGroupVisible: (g, vis) => panelHandle.current?.setGroupVisible(g, vis),
+    setMuted: () => {}, // Task 9
+    setVolume: () => {}, // Task 9
+    addObject: () => {}, // Task 10
+    updateObject: () => {}, // Task 10
+    removeObject: () => {}, // Task 10
+    updateLight: () => {}, // Task 10
+    resetScene: () => {}, // Task 10
   };
   const hud = new Hud(document.getElementById("hud")!, controls, hudModel);
   // --- end Plan 02b: HUD ---
