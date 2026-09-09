@@ -278,7 +278,7 @@ export interface HudModel {          // one-time construction data
   lif: { defaults: LifParams; ranges: Record<keyof LifParams, [number, number]> };
   scene: SceneConfig;                // initial objects/lights for the editor lists
   theme: Theme;
-  reservedRect: { x: number; y: number; w: number; h: number };    // fractional — Plan 2c docked card to avoid; provisional { 0.015, 0.045, 0.18, 0.30 }, firm from Plan 2c
+  reservedRect: { x: number; y: number; w: number; h: number };    // fractional — Plan 2c docked card to avoid; firm { 0.0125, 0.022, 0.156, 0.322 } (keep-clear ≈ 336×384 px)
 }
 export interface HudFrame {          // per-RAF refresh data
   readouts: Readouts; sensory: Readouts;
@@ -485,11 +485,11 @@ all-caps, no tracked eyebrows, no `→` on buttons.
   debounced ~50 ms → `controls.setParams({ [param]: value })`, plus a **Reset** button →
   `controls.setParams(model.lif.defaults)`.
 - **Reserved region** — the HUD places no interactive elements inside `model.reservedRect` (the
-  Plan 2c docked card — a floating card hovering over the void, **top-left**, anchored ~16px
-  down/right of the reticle corner; provisional fracs `{ x: 0.015, y: 0.045, w: 0.18, h: 0.30 }`,
-  envelope ~320×340px; firm rect from Plan 2c). The top-left is otherwise unused by the HUD (the
-  header readouts sit top-right, the depth slider runs down the left edge *below* the card
-  envelope).
+  Plan 2c docked card — a floating card hovering over the void, **top-left**, anchored 24px in
+  from the frame-inset corner; card 300×348px, keep-clear region **x ≤ 336 px, y ≤ 384 px**; frac
+  `{ x: 0.0125, y: 0.022, w: 0.156, h: 0.322 }` at a 1080p ref). The top-left is otherwise unused
+  by the HUD (the header readouts sit top-right, the depth slider runs down the left edge *below*
+  the card envelope).
 - **Collapse** — key `H` (or a header tick) hides the whole overlay; `Space` pause mirrors its
   control. (No `C`/`B` keys — there is no second camera and no inset.)
 
@@ -532,10 +532,11 @@ Plan 02b's obligations to Plan 2c:
 2. **Static inputs.** The panel reads the fixture `NeuronsFile` (`groupId` / `pos` / `flags`) and
    `RoleTable` (role name → neuron-index lists) — both already available at boot.
 3. **Screen region.** `HudModel.reservedRect` (fractional) marks the card's area; the HUD keeps it
-   clear. Plan 2c locked a **floating card, top-left, over the void**, anchored ~16px down/right
-   of the reticle corner — provisional fracs `{ x: 0.015, y: 0.045, w: 0.18, h: 0.30 }`, envelope
-   ~320×340px; Plan 2c sends the firm px+frac. The HUD's project-name banner moves to the
-   top-right group to yield the corner (§5.2).
+   clear. Plan 2c locked a **floating card, top-left, over the void**, 24px in from the frame
+   inset, card 300×348px, keep-clear **x ≤ 336 px / y ≤ 384 px**, frac
+   `{ x: 0.0125, y: 0.022, w: 0.156, h: 0.322 }` (1080p ref). Plan 2c's own config holds
+   `CONFIG.brainPanel.rect`; Plan 02b's `CONFIG.hud.reservedRect` mirrors the frac. The HUD's
+   project-name banner moves to the top-right group to yield the corner (§5.2).
 4. **`setGroupVisible`.** The callback type stays in `HudControls` (Plan 02b owns it); the
    region/class filter **checkbox UI renders in the Plan 2c panel**, which imports the type and
    calls it. The HUD has no filter checkboxes.
@@ -790,9 +791,9 @@ camera: {                       // existing OFFSET/LOOKAHEAD/omega kept; add:
   IDLE_SWAY_HZ: 0.1, IDLE_SWAY_AMP: 0.02,
 },
 hud: {
-  // Plan 2c docked card region the HUD keeps clear (viewport fracs). Provisional —
-  // replace with Plan 2c's firm value when it lands.
-  reservedRect: { x: 0.015, y: 0.045, w: 0.18, h: 0.30 },
+  // Plan 2c docked card region the HUD keeps clear (viewport fracs, 1080p ref).
+  // Firm value from Plan 2c; mirrors CONFIG.brainPanel.rect in that plan's config.
+  reservedRect: { x: 0.0125, y: 0.022, w: 0.156, h: 0.322 },
 },
 aesthetic: {
   // existing point dials (BASE_SIZE, CORE_SIZE, ACT_SWELL, POINT_SCALE, POINT_MAX,
@@ -977,7 +978,7 @@ maintainer merges. Coordinate the `main.ts` merge with Plan 2c (§2).
     audio engine needs; the mute toggle stays live throughout.
 15. **Font FOUT / self-host** — `@font-face` with `font-display: swap` + real fallback stacks so
     the boot banner is never invisible; `woff2` only.
-16. **`reservedRect` still provisional** — Plan 2c locked "floating card, top-left" and a
-    provisional frac rect (`CONFIG.hud.reservedRect`); the firm px+frac lands before task 6
-    completes. The HUD banner already moved to the top-right group, so a small rect change only
-    shifts where the depth slider starts.
+16. **`reservedRect` is firm** — Plan 2c locked "floating card, top-left", keep-clear
+    x ≤ 336 / y ≤ 384 px (`CONFIG.hud.reservedRect`). The HUD banner sits in the top-right group;
+    the depth slider starts below the card envelope. Any later card resize is a one-line config
+    change.
