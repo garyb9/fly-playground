@@ -28,6 +28,7 @@ export interface Pose {
 export interface WorldQuery {
   aabbs: Aabb[];
   bounds: Aabb;
+  lights: { pos: Vec3; intensity: number }[];
 }
 
 export type Readouts = Record<string, number>;

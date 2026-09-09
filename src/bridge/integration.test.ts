@@ -98,3 +98,38 @@ test.runIf(havePkg)("raising noiseSigma raises baseline activity via the real wa
   for (let i = 0; i < 300; i++) loud.step(1);
   expect(meanActivity(loud)).toBeGreaterThan(meanActivity(quiet));
 });
+
+test.runIf(havePkg)(
+  "a one-sided light drives the contralateral wing readout higher (phototaxis path)",
+  async () => {
+    const { createRequire } = await import("node:module");
+    const require = createRequire(import.meta.url);
+    const { Sim } = require(pkg) as { Sim: WasmSimCtor };
+    const groups = parseGroups(fixtureJson("groups.json"));
+    const rt = buildRoleTable(groups);
+    const lists = roleNeuronLists(groups, rt);
+    const sim = new Sim(
+      new Uint8Array(fixtureBuf("neurons.bin")),
+      new Uint8Array(fixtureBuf("graph.bin")),
+      5n,
+    );
+    const inputIds = lists.input.map((ids, i) =>
+      sim.define_input_role(rt.inputOrder[i]!, Uint32Array.from(ids)),
+    );
+    lists.readout.forEach((ids, i) =>
+      sim.define_readout_role(rt.readoutOrder[i]!, Uint32Array.from(ids)),
+    );
+    const cfg = { TICK_MS: 5, MAX_CATCHUP_MS: 20, hzEmaTau: 0.5 };
+    let st: AccState = { acc: 0, tick: 0, hzEma: 0 };
+    const stim = new Float32Array(rt.inputOrder.length);
+    // Drive the LEFT eye: in the seed-42 synthetic fixture only `light_l → wing_r`
+    // is a net-excitatory contralateral path (the `light_r` group 13/14/15 is
+    // partly inhibitory, so `light_r` suppresses `wing_l` instead of driving it).
+    // The mechanism under test is sign-agnostic (spec §3.7 / §4.3): a one-sided
+    // light produces a contralateral wing asymmetry through the real brain.
+    stim[rt.input.light_l!] = 1.0; // sustained light on the left
+    for (let f = 0; f < 400; f++) st = stepAccumulator(st, 16.7, stim, sim, inputIds, cfg);
+    // fixture wires light_l → wing_r (contralateral)
+    expect(sim.readout(rt.readout.wing_r!)).toBeGreaterThan(sim.readout(rt.readout.wing_l!));
+  },
+);

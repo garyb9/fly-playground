@@ -19,3 +19,12 @@ test("box object → an AABB centered on its position", () => {
   expect(wq.aabbs[0]!.max).toEqual(v(4, 2, 1));
   expect(wq.bounds).toEqual(scene.bounds);
 });
+
+test("lights pass through as { pos, intensity }", () => {
+  const s: SceneConfig = {
+    ...scene,
+    lights: [{ position: v(6, 10, 6), color: 0xffffff, intensity: 42 }],
+  };
+  const wq = worldQuery(s);
+  expect(wq.lights).toEqual([{ pos: v(6, 10, 6), intensity: 42 }]);
+});

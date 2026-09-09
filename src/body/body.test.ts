@@ -2,7 +2,11 @@ import { expect, test } from "vitest";
 import { Body } from "./body";
 import { v, type WorldQuery, type Readouts } from "./types";
 
-const world: WorldQuery = { aabbs: [], bounds: { min: v(-20, -20, -20), max: v(20, 20, 20) } };
+const world: WorldQuery = {
+  aabbs: [],
+  bounds: { min: v(-20, -20, -20), max: v(20, 20, 20) },
+  lights: [],
+};
 const hoverR = (): Readouts => ({ wing_l: 0, wing_r: 0, thrust: 0, yaw_torque: 0, escape: 0 });
 
 test("with hover readouts the fly holds altitude within a small band", () => {

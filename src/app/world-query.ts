@@ -30,5 +30,6 @@ export function worldQuery(scene: SceneConfig): WorldQuery {
   return {
     aabbs: scene.objects.map(aabbOf),
     bounds: scene.bounds,
+    lights: scene.lights.map((l) => ({ pos: l.position, intensity: l.intensity })),
   };
 }

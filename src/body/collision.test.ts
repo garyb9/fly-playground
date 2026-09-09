@@ -5,6 +5,7 @@ import { v, type WorldQuery } from "./types";
 const world: WorldQuery = {
   aabbs: [{ min: v(-1, -1, -1), max: v(1, 1, 1) }],
   bounds: { min: v(-10, -10, -10), max: v(10, 10, 10) },
+  lights: [],
 };
 
 test("a sphere overlapping the +X face is pushed out along +X and its x-velocity reflects", () => {

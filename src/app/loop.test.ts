@@ -38,7 +38,11 @@ function fakeBridge() {
   return { obj, stim, state };
 }
 
-const world: WorldQuery = { aabbs: [], bounds: { min: v(-20, 0, -20), max: v(20, 20, 20) } };
+const world: WorldQuery = {
+  aabbs: [],
+  bounds: { min: v(-20, 0, -20), max: v(20, 20, 20) },
+  lights: [],
+};
 
 test("frameOnce feeds sensing→bridge and builds a named Readouts view for the body", () => {
   const fb = fakeBridge();
@@ -104,10 +108,11 @@ test("a collision this frame adds a proximity startle to next frame's stimulus",
     return fb.stim[fb.stim.length - 1]![rt.input.proximity!]!;
   };
 
-  const nonContactProx = runFrames({ aabbs: [], bounds: world.bounds });
+  const nonContactProx = runFrames({ aabbs: [], bounds: world.bounds, lights: [] });
   const contactProx = runFrames({
     aabbs: [{ min: v(0.1, 4.1, 0.1), max: v(3, 7, 3) }],
     bounds: world.bounds,
+    lights: [],
   });
 
   // The non-contacting run's proximity must stay well below PROX_MAX so the
