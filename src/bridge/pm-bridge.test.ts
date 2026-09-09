@@ -94,10 +94,42 @@ test("setStimulus posts a stimulus message; readState returns last state", async
       activity: new Float32Array(4),
       simHz: 200,
       tick: 10,
+      paused: false,
     },
   });
   // NOTE (deviation from plan): readouts is a Float32Array, so 0.9 reads back as
   // Math.fround(0.9); the plan's `toBe(0.9)` cannot pass against its own verbatim code.
   expect(b.readState().readouts[0]).toBe(Math.fround(0.9));
   expect(b.readState().tick).toBe(10);
+  expect(b.readState().paused).toBe(false);
+});
+
+test("readState surfaces paused from the state message", async () => {
+  const fw = new FakeWorker();
+  fw.handler = (m, reply) => {
+    if (m.t === "init")
+      reply({
+        t: "ready",
+        nNeurons: 4,
+        coreCount: 2,
+        groups: { roles: { input: { a: [0] }, readout: { b: [1] } } },
+      });
+  };
+  const b = new PmBridge(() => fw as unknown as Worker);
+  await b.init(
+    { neurons: new ArrayBuffer(8), graph: new ArrayBuffer(8), groups: {} },
+    { seed: 1, snapMax: 8 },
+  );
+  b.pause();
+  fw.onmessage?.({
+    data: {
+      t: "state",
+      readouts: Float32Array.from([0]),
+      activity: new Float32Array(4),
+      simHz: 0,
+      tick: 3,
+      paused: true,
+    },
+  });
+  expect(b.readState().paused).toBe(true);
 });

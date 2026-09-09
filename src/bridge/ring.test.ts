@@ -8,7 +8,7 @@ test("output round-trips through the ring", () => {
   const v = L.views(sab);
   const readouts = Float32Array.from([0.1, 0.2, 0.3, 0.4, 0.5]);
   const activity = Float32Array.from({ length: 16 }, (_, i) => i / 16);
-  writeOutput(v, {
+  const d = {
     readouts,
     activity,
     nSnapshot: 10,
@@ -16,13 +16,18 @@ test("output round-trips through the ring", () => {
     simHz: 187.5,
     tick: 4_000_000_050,
     paused: 0,
-  });
+  };
+  writeOutput(v, d);
   const got = readOutput(v);
   expect(got).not.toBeNull();
   expect([...got!.readouts]).toEqual([...readouts]);
   expect([...got!.activity]).toEqual([...activity.slice(0, 10)]);
   expect(got!.simHz).toBeCloseTo(187.5, 1);
   expect(got!.tick).toBe(4_000_000_050); // 53-bit split survives
+  expect(got!.paused).toBe(false);
+
+  writeOutput(v, { ...d, paused: 1 });
+  expect(readOutput(v)!.paused).toBe(true);
 });
 
 test("a torn read (odd seq) returns null", () => {

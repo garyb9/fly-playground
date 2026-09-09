@@ -14,6 +14,7 @@ export class SabBridge implements SimBridge {
     activity: new Float32Array(0),
     simHz: 0,
     tick: 0,
+    paused: false,
   };
 
   constructor(workerFactory: () => Worker) {
@@ -38,6 +39,7 @@ export class SabBridge implements SimBridge {
           activity: new Float32Array(0),
           simHz: 0,
           tick: 0,
+          paused: false,
         };
         this.worker.onmessage = (e: MessageEvent<FromWorker>) => {
           const m = e.data;

@@ -39,7 +39,12 @@ async function onInit(msg: Extract<ToWorker, { t: "init" }> & { sab?: SharedArra
     rt,
     inputIds,
     readoutIds,
-    { ...CONFIG.worker, snapMax: msg.config.snapMax, coreFloor: CONFIG.sim.coreFloor },
+    {
+      ...CONFIG.worker,
+      snapMax: msg.config.snapMax,
+      coreFloor: CONFIG.sim.coreFloor,
+      lif: { ...CONFIG.lif.defaults, ...(msg.config.lif ?? {}) },
+    },
   );
   core.setActiveCount(sim.neuron_count());
   if (msg.sab) {
@@ -62,14 +67,13 @@ function loop() {
   const now = performance.now();
   const elapsed = now - lastTs;
   lastTs = now;
-  if (running) {
-    if (views) {
-      core.setStimulus(readInput(views));
-      writeOutput(views, { ...core.frame(elapsed), paused: running ? 0 : 1 });
-    } else {
-      const enc = encodeState(core.frame(elapsed));
-      post(enc.payload, enc.transfer);
-    }
+  const frame = core.frame(running ? elapsed : 0);
+  if (views) {
+    core.setStimulus(readInput(views));
+    writeOutput(views, { ...frame, paused: running ? 0 : 1 });
+  } else {
+    const enc = encodeState({ ...frame, paused: !running });
+    post(enc.payload, enc.transfer);
   }
   setTimeout(loop, 0);
 }
@@ -84,7 +88,8 @@ self.onmessage = (e: MessageEvent<ToWorker>) => {
     else if (m.t === "resume") {
       running = true;
       lastTs = performance.now();
-    } else if (m.t === "reset") core?.reset();
+    } else if (m.t === "setParams") core?.setParams(m.p);
+    else if (m.t === "reset") core?.reset();
     else if (m.t === "dispose") {
       running = false;
       core = null;

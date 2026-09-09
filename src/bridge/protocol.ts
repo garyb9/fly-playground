@@ -3,6 +3,7 @@ export interface StatePayload {
   activity: Float32Array;
   simHz: number;
   tick: number;
+  paused: boolean;
 }
 
 export type ToWorker =
@@ -21,7 +22,14 @@ export type ToWorker =
 
 export type FromWorker =
   | { t: "ready"; nNeurons: number; coreCount: number; groups: unknown }
-  | { t: "state"; readouts: Float32Array; activity: Float32Array; simHz: number; tick: number }
+  | {
+      t: "state";
+      readouts: Float32Array;
+      activity: Float32Array;
+      simHz: number;
+      tick: number;
+      paused: boolean;
+    }
   | { t: "error"; message: string };
 
 export function encodeState(s: StatePayload): {
@@ -31,10 +39,16 @@ export function encodeState(s: StatePayload): {
   const readouts = s.readouts.slice();
   const activity = s.activity.slice();
   return {
-    payload: { t: "state", readouts, activity, simHz: s.simHz, tick: s.tick },
+    payload: { t: "state", readouts, activity, simHz: s.simHz, tick: s.tick, paused: s.paused },
     transfer: [readouts.buffer, activity.buffer],
   };
 }
 export function decodeState(p: FromWorker & { t: "state" }): StatePayload {
-  return { readouts: p.readouts, activity: p.activity, simHz: p.simHz, tick: p.tick };
+  return {
+    readouts: p.readouts,
+    activity: p.activity,
+    simHz: p.simHz,
+    tick: p.tick,
+    paused: p.paused,
+  };
 }

@@ -11,6 +11,7 @@ export class PmBridge implements SimBridge {
     activity: new Float32Array(0),
     simHz: 0,
     tick: 0,
+    paused: false,
   };
   private stim = new Float32Array(0);
 
@@ -34,6 +35,7 @@ export class PmBridge implements SimBridge {
               activity: new Float32Array(0),
               simHz: 0,
               tick: 0,
+              paused: false,
             };
             this.worker.onmessage = (ev: MessageEvent<FromWorker>) => this.onMessage(ev.data);
             resolve({ nNeurons: m.nNeurons, coreCount: m.coreCount, roleTable: this.roleTable });
@@ -45,7 +47,13 @@ export class PmBridge implements SimBridge {
   }
   private onMessage(m: FromWorker) {
     if (m.t === "state")
-      this.last = { readouts: m.readouts, activity: m.activity, simHz: m.simHz, tick: m.tick };
+      this.last = {
+        readouts: m.readouts,
+        activity: m.activity,
+        simHz: m.simHz,
+        tick: m.tick,
+        paused: m.paused,
+      };
   }
   private post(m: ToWorker, transfer: Transferable[] = []) {
     this.worker.postMessage(m, transfer);

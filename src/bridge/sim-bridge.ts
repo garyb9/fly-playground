@@ -25,6 +25,7 @@ export interface SimState {
   activity: Float32Array; // length = nSnapshot (valid prefix); values ~0..1
   simHz: number;
   tick: number;
+  paused: boolean;
 }
 
 /** Transport-agnostic handle the app drives the sim worker through. */
@@ -49,6 +50,14 @@ export interface SimLike {
   step(ticks: number): void;
   readout(roleId: number): number;
   activity_snapshot(): Float32Array;
+  set_params(
+    dtMs: number,
+    tauMMs: number,
+    vThreshold: number,
+    vReset: number,
+    refracMs: number,
+    noiseSigma: number,
+  ): void;
 }
 
 export function createSimBridge(workerFactory: () => Worker): SimBridge {

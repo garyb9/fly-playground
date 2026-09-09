@@ -65,3 +65,36 @@ test.runIf(havePkg)("looming ramp drives escape across threshold via the real wa
     st2 = stepAccumulator(st2, 16.7, new Float32Array(rt.inputOrder.length), sim2, inputIds, cfg);
   expect(sim2.readout(escapeIdx)).toBeLessThan(0.5);
 });
+
+test.runIf(havePkg)("raising noiseSigma raises baseline activity via the real wasm", async () => {
+  const { createRequire } = await import("node:module");
+  const require = createRequire(import.meta.url);
+  const { Sim } = require(pkg) as { Sim: WasmSimCtor };
+  const groups = parseGroups(fixtureJson("groups.json"));
+  const rt = buildRoleTable(groups);
+  const lists = roleNeuronLists(groups, rt);
+  const mk = () => {
+    const s = new Sim(
+      new Uint8Array(fixtureBuf("neurons.bin")),
+      new Uint8Array(fixtureBuf("graph.bin")),
+      7n,
+    );
+    lists.input.forEach((ids, i) => s.define_input_role(rt.inputOrder[i]!, Uint32Array.from(ids)));
+    lists.readout.forEach((ids, i) =>
+      s.define_readout_role(rt.readoutOrder[i]!, Uint32Array.from(ids)),
+    );
+    return s;
+  };
+  const meanActivity = (s: WasmSim) => {
+    const a = s.activity_snapshot();
+    let sum = 0;
+    for (let i = 0; i < a.length; i++) sum += a[i]!;
+    return sum / a.length;
+  };
+  const quiet = mk();
+  for (let i = 0; i < 300; i++) quiet.step(1);
+  const loud = mk();
+  loud.set_params(5, 20, 1, 0, 2, 0.2);
+  for (let i = 0; i < 300; i++) loud.step(1);
+  expect(meanActivity(loud)).toBeGreaterThan(meanActivity(quiet));
+});

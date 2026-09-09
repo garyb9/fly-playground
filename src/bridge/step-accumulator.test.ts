@@ -17,6 +17,7 @@ class FakeSim implements SimLike {
   activity_snapshot() {
     return new Float32Array(0);
   }
+  set_params() {}
 }
 const CFG = { TICK_MS: 5, MAX_CATCHUP_MS: 20, hzEmaTau: 0.5 };
 const fresh = (): AccState => ({ acc: 0, tick: 0, hzEma: 0 });

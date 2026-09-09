@@ -21,6 +21,7 @@ function fakeBridge() {
     activity: new Float32Array(8),
     simHz: 200,
     tick: 0,
+    paused: false,
   };
   const stim: Float32Array[] = [];
   const obj: SimBridge = {

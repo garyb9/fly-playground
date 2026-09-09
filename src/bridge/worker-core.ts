@@ -1,4 +1,4 @@
-import type { SimLike } from "./sim-bridge";
+import type { LifParams, SimLike } from "./sim-bridge";
 import type { RoleTable } from "../sim/roles";
 import { stepAccumulator, type AccState } from "./step-accumulator";
 
@@ -8,13 +8,14 @@ interface Cfg {
   hzEmaTau: number;
   snapMax: number;
   coreFloor: number;
+  lif: LifParams;
 }
 
 export class WorkerCore {
   private latched: Float32Array;
   private acc: AccState = { acc: 0, tick: 0, hzEma: 0 };
   private activeCount = 0;
-  private paused = false;
+  private params: LifParams;
   constructor(
     private sim: SimLike,
     private rt: RoleTable,
@@ -23,6 +24,17 @@ export class WorkerCore {
     private cfg: Cfg,
   ) {
     this.latched = new Float32Array(rt.inputOrder.length);
+    this.params = { ...cfg.lif };
+    this.applyParams();
+  }
+
+  private applyParams() {
+    const p = this.params;
+    this.sim.set_params(p.dtMs, p.tauMMs, p.vThreshold, p.vReset, p.refracMs, p.noiseSigma);
+  }
+  setParams(p: Partial<LifParams>) {
+    this.params = { ...this.params, ...p };
+    this.applyParams();
   }
 
   setStimulus(v: Float32Array) {
@@ -31,19 +43,13 @@ export class WorkerCore {
   setActiveCount(n: number) {
     this.activeCount = Math.max(n | 0, this.cfg.coreFloor);
   }
-  pause() {
-    this.paused = true;
-  }
-  resume() {
-    this.paused = false;
-  }
   reset() {
     this.acc = { acc: 0, tick: 0, hzEma: 0 };
     this.latched.fill(0);
   }
 
   frame(elapsedMs: number) {
-    if (!this.paused) {
+    if (elapsedMs > 0) {
       this.acc = stepAccumulator(
         this.acc,
         elapsedMs,

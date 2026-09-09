@@ -74,7 +74,8 @@ export function readOutput(v: V) {
   const hz = Atomics.load(v.control, HZ_MILLI) / 1000;
   const tick =
     Atomics.load(v.control, TICK_HI) * 0x100000000 + (Atomics.load(v.control, TICK_LO) >>> 0);
+  const paused = Atomics.load(v.control, PAUSED) !== 0;
   const s2 = Atomics.load(v.control, SEQ);
   if (s2 !== s1) return null;
-  return { readouts, activity, simHz: hz, tick };
+  return { readouts, activity, simHz: hz, tick, paused };
 }
