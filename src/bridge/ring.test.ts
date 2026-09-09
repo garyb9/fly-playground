@@ -8,7 +8,15 @@ test("output round-trips through the ring", () => {
   const v = L.views(sab);
   const readouts = Float32Array.from([0.1, 0.2, 0.3, 0.4, 0.5]);
   const activity = Float32Array.from({ length: 16 }, (_, i) => i / 16);
-  writeOutput(v, { readouts, activity, nSnapshot: 10, activeCount: 200, simHz: 187.5, tick: 4_000_000_050, paused: 0 });
+  writeOutput(v, {
+    readouts,
+    activity,
+    nSnapshot: 10,
+    activeCount: 200,
+    simHz: 187.5,
+    tick: 4_000_000_050,
+    paused: 0,
+  });
   const got = readOutput(v);
   expect(got).not.toBeNull();
   expect([...got!.readouts]).toEqual([...readouts]);

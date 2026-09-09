@@ -1,10 +1,18 @@
 import type { SimLike } from "./sim-bridge";
 
-export interface AccState { acc: number; tick: number; hzEma: number; }
+export interface AccState {
+  acc: number;
+  tick: number;
+  hzEma: number;
+}
 
 export function stepAccumulator(
-  state: AccState, elapsedMs: number, latched: Float32Array, sim: SimLike,
-  inputRoleIds: number[], cfg: { TICK_MS: number; MAX_CATCHUP_MS: number; hzEmaTau: number },
+  state: AccState,
+  elapsedMs: number,
+  latched: Float32Array,
+  sim: SimLike,
+  inputRoleIds: number[],
+  cfg: { TICK_MS: number; MAX_CATCHUP_MS: number; hzEmaTau: number },
 ): AccState {
   let acc = Math.min(state.acc + elapsedMs, cfg.MAX_CATCHUP_MS);
   let tick = state.tick;

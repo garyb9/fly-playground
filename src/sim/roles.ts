@@ -7,7 +7,10 @@ export interface RoleTable {
   readoutOrder: string[];
 }
 
-function order(roles: Record<string, number[]>): { order: string[]; index: Record<string, number> } {
+function order(roles: Record<string, number[]>): {
+  order: string[];
+  index: Record<string, number>;
+} {
   const orderArr = Object.keys(roles).sort();
   const index: Record<string, number> = {};
   orderArr.forEach((name, i) => (index[name] = i));
@@ -21,7 +24,10 @@ export function buildRoleTable(groups: GroupsFile): RoleTable {
 }
 
 /** Neuron-index lists in RoleTable order — used by the worker to define roles on the Sim. */
-export function roleNeuronLists(groups: GroupsFile, rt: RoleTable): { input: number[][]; readout: number[][] } {
+export function roleNeuronLists(
+  groups: GroupsFile,
+  rt: RoleTable,
+): { input: number[][]; readout: number[][] } {
   return {
     input: rt.inputOrder.map((n) => groups.inputRoles[n]!),
     readout: rt.readoutOrder.map((n) => groups.readoutRoles[n]!),

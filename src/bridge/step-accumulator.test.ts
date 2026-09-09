@@ -5,10 +5,18 @@ import type { SimLike } from "./sim-bridge";
 class FakeSim implements SimLike {
   injects: Array<[number, number]> = [];
   steps = 0;
-  inject(id: number, v: number) { this.injects.push([id, v]); }
-  step(t: number) { this.steps += t; }
-  readout() { return 0; }
-  activity_snapshot() { return new Float32Array(0); }
+  inject(id: number, v: number) {
+    this.injects.push([id, v]);
+  }
+  step(t: number) {
+    this.steps += t;
+  }
+  readout() {
+    return 0;
+  }
+  activity_snapshot() {
+    return new Float32Array(0);
+  }
 }
 const CFG = { TICK_MS: 5, MAX_CATCHUP_MS: 20, hzEmaTau: 0.5 };
 const fresh = (): AccState => ({ acc: 0, tick: 0, hzEma: 0 });
@@ -30,9 +38,12 @@ test("stimulus is re-injected before every tick", () => {
   const stim = Float32Array.from([0.7, 0.2]);
   stepAccumulator(fresh(), 15, stim, sim, [0, 1], CFG);
   expect(sim.injects).toEqual([
-    [0, stim[0]], [1, stim[1]],
-    [0, stim[0]], [1, stim[1]],
-    [0, stim[0]], [1, stim[1]],
+    [0, stim[0]],
+    [1, stim[1]],
+    [0, stim[0]],
+    [1, stim[1]],
+    [0, stim[0]],
+    [1, stim[1]],
   ]);
 });
 
