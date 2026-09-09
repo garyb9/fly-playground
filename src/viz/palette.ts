@@ -5,7 +5,7 @@ import * as THREE from "three";
 
 export const PALETTE = {
   bg: 0xece4d6,
-  pointCold: 0x1b1e2b,
+  pointCold: 0x2b2724,
   pointHot: 0xfdf0d5,
   coreTint: 0xd98a1f,
   edge: 0x8c7a5c,

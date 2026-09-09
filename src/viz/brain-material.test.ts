@@ -11,7 +11,19 @@ test("brain material is opaque normal-blended ink so dark points read on the lig
 
 test("brain material exposes the size/colour uniforms the shader and per-frame update need", () => {
   const { uniforms } = makeBrainMaterial();
-  for (const name of ["uBaseSize", "uCoreSize", "uSwell", "uScale", "uMaxSize", "uCold", "uHot"]) {
+  for (const name of [
+    "uBaseSize",
+    "uCoreSize",
+    "uSwell",
+    "uScale",
+    "uMaxSize",
+    "uDepthNear",
+    "uDepthFar",
+    "uDepthFadeMax",
+    "uCold",
+    "uHot",
+    "uBg",
+  ]) {
     expect(uniforms[name]).toBeDefined();
   }
 });

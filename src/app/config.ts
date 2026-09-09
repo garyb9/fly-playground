@@ -36,11 +36,17 @@ export const CONFIG = {
   },
   camera: { OFFSET: { x: -3.2, y: 1.4, z: 0 }, LOOKAHEAD: 2.5, omega: 14 },
   aesthetic: {
-    BASE_SIZE: 2.2,
-    CORE_SIZE: 4.5,
+    BASE_SIZE: 1.5,
+    CORE_SIZE: 3.0,
     ACT_SWELL: 1.6,
     POINT_SCALE: 90,
-    POINT_MAX: 22,
+    POINT_MAX: 14,
+    // Depth shading: points past NEAR fade toward the background, reaching
+    // FADE (0..1) of the way there by FAR — gives the cloud volume instead of a
+    // flat stipple. Tuned to the brainScale-10 placement.
+    POINT_DEPTH_NEAR: 8,
+    POINT_DEPTH_FAR: 42,
+    POINT_DEPTH_FADE: 0.45,
     FLAP_MIN: 8,
     FLAP_MAX: 34,
     FLAP_AMP: 0.9,
