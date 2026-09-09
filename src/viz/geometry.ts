@@ -44,8 +44,8 @@ export function activityColour(t: number): [number, number, number] {
   const lerp = (a: number, b: number, u: number) => a + (b - a) * u;
   if (c < 0.6) {
     const u = c / 0.6;
-    return [lerp(0.106, 0.851, u), lerp(0.118, 0.541, u), lerp(0.169, 0.122, u)];
+    return [lerp(0.106, 0.851, u), lerp(0.118, 0.541, u), lerp(0.169, 0.3, u)];
   }
   const u = (c - 0.6) / 0.4;
-  return [lerp(0.851, 0.992, u), lerp(0.541, 0.941, u), lerp(0.122, 0.835, u)];
+  return [lerp(0.851, 0.992, u), lerp(0.541, 0.941, u), lerp(0.3, 0.835, u)];
 }

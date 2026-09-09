@@ -23,9 +23,12 @@ test("coreEdgePairs are all core-core and even-length", () => {
   expect(e.length % 2).toBe(0);
   for (const idx of e) expect(idx).toBeLessThan(n.coreCount);
 });
-test("activityColour ramps cold→hot monotonically", () => {
+test("activityColour ramps cold→hot monotonically, blue never dips at the midpoint", () => {
   const [r0, gr0, b0] = activityColour(0);
   const [r1, gr1, b1] = activityColour(1);
+  const bMid = activityColour(0.6)[2];
   expect(r1).toBeGreaterThanOrEqual(r0);
-  expect(r1 + gr1 + b1).toBeGreaterThan(r0 + gr0 + b0); // hot is brighter
+  expect(r1 + gr1 + b1).toBeGreaterThan(r0 + gr0 + b0);
+  expect(b1).toBeGreaterThanOrEqual(b0);
+  expect(bMid).toBeGreaterThanOrEqual(b0); // was 0.122 < 0.169 — the dip
 });

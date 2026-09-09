@@ -33,7 +33,13 @@ export function mapReadouts(
   const wl = (readouts.wing_l ?? 0) + wingNoise;
   const wr = (readouts.wing_r ?? 0) + wingNoise;
   const thrust = (readouts.thrust ?? 0) + n(2);
-  const yaw = (readouts.yaw_torque ?? 0) + n(3);
+  // n(3) alone is not zero-mean over a short window, so it fed a slow DC yaw-torque
+  // bias → the resting fly wandered ~50°/15s in heading. A finite difference of the
+  // same noise channel is the increment of a stationary process: mean-zero, so its
+  // integral (heading) stays bounded while still wobbling for life.
+  const yawJitter =
+    (noise.at(3, tSeconds) - noise.at(3, tSeconds - CONFIG.physics.YAW_JITTER_DT)) * P.NOISE_AMP;
+  const yaw = (readouts.yaw_torque ?? 0) + yawJitter;
   const escape = readouts.escape ?? 0;
 
   let lockout = Math.max(0, esc.lockout - dt);

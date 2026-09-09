@@ -68,3 +68,21 @@ test("escape must fall below TH - HYST before it can re-arm", () => {
   const held = mapReadouts(R({ escape: 0.9 }), pose, partial, 0.016, noNoise, 1.1);
   expect(held.firedImpulse).toBeNull(); // never dropped far enough to re-arm
 });
+
+test("at rest, yaw torque from noise is mean-zero over a 15s window (no heading drift)", () => {
+  const noise = new ValueNoise(CONFIG.sim.seed);
+  const dt = 1 / 60;
+  let sumTorqueY = 0;
+  let n = 0;
+  for (let t = 0; t < 15; t += dt) {
+    const { wrench } = mapReadouts(R({}), pose, initEscapeState(), dt, noise, t);
+    sumTorqueY += wrench.torque.y;
+    n++;
+  }
+  const meanTorqueY = sumTorqueY / n;
+  // A DC bias here integrates into a steady heading rate. The finite-difference
+  // jitter is the increment of a stationary process → mean ~0.
+  expect(Math.abs(meanTorqueY)).toBeLessThan(1e-3);
+  // The time-integral (∝ heading change) must also stay bounded, not grow with the window.
+  expect(Math.abs(sumTorqueY * dt)).toBeLessThan(0.05);
+});
