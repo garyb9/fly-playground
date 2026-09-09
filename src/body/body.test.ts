@@ -8,14 +8,13 @@ const hoverR = (): Readouts => ({ wing_l: 0, wing_r: 0, thrust: 0, yaw_torque: 0
 test("with hover readouts the fly holds altitude within a small band", () => {
   const b = new Body(v(0, 5, 0), 0);
   for (let i = 0; i < 300; i++) b.step(1 / 60, hoverR(), world);
-  // NOTE (deviation from plan): plan asserts < 1.5. The merged Task 8 ValueNoise
-  // channels are not zero-mean over a 5 s window (ch0 mean ~ -0.52), so
-  // `wing_l - wing_r` carries a standing bias that slowly rolls the body; the
-  // tilted lift vector makes it descend ~3.7 units over 300 steps. The Task 9
-  // orchestrator is a verbatim transcription of the plan — only this band
-  // constant is relaxed so the test still asserts the fly stays contained and
-  // does not diverge. Actual |dy| ~ 3.69.
-  expect(Math.abs(b.pose().position.y - 5)).toBeLessThan(4.5);
+  // Task 13 tuning pass: the ValueNoise channels are not zero-mean over a 5 s
+  // window, so independent noise on wing_l/wing_r left a standing `wing_l - wing_r`
+  // bias that slowly rolled the body and tilted the lift vector into a descent
+  // (~3.69 m over 300 steps with the pre-tuning constants). Halving
+  // physics.NOISE_AMP (0.04 -> 0.02) and raising physics.ANG_DRAG (4.0 -> 6.0)
+  // damps the roll before it can integrate; residual |dy| ~ 0.53 m over 5 s.
+  expect(Math.abs(b.pose().position.y - 5)).toBeLessThan(0.8);
 });
 test("deterministic: same seed + same inputs → same trajectory", () => {
   const run = () => {

@@ -7,7 +7,7 @@ export const CONFIG = {
     INERTIA: 0.05,
     GRAVITY: 9.81,
     LIN_DRAG: 1.4,
-    ANG_DRAG: 4.0,
+    ANG_DRAG: 6.0,
     HOVER_S: 0,
     LIFT_K: 6,
     CRUISE_THRUST: 1.6,
@@ -24,7 +24,7 @@ export const CONFIG = {
     BOUNCE: 0.35,
     FLY_R: 0.25,
     CONTACT_STARTLE: 3,
-    NOISE_AMP: 0.04,
+    NOISE_AMP: 0.02,
     NOISE_HZ: 1.3,
   },
   sensing: {
