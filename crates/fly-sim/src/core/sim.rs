@@ -2,8 +2,7 @@
 //! network over the CSR graph: double-buffered synaptic input, per-neuron
 //! excitatory/inhibitory sign, an EMA activity trace, and the `active_count`
 //! slider (edges to targets `>= active_count` are skipped during traversal).
-//! Private to the crate until the wasm wrapper task, so dead code is allowed.
-#![allow(dead_code)]
+//! Driven by the `#[wasm_bindgen] Sim` wrapper in `lib.rs`.
 
 use crate::core::format::{GraphFile, NeuronsFile};
 use crate::core::lif::{integrate_one, LifParams, LifState};
@@ -15,6 +14,11 @@ pub struct SimConfig {
     pub params: LifParams,
     pub seed: u64,
     pub activity_tau_ticks: f32,
+    /// Fixed simulation tick length in ms (the "200 Hz tick" Global Constraint).
+    /// Stored so it can be read back and cross-checked; it does not feed the
+    /// step math directly — `LifParams::from_ms` already folds it into `leak`
+    /// and `refrac_ticks`.
+    pub dt_ms: f32,
 }
 
 impl Default for SimConfig {
@@ -23,6 +27,7 @@ impl Default for SimConfig {
             params: LifParams::default(),
             seed: 0x0DDB_1A5E,
             activity_tau_ticks: 40.0,
+            dt_ms: 5.0,
         }
     }
 }
@@ -32,6 +37,7 @@ pub struct SimCore {
     core_count: usize,
     active: usize,
     params: LifParams,
+    dt_ms: f32,
     activity_tau: f32,
     rng: SplitMix64,
 
@@ -72,6 +78,7 @@ impl SimCore {
             core_count: neurons.core_count as usize,
             active: n,
             params: cfg.params,
+            dt_ms: cfg.dt_ms,
             activity_tau: cfg.activity_tau_ticks.max(1.0),
             rng: SplitMix64::new(cfg.seed),
             offsets: graph.offsets.clone(),
@@ -96,8 +103,14 @@ impl SimCore {
     pub fn active_count(&self) -> usize {
         self.active
     }
+    pub fn dt_ms(&self) -> f32 {
+        self.dt_ms
+    }
     pub fn set_params(&mut self, p: LifParams) {
         self.params = p;
+    }
+    pub fn set_dt_ms(&mut self, dt_ms: f32) {
+        self.dt_ms = dt_ms;
     }
     pub fn set_active_count(&mut self, n: usize) {
         self.active = n.clamp(self.core_count, self.n);
@@ -194,8 +207,7 @@ impl SimCore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::format::{GraphFile, NeuronsFile};
-    use crate::core::format::{GraphFile as GF, NeuronsFile as NF};
+    use crate::core::format::{GraphFile, GraphFile as GF, NeuronsFile, NeuronsFile as NF};
 
     // Build a tiny hand-made pair of files: 3 neurons (index 0 core), edges
     // 0->1 and 0->2. `flags0` is neuron 0's flag byte (bit1 = inhibitory);
@@ -321,6 +333,18 @@ mod tests {
     }
 
     #[test]
+    fn dt_ms_is_stored_and_readable() {
+        let (nb, gb) = tiny();
+        let mut s = core_from(&nb, &gb, 1);
+        assert_eq!(s.dt_ms(), 5.0, "default dt_ms");
+        s.set_dt_ms(10.0);
+        assert_eq!(s.dt_ms(), 10.0);
+        s.set_active_count(2);
+        assert_eq!(s.active_count(), 2, "active_count round-trips");
+        assert_eq!(s.dt_ms(), 10.0, "set_active_count leaves dt_ms alone");
+    }
+
+    #[test]
     fn deterministic_for_equal_seed_and_inputs() {
         let (nb, gb) = tiny();
         let run = |seed| {
@@ -404,8 +428,13 @@ mod tests {
         .unwrap();
         let nf = NF::parse(&nb).unwrap();
         let gf = GF::parse(&gb).unwrap();
-        let mut cfg = SimConfig::default();
-        cfg.params.noise_sigma = 0.0;
+        let cfg = SimConfig {
+            params: LifParams {
+                noise_sigma: 0.0,
+                ..LifParams::default()
+            },
+            ..SimConfig::default()
+        };
         SimCore::new(&nf, &gf, cfg)
     }
 

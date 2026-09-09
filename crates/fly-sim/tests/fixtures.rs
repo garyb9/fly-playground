@@ -1,5 +1,12 @@
 //! Shared constants + loaders for integration tests. Mirrors the "Fixture
 //! contract" in the Plan 01 doc and pipeline/gen_fixture.py.
+//!
+//! `#[path]`-included by both `golden_trace.rs` and any future integration
+//! test, so which items are "used" depends on the current test set. Today
+//! `golden_trace.rs` consumes `FIXTURE_SEED`, `neurons_bytes`, `graph_bytes`
+//! and the two `fixture_*_roles` helpers, but not `FIXTURE_N` / `FIXTURE_CORE`
+//! (kept as the documented contract values for tests still to come), so the
+//! module still needs the dead-code allow.
 #![allow(dead_code)]
 
 pub const FIXTURE_N: usize = 500;

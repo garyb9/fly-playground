@@ -1,8 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "fly-playground-pipeline"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["numpy>=2.0"]
+# Upper-bounded: NEP 19 guarantees bit-generator stream stability but NOT
+# `Generator` method streams across numpy majors, and CI byte-compares a
+# regenerated fixture (`git diff --exit-code pipeline/out/fixture`).
+dependencies = ["numpy>=2.0,<3"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]

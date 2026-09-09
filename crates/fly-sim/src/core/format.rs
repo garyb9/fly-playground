@@ -3,11 +3,9 @@
 //! section (16-byte `neurons.bin` header + 24-byte records; 32-byte padded
 //! `graph.bin` header + CSR arrays). Little-endian throughout.
 //!
-//! Several fields / accessors here (`version`, `group_id`, `is_inhibitory`, …)
-//! are part of the format contract but are first consumed by later Plan 01
-//! tasks (`core::lif`, `core::sim`, the wasm wrapper), so the module allows
-//! dead code until then.
-#![allow(dead_code)]
+//! Fields / accessors here (`version`, `group_id`, `is_inhibitory`, …) are part
+//! of the format contract and are consumed by `core::lif`, `core::sim` and the
+//! wasm wrapper.
 
 use std::convert::TryInto;
 
@@ -17,9 +15,22 @@ const NEURON_REC: usize = 24;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum FormatError {
-    TooShort { need: usize, got: usize },
-    BadMagic { expected: u32, got: u32 },
+    TooShort {
+        need: usize,
+        got: usize,
+    },
+    BadMagic {
+        expected: u32,
+        got: u32,
+    },
     BadOffsets,
+    /// `neurons.bin` header claims more core neurons than total neurons. Left
+    /// unchecked this reaches `set_active_count`'s `n.clamp(core_count, n)` with
+    /// `min > max`, which panics and poisons the wasm module instance.
+    BadHeader {
+        core_count: u32,
+        count: u32,
+    },
 }
 
 #[inline]
@@ -82,6 +93,12 @@ impl NeuronsFile {
         let version = u32_at(b, 4);
         let count = u32_at(b, 8) as usize;
         let core_count = u32_at(b, 12);
+        if core_count as usize > count {
+            return Err(FormatError::BadHeader {
+                core_count,
+                count: count as u32,
+            });
+        }
         let need = 16 + count * NEURON_REC;
         if b.len() < need {
             return Err(FormatError::TooShort { need, got: b.len() });
@@ -279,6 +296,23 @@ mod tests {
         assert!(matches!(
             NeuronsFile::parse(&b),
             Err(FormatError::BadMagic { .. })
+        ));
+    }
+
+    #[test]
+    fn rejects_core_count_exceeding_count() {
+        // Hand-built 16-byte header: count = 3, core_count = 99.
+        let mut b = Vec::new();
+        b.extend(NEURONS_MAGIC.to_le_bytes());
+        b.extend(1u32.to_le_bytes()); // version
+        b.extend(3u32.to_le_bytes()); // count
+        b.extend(99u32.to_le_bytes()); // core_count > count
+        assert!(matches!(
+            NeuronsFile::parse(&b),
+            Err(FormatError::BadHeader {
+                core_count: 99,
+                count: 3
+            })
         ));
     }
 

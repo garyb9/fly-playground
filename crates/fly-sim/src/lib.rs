@@ -42,6 +42,10 @@ impl Sim {
         self.inner.set_active_count(n as usize);
     }
 
+    pub fn active_count(&self) -> u32 {
+        self.inner.active_count() as u32
+    }
+
     pub fn set_params(
         &mut self,
         dt_ms: f32,
@@ -51,6 +55,9 @@ impl Sim {
         refrac_ms: f32,
         noise_sigma: f32,
     ) {
+        // `dt_ms` is folded into `leak`/`refrac_ticks` by `from_ms`; also store
+        // it verbatim so `dt_ms()` can cross-check the fixed-tick constraint.
+        self.inner.set_dt_ms(dt_ms);
         self.inner.set_params(LifParams::from_ms(
             dt_ms,
             tau_m_ms,
@@ -59,6 +66,10 @@ impl Sim {
             refrac_ms,
             noise_sigma,
         ));
+    }
+
+    pub fn dt_ms(&self) -> f32 {
+        self.inner.dt_ms()
     }
 
     pub fn define_input_role(&mut self, name: &str, neurons: &[u32]) -> u32 {
@@ -89,8 +100,31 @@ impl Sim {
 
 #[cfg(test)]
 mod tests {
+    use super::Sim;
+
+    fn fixture_bytes(name: &str) -> Vec<u8> {
+        std::fs::read(format!(
+            "{}/../../pipeline/out/fixture/{}",
+            env!("CARGO_MANIFEST_DIR"),
+            name
+        ))
+        .expect("run `python pipeline/gen_fixture.py` first")
+    }
+
     #[test]
     fn abi_version_is_one() {
         assert_eq!(super::sim_abi_version(), 1);
+    }
+
+    #[test]
+    fn set_params_stores_dt_ms_and_active_count_round_trips() {
+        let nb = fixture_bytes("neurons.bin");
+        let gb = fixture_bytes("graph.bin");
+        let mut s = Sim::new(&nb, &gb, 42).expect("fixture parses");
+        assert_eq!(s.dt_ms(), 5.0, "default dt_ms");
+        s.set_params(10.0, 20.0, 1.0, 0.0, 2.0, 0.02);
+        assert_eq!(s.dt_ms(), 10.0, "set_params records dt_ms");
+        s.set_active_count(120);
+        assert_eq!(s.active_count(), 120, "active_count reads back the slider");
     }
 }

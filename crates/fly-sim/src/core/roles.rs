@@ -1,8 +1,7 @@
 //! `Roles` — named input/readout groups over neuron indices. An input role is
 //! a set of neurons that `SimCore::inject` drives; a readout role is a set that
 //! `SimCore::readout` averages activity over. Role ids are the insertion index
-//! into the respective list. Unused until the wasm wrapper task.
-#![allow(dead_code)]
+//! into the respective list.
 
 #[derive(Default)]
 pub struct Roles {

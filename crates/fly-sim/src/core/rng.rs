@@ -1,9 +1,6 @@
 //! `SplitMix64` — a tiny, fast, fully deterministic PRNG. Its only consumer is
 //! `core::sim`, which draws one Box–Muller Gaussian per active neuron per tick
-//! for membrane noise (and only when `noise_sigma > 0`). Like the sibling
-//! `core` modules it allows dead code: the `core` module is private to the
-//! crate until the wasm wrapper task wires it up.
-#![allow(dead_code)]
+//! for membrane noise (and only when `noise_sigma > 0`).
 
 /// SplitMix64 — tiny, fast, fully deterministic. Used for membrane noise only.
 pub struct SplitMix64(u64);

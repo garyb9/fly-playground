@@ -1,12 +1,7 @@
 //! Leaky integrate-and-fire (LIF) neuron model: parameters, per-neuron state
 //! buffers, and one pure single-neuron integration step. No graph, no RNG, no
-//! wasm — `core::sim` (a later Plan 01 task) drives `integrate_one` per tick
-//! with a double-buffered `input` that already folds in synaptic drive,
-//! injected stimulus, and noise.
-//!
-//! Every item here is part of the `core::sim` contract but is first consumed by
-//! that later Plan 01 task, so the module allows dead code until then.
-#![allow(dead_code)]
+//! wasm — `core::sim` drives `integrate_one` per tick with a double-buffered
+//! `input` that already folds in synaptic drive, injected stimulus, and noise.
 
 /// Fixed per-simulation LIF coefficients. `leak` is the per-tick membrane
 /// multiplier `exp(-dt/tau_m)`; `refrac_ticks` is the absolute refractory

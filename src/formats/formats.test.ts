@@ -48,3 +48,28 @@ test("truncated graph is rejected", () => {
   const buf = fixtureBuf("graph.bin").slice(0, 40);
   expect(() => parseGraph(buf)).toThrow();
 });
+
+test("graph target >= nNodes is rejected with BAD_OFFSETS", () => {
+  // Minimal synthetic graph.bin: 2 nodes, 1 edge whose target === nNodes.
+  const buf = new ArrayBuffer(50); // 32 header + 12 offsets + 4 targets + 2 weights
+  const dv = new DataView(buf);
+  dv.setUint32(0, 0x47594c46, true); // magic "FLYG"
+  dv.setUint32(4, 1, true); // version
+  dv.setUint32(8, 2, true); // nNodes
+  dv.setUint32(12, 0, true); // pad
+  dv.setBigUint64(16, 1n, true); // nEdges
+  dv.setFloat32(24, 0.01, true); // wNorm
+  dv.setUint32(28, 0, true); // pad
+  dv.setUint32(32, 0, true); // offsets[0]
+  dv.setUint32(36, 1, true); // offsets[1]
+  dv.setUint32(40, 1, true); // offsets[2] === nEdges
+  dv.setUint32(44, 2, true); // targets[0] === nNodes -> out of range
+  dv.setInt16(48, 5, true); // weights[0]
+  let code: string | undefined;
+  try {
+    parseGraph(buf);
+  } catch (e) {
+    code = (e as { code?: string }).code;
+  }
+  expect(code).toBe("BAD_OFFSETS");
+});

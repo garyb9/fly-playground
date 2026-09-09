@@ -74,7 +74,7 @@ rescales them so that a plausible number of coincident presynaptic spikes brings
 a postsynaptic neuron to threshold:
 
 ```
-w_sim = w_raw / W_NORM        # W_NORM chosen in pipeline, ~= median in-degree-weighted value
+w_sim = w_raw * W_NORM        # W_NORM: a small scale factor chosen in the pipeline (0.01 in the fixture)
 ```
 
 `w_sim` is quantised for storage (see §2) and de-quantised on load.

@@ -37,6 +37,12 @@ export function parseGraph(buf: ArrayBuffer): GraphFile {
   for (let i = 0; i < nNodes; i++)
     if (offsets[i]! > offsets[i + 1]!) throw coded("graph.bin non-monotonic offsets", "BAD_OFFSETS");
 
+  // Target-range parity with the Rust decoder (`format.rs` rejects `t >= n_nodes`
+  // with `BadOffsets`): an out-of-range target would otherwise `row()`-index a
+  // position array to `undefined`/NaN in Plan 02's brainviz.
+  for (let k = 0; k < targets.length; k++)
+    if (targets[k]! >= nNodes) throw coded("graph.bin target out of range", "BAD_OFFSETS");
+
   return { version, nNodes, nEdges, wNorm, offsets, targets, weights };
 }
 
