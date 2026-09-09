@@ -8,3 +8,6 @@ pipeline/out/*
 __pycache__/
 *.egg-info/
 .vitest/
+
+# SDD workspace (subagent-driven-development scratch)
+.superpowers/
