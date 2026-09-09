@@ -26,6 +26,7 @@ import { worldQuery } from "./app/world-query";
 import { Loop, type FrameView } from "./app/loop";
 import { Hud } from "./ui/hud";
 import type { HudControls, HudModel } from "./ui/controls";
+import { AudioEngine } from "./audio/audio";
 import * as THREE from "three";
 import type { BufferAttribute } from "three";
 
@@ -101,6 +102,9 @@ async function main(): Promise<void> {
     current: null,
   };
   const setParamsDebounced = debounce((p: Partial<LifParams>) => bridge.setParams(p), 50);
+  // --- Plan 02b: audio --- lazily builds its AudioContext on the first
+  // setMuted(false) (unchecking the HUD mute box is the required user gesture).
+  const audio = new AudioEngine();
   const controls: HudControls = {
     setActiveCount: (n) => {
       currentActiveCount = n;
@@ -118,8 +122,8 @@ async function main(): Promise<void> {
     },
     setParams: (p) => setParamsDebounced(p),
     setGroupVisible: (g, vis) => panelHandle.current?.setGroupVisible(g, vis),
-    setMuted: () => {}, // Task 9
-    setVolume: () => {}, // Task 9
+    setMuted: (b) => audio.setMuted(b),
+    setVolume: (v) => audio.setVolume(v),
     addObject: () => {}, // Task 10
     updateObject: () => {}, // Task 10
     removeObject: () => {}, // Task 10
@@ -186,7 +190,8 @@ async function main(): Promise<void> {
     renderer.camera.position.set(cam.position.x, cam.position.y, cam.position.z);
     renderer.camera.lookAt(cam.lookAt.x, cam.lookAt.y, cam.lookAt.z);
 
-    // Plan 02b: HUD sink.
+    // Plan 02b: audio + HUD sinks.
+    audio.update(view, dt);
     hud.update({
       readouts: view.readouts,
       sensory: view.sensory,
