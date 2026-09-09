@@ -352,7 +352,7 @@ export class Hud {
 
     // --- add row: kind + material + "add at fly" -------------------------------
     const kindSel = select(["box", "sphere", "torus"]);
-    const matSel = select(["clay", "sage", "ochre"]);
+    const matSel = select(["buoy-a", "buoy-b", "buoy-c"]);
     const addBtn = el("button", "hud-scene__btn", "add at fly");
     addBtn.type = "button";
     addBtn.addEventListener("click", () => {

@@ -38,7 +38,7 @@ export const SCENE: SceneConfig = {
       position: v(9, 4, 0),
       rotation: v(0, 0, 0),
       scale: v(1.2, 1.2, 1.2),
-      material: "clay",
+      material: "buoy-a",
     },
     {
       id: "obj-1",
@@ -46,7 +46,7 @@ export const SCENE: SceneConfig = {
       position: v(3, 3, -5),
       rotation: v(0, 0, 0),
       scale: v(1, 0.35, 1),
-      material: "sage",
+      material: "buoy-b",
     },
     {
       id: "obj-2",
@@ -54,7 +54,7 @@ export const SCENE: SceneConfig = {
       position: v(-4, 6, 4),
       rotation: v(0, 0, 0),
       scale: v(1, 1, 1),
-      material: "ochre",
+      material: "buoy-c",
     },
   ],
   lights: [

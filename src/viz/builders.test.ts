@@ -27,15 +27,16 @@ test("buildCoreEdges index is even-length and core-core only", () => {
   for (let i = 0; i < idx.count; i++) expect(idx.getX(i)).toBeLessThan(n.coreCount);
 });
 
-test("buildWorld: one mesh per object, one PointLight per light, plus sun + hemi", () => {
+test("buildWorld: one mesh per object + one marker per light + a ground disc; one cool key + hemi; no grid", () => {
   const world = buildWorld(SCENE);
-  const pointLights = world.children.filter((c) => c instanceof THREE.PointLight);
-  const dirLights = world.children.filter((c) => c instanceof THREE.DirectionalLight);
-  const hemiLights = world.children.filter((c) => c instanceof THREE.HemisphereLight);
   const meshes = world.children.filter((c) => c instanceof THREE.Mesh);
-  expect(pointLights.length).toBe(SCENE.lights.length);
-  expect(dirLights.length).toBe(1);
-  expect(hemiLights.length).toBe(1);
-  // one mesh per object + one emissive marker per light
-  expect(meshes.length).toBe(SCENE.objects.length + SCENE.lights.length);
+  const dir = world.children.filter((c) => c instanceof THREE.DirectionalLight);
+  const hemi = world.children.filter((c) => c instanceof THREE.HemisphereLight);
+  const points = world.children.filter((c) => c instanceof THREE.PointLight);
+  expect(points.length).toBe(SCENE.lights.length);
+  expect(dir.length).toBe(1);
+  expect(hemi.length).toBe(1);
+  // objects + one emissive marker per light + the ground disc
+  expect(meshes.length).toBe(SCENE.objects.length + SCENE.lights.length + 1);
+  expect(world.children.some((c) => c.name === "ground-disc")).toBe(true);
 });

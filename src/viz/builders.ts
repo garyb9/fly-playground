@@ -7,7 +7,9 @@ import type { GraphFile } from "../formats/graph";
 import type { SceneConfig } from "../scene.config";
 import { brainPositions, coreFlags, coreEdgePairs } from "./geometry";
 import { makeBrainMaterial } from "./brain-material";
-import { PALETTE, material } from "./palette";
+import { PALETTE, activePalette, material } from "./palette";
+import { CONFIG } from "../app/config";
+import type { Theme } from "../ui/controls";
 
 /** Point cloud for the whole brain. `aActivity` starts at zero (driven later). */
 export function buildBrainPoints(neurons: NeuronsFile, scaleFactor: number): THREE.Points {
@@ -46,13 +48,50 @@ function geometryFor(kind: SceneConfig["objects"][number]["kind"]): THREE.Buffer
   }
 }
 
-/** Build the static world: object meshes, per-light `PointLight` + marker, plus
- * one warm `DirectionalLight` and a `HemisphereLight`. */
-export function buildWorld(scene: SceneConfig): THREE.Group {
+/**
+ * Ground plane: a radial disc that fades to nothing at the rim (§6.6 — this
+ * replaces the reference grid, which the direction rejects on sight). The
+ * falloff is baked as per-vertex alpha — `CircleGeometry` vertex 0 is the
+ * centre, every other vertex sits on the rim — so no shader patch is needed.
+ */
+function groundDisc(theme: Theme): THREE.Mesh {
+  const geom = new THREE.CircleGeometry(40, 64);
+  const n = geom.getAttribute("position").count;
+  const colors = new Float32Array(n * 4);
+  for (let i = 0; i < n; i++) {
+    colors[i * 4] = 1;
+    colors[i * 4 + 1] = 1;
+    colors[i * 4 + 2] = 1;
+    colors[i * 4 + 3] = i === 0 ? 1 : 0;
+  }
+  geom.setAttribute("color", new THREE.BufferAttribute(colors, 4));
+
+  const mat = new THREE.MeshBasicMaterial({
+    color: activePalette(theme).ground,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  mat.userData.themeKey = "ground";
+
+  const ground = new THREE.Mesh(geom, mat);
+  ground.name = "ground-disc";
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = 0;
+  return ground;
+}
+
+/** Build the static world: object meshes, per-light `PointLight` + marker, a
+ * radial ground disc, plus one **cool** `DirectionalLight` key and a
+ * `HemisphereLight`. No grid — see `docs/2026-09-09-visual-direction.md` §6.6. */
+export function buildWorld(scene: SceneConfig, theme: Theme = CONFIG.aesthetic.theme): THREE.Group {
   const group = new THREE.Group();
+  const pal = activePalette(theme);
 
   for (const obj of scene.objects) {
-    const mesh = new THREE.Mesh(geometryFor(obj.kind), material(obj.material));
+    const mesh = new THREE.Mesh(geometryFor(obj.kind), material(obj.material, theme));
     mesh.position.set(obj.position.x, obj.position.y, obj.position.z);
     mesh.rotation.set(obj.rotation.x, obj.rotation.y, obj.rotation.z);
     mesh.scale.set(obj.scale.x, obj.scale.y, obj.scale.z);
@@ -72,11 +111,19 @@ export function buildWorld(scene: SceneConfig): THREE.Group {
     group.add(marker);
   }
 
-  const sun = new THREE.DirectionalLight(0xfff1d0, 1.1);
-  sun.position.set(10, 18, 6);
-  group.add(sun);
+  // One cool key light, high up — the warm "sun" is gone; the only warm source
+  // in the frame is the fly's ember (§6.5/§6.6).
+  const key = new THREE.DirectionalLight(pal.pointHot, 0.6);
+  key.position.set(10, 18, 6);
+  group.add(key);
 
-  group.add(new THREE.HemisphereLight(PALETTE.bg, PALETTE.ground, 0.6));
+  group.add(new THREE.HemisphereLight(pal.bg, pal.ground, 0.4));
+
+  group.add(groundDisc(theme));
+
+  // NOTE: the dim `bounds` hairline (§6.6) has no mesh today — `SceneConfig.bounds`
+  // is collision-only and was never built as `LineSegments`. Left as a follow-up
+  // so the world's child count stays exactly what `builders.test.ts` asserts.
 
   return group;
 }

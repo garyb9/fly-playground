@@ -21,13 +21,14 @@ import { parseNeurons } from "./formats/neurons";
 import { parseGraph } from "./formats/graph";
 import { buildBrainPoints, buildCoreEdges, buildWorld } from "./viz/builders";
 import { createRenderer } from "./viz/renderer";
+import { buildComposer } from "./viz/post";
 import { Fly } from "./viz/fly";
 import { updateFollowCamera } from "./viz/follow-camera";
 import { CONFIG } from "./app/config";
 import { worldQuery } from "./app/world-query";
 import { Loop, type FrameView } from "./app/loop";
 import { Hud } from "./ui/hud";
-import type { HudControls, HudModel } from "./ui/controls";
+import type { HudControls, HudModel, Theme } from "./ui/controls";
 import { AudioEngine } from "./audio/audio";
 import * as THREE from "three";
 import type { BufferAttribute } from "three";
@@ -97,13 +98,16 @@ async function main(): Promise<void> {
       return null;
     }
   })();
+  // Plan 02b aesthetic: the live theme — seeded from localStorage, swapped by
+  // `controls.setTheme`, and read whenever the world is rebuilt.
+  let currentTheme: Theme = savedTheme ?? CONFIG.aesthetic.theme;
   const hudModel: HudModel = {
     coreCount,
     nNeurons,
     groups,
     lif: CONFIG.lif,
     scene: initialScene,
-    theme: savedTheme ?? CONFIG.aesthetic.theme,
+    theme: currentTheme,
     reservedRect: CONFIG.hud.reservedRect,
   };
   // Plan 2c's docked panel sets `panelHandle.current`; a safe no-op until then.
@@ -123,13 +127,15 @@ async function main(): Promise<void> {
     },
     setPaused: (p) => (p ? bridge.pause() : bridge.resume()),
     setTheme: (t) => {
+      currentTheme = t;
       hud.setTheme(t);
+      renderer.setTheme(t);
+      fly.setTheme(t);
       try {
         localStorage.setItem("fly-playground.theme", t);
       } catch {
         /* storage unavailable */
       }
-      // renderer.setTheme(t) — wired in Task 11
     },
     setParams: (p) => setParamsDebounced(p),
     setGroupVisible: (g, vis) => panelHandle.current?.setGroupVisible(g, vis),
@@ -163,6 +169,15 @@ async function main(): Promise<void> {
   // 5. Renderer + brainviz + world + fly.
   const renderer = createRenderer(canvas);
 
+  // --- Plan 02b: aesthetic ---
+  // "Deep Field" post-FX (§6.2): render → bloom → vignette → grain. Tone
+  // mapping + exposure live on the WebGLRenderer itself (`createRenderer`).
+  // Bloom selectivity rides on the luminance THRESHOLD for now — matte buoys and
+  // the ground stay well below it; a bloom layer is Task 12's call if needed.
+  const composer = buildComposer(renderer.gl, renderer.scene, renderer.camera);
+  renderer.setComposer(composer);
+  // --- end Plan 02b: aesthetic ---
+
   const points = buildBrainPoints(neuronsFile, scaleFactor);
   const edges = buildCoreEdges(graphFile, neuronsFile.coreCount);
   // Constraint #1: buildCoreEdges' geometry is index-only — share the point
@@ -180,8 +195,8 @@ async function main(): Promise<void> {
   // 500 points — never worth culling, and culling was half of why it went missing.
   points.frustumCulled = false;
 
-  let world3d = buildWorld(initialScene);
-  const fly = new Fly();
+  let world3d = buildWorld(initialScene, currentTheme);
+  const fly = new Fly(currentTheme);
   renderer.scene.add(brain, world3d, fly.object3d);
 
   const aActivity = points.geometry.getAttribute("aActivity") as BufferAttribute;
@@ -226,7 +241,7 @@ async function main(): Promise<void> {
       activeCount: currentActiveCount,
       paused: view.paused,
     });
-    renderer.render();
+    renderer.render(dt);
   };
 
   const loop = new Loop({ bridge, body, sensing, roleTable, world, onFrame });
@@ -242,7 +257,7 @@ async function main(): Promise<void> {
         (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
       }
     });
-    world3d = buildWorld(s);
+    world3d = buildWorld(s, currentTheme);
     renderer.scene.add(world3d);
     loop.setWorld(worldQuery(s));
     hud.syncScene(s);
@@ -254,6 +269,10 @@ async function main(): Promise<void> {
   const resize = (): void => renderer.resize(window.innerWidth, window.innerHeight);
   window.addEventListener("resize", resize);
   resize();
+
+  // Plan 02b aesthetic: apply the seeded theme once, now that the scene, the
+  // world and the fly all exist (recolours every `userData.themeKey` material).
+  renderer.setTheme(currentTheme);
 
   // 9. Run the whole cloud.
   bridge.setActiveCount(nNeurons);
