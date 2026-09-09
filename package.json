@@ -21,8 +21,8 @@
     "rs:wasm": "wasm-pack build crates/fly-sim --target web --dev",
     "rs:wasm:node": "wasm-pack build crates/fly-sim --target nodejs --dev --out-dir pkg-node",
     "rs:smoke": "yarn rs:wasm:node && node examples/smoke.mjs",
-    "py:test": "python -m pytest pipeline -q || [ $? -eq 5 ]",
-    "py:fixture-check": "python pipeline/gen_fixture.py && git diff --exit-code pipeline/out/fixture",
+    "py:test": "python3 -m pytest pipeline -q || [ $? -eq 5 ]",
+    "py:fixture-check": "python3 pipeline/gen_fixture.py && git diff --exit-code pipeline/out/fixture",
     "prep": "yarn format && yarn lint:fix && yarn rs:fmt && yarn rs:wasm && yarn typecheck && yarn rs:lint && yarn rs:wasm:node && yarn build",
     "ci": "yarn format:check && yarn lint && yarn rs:fmt:check && yarn rs:wasm && yarn typecheck && yarn rs:lint && yarn rs:test && yarn rs:wasm:node && yarn test && yarn build && yarn py:test && yarn py:fixture-check"
   },
