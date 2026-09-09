@@ -12,8 +12,10 @@ import { CONFIG } from "./config";
 export interface FrameView {
   pose: Pose;
   readouts: Readouts;
+  sensory: Readouts;
   activity: Float32Array;
   simHz: number;
+  paused: boolean;
 }
 
 export interface LoopDeps {
@@ -27,6 +29,7 @@ export interface LoopDeps {
 
 export class Loop {
   private readonly deps: LoopDeps;
+  private world: WorldQuery;
   private last = 0;
   private seeded = false;
   private sensingState: SensingState = initSensingState();
@@ -35,6 +38,12 @@ export class Loop {
 
   constructor(deps: LoopDeps) {
     this.deps = deps;
+    this.world = deps.world;
+  }
+
+  // Runtime scene edits (Task 10) land here and take effect on the next frame.
+  setWorld(w: WorldQuery): void {
+    this.world = w;
   }
 
   frameOnce(nowMs: number): void {
@@ -48,7 +57,8 @@ export class Loop {
     const dt = Math.min((nowMs - this.last) / 1000, CONFIG.loop.MAX_FRAME_DT);
     this.last = nowMs;
 
-    const { bridge, body, sensing, roleTable, world, onFrame } = this.deps;
+    const { bridge, body, sensing, roleTable, onFrame } = this.deps;
+    const world = this.world;
 
     const pose = body.pose();
     const { stimulus, state } = sensing.sample(pose, world, dt, this.sensingState, roleTable);
@@ -65,11 +75,22 @@ export class Loop {
     const readouts: Readouts = Object.fromEntries(
       roleTable.readoutOrder.map((name, i) => [name, raw.readouts[i] ?? 0]),
     );
+    // Named view of the stimulus actually injected this frame (post startle add).
+    const sensory: Readouts = Object.fromEntries(
+      roleTable.inputOrder.map((name, i) => [name, stimulus[i] ?? 0]),
+    );
 
     const { contact } = body.step(dt, readouts, world);
     if (contact) this.pendingStartle = CONFIG.physics.CONTACT_STARTLE;
 
-    onFrame({ pose: body.pose(), readouts, activity: raw.activity, simHz: raw.simHz });
+    onFrame({
+      pose: body.pose(),
+      readouts,
+      sensory,
+      activity: raw.activity,
+      simHz: raw.simHz,
+      paused: raw.paused,
+    });
   }
 
   start(): void {

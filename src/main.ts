@@ -98,6 +98,7 @@ async function main(): Promise<void> {
   );
   let lastFrameMs = performance.now();
 
+  // FrameView is frozen — Plan 2c's docked panel consumes { activity, readouts, sensory, paused }
   const onFrame = (view: FrameView): void => {
     const now = performance.now();
     const dt = Math.min((now - lastFrameMs) / 1000, CONFIG.loop.MAX_FRAME_DT);

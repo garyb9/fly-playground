@@ -122,3 +122,51 @@ test("a collision this frame adds a proximity startle to next frame's stimulus",
   expect(contactProx - nonContactProx).toBeGreaterThan(2.5);
   expect(contactProx - nonContactProx).toBeLessThan(3.5);
 });
+
+test("frameOnce feeds sensing→bridge and builds named Readouts + sensory views", () => {
+  const fb = fakeBridge();
+  fb.state.readouts[rt.readout.wing_l!] = 0.3;
+  let seen: FrameView | undefined;
+  const loop = new Loop({
+    bridge: fb.obj,
+    body: new Body(v(0, 4, 0), 0),
+    sensing,
+    roleTable: rt,
+    world: { aabbs: [], bounds: { min: v(-20, 0, -20), max: v(20, 20, 20) }, lights: [] },
+    onFrame: (fv) => (seen = fv),
+  });
+  loop.frameOnce(0);
+  loop.frameOnce(16);
+  expect(seen!.readouts.wing_l).toBeCloseTo(0.3, 6);
+  // sensory is a named view of the injected stimulus (inputOrder keys)
+  expect(Object.keys(seen!.sensory).sort()).toEqual([...rt.inputOrder].sort());
+  expect(seen!.sensory.proximity).toBeGreaterThanOrEqual(0);
+  expect(seen!.paused).toBe(false);
+});
+
+test("setWorld swaps the world the loop feeds to sensing + body on the next frame", () => {
+  const fb = fakeBridge();
+  const steps: unknown[] = [];
+  const body = {
+    pose: () => new Body(v(0, 4, 0), 0).pose(),
+    step: (_dt: number, _r: unknown, w: unknown) => {
+      steps.push(w);
+      return { contact: false };
+    },
+  } as unknown as Body;
+  const w1: WorldQuery = { aabbs: [], bounds: { min: v(-1, 0, -1), max: v(1, 1, 1) }, lights: [] };
+  const w2: WorldQuery = { aabbs: [], bounds: { min: v(-9, 0, -9), max: v(9, 9, 9) }, lights: [] };
+  const loop = new Loop({
+    bridge: fb.obj,
+    body,
+    sensing,
+    roleTable: rt,
+    world: w1,
+    onFrame: () => {},
+  });
+  loop.frameOnce(0);
+  loop.frameOnce(16);
+  loop.setWorld(w2);
+  loop.frameOnce(32);
+  expect(steps.at(-1)).toBe(w2);
+});
