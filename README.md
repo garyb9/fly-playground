@@ -22,7 +22,10 @@ Plan 02 (app shell) complete: the fixture brain flies the fly through a
 proximity + looming → escape loop in the browser, over a `SharedArrayBuffer`
 worker bridge with a `postMessage` fallback, with the connectome drawn as a
 Three.js point cloud. Next: Plan 02b (light / wind sensing, HUD slider + meters,
-brain camera mode, audio, object UI, aesthetic pass).
+brain camera mode, audio, object UI, aesthetic pass — the aesthetic direction is
+specced as "Deep Field" in
+[`docs/2026-09-09-visual-direction.md`](docs/2026-09-09-visual-direction.md),
+with a status table the implementing agent keeps current).
 
 ## What it does (target)
 
@@ -77,6 +80,7 @@ fixture under `pipeline/out/`.
 ## Documentation
 
 - [`docs/2026-09-09-design.md`](docs/2026-09-09-design.md) — full design / spec
+- [`docs/2026-09-09-visual-direction.md`](docs/2026-09-09-visual-direction.md) — "Deep Field" aesthetic direction + implementation status
 - [`docs/architecture.md`](docs/architecture.md) — module map, worker protocol, ring buffer
 - [`docs/neuron-model.md`](docs/neuron-model.md) — LIF math, CSR format, exc/inh sign, determinism
 - [`docs/data-pipeline.md`](docs/data-pipeline.md) — download → filter → tier → binary formats

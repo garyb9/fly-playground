@@ -35,6 +35,10 @@ export const CONFIG = {
     TAU_LOOM: 0.06,
   },
   camera: { OFFSET: { x: -3.2, y: 1.4, z: 0 }, LOOKAHEAD: 2.5, omega: 14 },
+  // The "Deep Field" aesthetic pass (Plan 02b) extends this block with motion +
+  // post-FX dials (BREATH_*, BOB_*, ESCAPE_KICK, BLOOM_*, VIGNETTE, GRAIN,
+  // EXPOSURE) and turns `grain` into a float. See
+  // `docs/2026-09-09-visual-direction.md` §5–§6 and its §7 status table.
   aesthetic: {
     BASE_SIZE: 1.5,
     CORE_SIZE: 3.0,

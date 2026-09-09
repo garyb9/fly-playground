@@ -75,3 +75,15 @@ check with the automated coverage that does exist noted alongside.
 - [ ] `light_*` / `wind_*` sensing produces a steering gradient.
 - [ ] Brain camera mode (OrbitControls through the connectome).
 - [ ] Ambient audio bed + reactive one-shots.
+
+### Aesthetic — "Deep Field" ([`2026-09-09-visual-direction.md`](2026-09-09-visual-direction.md) §7 tracks code-side status; these are the by-eye rows)
+
+- [ ] Background is the blue-black `void` (#070B14) — not cream, not `#000`, not tinted near-black.
+- [ ] The connectome glows (additive) in cool teal→white; overlapping points bloom.
+- [ ] Exactly **one** warm thing in the frame: the fly ember. World, lights, HUD all read cool.
+- [ ] Escape burst is the sharpest motion in the scene — white bloom + pathway pulse + brief camera kick.
+- [ ] Connectome breathes slowly at rest; fly drifts/bobs; none of it feels static.
+- [ ] HUD is faint edge instrumentation (Plex Mono numbers, Plex Sans labels), centre stays clear; looming meter warms toward the escape colour as it climbs.
+- [ ] Load sequence: points converge out of the dark → banner → fly ignites → HUD last.
+- [ ] `prefers-reduced-motion` drops the ambient motion but keeps wing flap, physics, meters, escape bloom.
+- [ ] Matches the style-frame: <https://claude.ai/code/artifact/1de23900-b352-4a62-be19-512f36365675>

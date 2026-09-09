@@ -1,5 +1,11 @@
 # References
 
+## Visual direction
+
+- [`2026-09-09-visual-direction.md`](2026-09-09-visual-direction.md) — the
+  "Deep Field" aesthetic spec (palette, type, motion, post-FX), grounded in the
+  region-colour convention below and defined against `fly-escape`'s sunlit look.
+
 ## The dataset
 
 - **Announcement — Google blog:** *A map of the male fruit fly brain*

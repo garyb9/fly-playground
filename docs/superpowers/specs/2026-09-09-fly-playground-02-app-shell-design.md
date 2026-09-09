@@ -393,6 +393,15 @@ pass via `frontend-design` (post-processing, grain, refined palette, better fly 
 per-segment core-edge activity brightness (if not landed as the §4 nice-to-have); `set_params`
 live-tuning debug panel.
 
+**Aesthetic pass — follow [`docs/2026-09-09-visual-direction.md`](../../2026-09-09-visual-direction.md)
+("Deep Field").** It specifies the palette (with each token's code home), typography,
+HUD layout, motion, and the post-FX stack, and carries a tracked status table
+(§7) — update that table in the same commit as the code so status matches
+reality. Live visual reference:
+<https://claude.ai/code/artifact/1de23900-b352-4a62-be19-512f36365675>. The
+one-line brief: one warm ember of a fly through a cool bioluminescent connectome
+in a blue-black void; the escape is the only violent motion.
+
 **→ Plan 03 "real data + deploy":** Python `fetch/filter/tier/core_circuit/emit_bin` vs the real
 MaleCNS download; neuPrint type→bodyId mapping; W_NORM tuning; real assets; `format.rs` wasm32
 hardening; asset hosting + IndexedDB cache keyed by `manifest.version`; per-group-means snapshot

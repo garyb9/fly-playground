@@ -1,5 +1,11 @@
 // Named colours for the whole viz layer + a shared standard material factory.
 // `material()` is the only `three`-touching export here.
+//
+// AESTHETIC DIRECTION: these values are the pre-"Deep Field" placeholder palette
+// (warm daylight diorama). The approved direction is a cool bioluminescent
+// connectome in a blue-black void with one warm ember of a fly — see
+// `docs/2026-09-09-visual-direction.md` (§2 palette, §6.1 token→code map, §7
+// status table to update when retokenising this file).
 
 import * as THREE from "three";
 
