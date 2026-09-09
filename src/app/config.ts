@@ -26,15 +26,56 @@ export const CONFIG = {
     CONTACT_STARTLE: 3,
     NOISE_AMP: 0.04,
     NOISE_HZ: 1.3,
+    YAW_JITTER_DT: 0.05,
   },
   sensing: {
     PROX_MAX: 20,
     EPS: 0.05,
+    EPS2: 0.05 * 0.05,
     LOOM_CONE_DEG: 50,
     TAU_PROX: 0.08,
     TAU_LOOM: 0.06,
+    LIGHT_MAX: 4,
+    TAU_LIGHT: 0.12,
+    EYE_SPLAY: 0.6,
+    WIND: { x: 1, y: 0, z: 0.35 },
+    WIND_SPEED: 0.5,
+    WIND_TURN_HZ: 0.03,
+    TAU_WIND: 0.2,
   },
-  camera: { OFFSET: { x: -3.2, y: 1.4, z: 0 }, LOOKAHEAD: 2.5, omega: 14 },
+  lif: {
+    defaults: { dtMs: 5, tauMMs: 20, vThreshold: 1, vReset: 0, refracMs: 2, noiseSigma: 0.02 },
+    ranges: {
+      dtMs: [1, 10],
+      tauMMs: [2, 80],
+      vThreshold: [0.3, 3],
+      vReset: [-1, 0.5],
+      refracMs: [0, 10],
+      noiseSigma: [0, 0.3],
+    },
+  },
+  audio: {
+    ambientFreqs: [55, 82.5, 110],
+    lowpassHz: 380,
+    lfoHz: 0.05,
+    WING_HZ_MIN: 120,
+    WING_HZ_MAX: 900,
+    WING_GAIN_MAX: 0.15,
+    blip: { freq: 660, dur: 0.12, gain: 0.25 },
+    masterDefault: 0.6,
+    startMuted: true,
+  },
+  hud: {
+    // Plan 2c docked-card region the HUD keeps clear (viewport fracs, 1080p ref).
+    reservedRect: { x: 0.0125, y: 0.022, w: 0.156, h: 0.322 },
+  },
+  camera: {
+    OFFSET: { x: -3.2, y: 1.4, z: 0 },
+    LOOKAHEAD: 2.5,
+    omega: 14,
+    IDLE_SWAY_HZ: 0.1,
+    IDLE_SWAY_AMP: 0.02,
+  },
   // The "Deep Field" aesthetic pass (Plan 02b) extends this block with motion +
   // post-FX dials (BREATH_*, BOB_*, ESCAPE_KICK, BLOOM_*, VIGNETTE, GRAIN,
   // EXPOSURE) and turns `grain` into a float. See
@@ -54,8 +95,19 @@ export const CONFIG = {
     FLAP_MIN: 8,
     FLAP_MAX: 34,
     FLAP_AMP: 0.9,
-    grid: true,
-    grain: false,
+    theme: "dark",
+    BOB_HZ: 0.5,
+    BOB_AMP: 0.15,
+    ESCAPE_KICK: { posShove: 0.6, rollDeg: 1.5, decayS: 0.3 },
+    LOAD: { bannerS: 1.0, igniteS: 0.6, hudS: 0.8 },
+    EXPOSURE: 1.0,
+    // "bloom off" is STRENGTH: 0 (not null) so config.test.ts's finite/shape checks stay simple.
+    BLOOM: {
+      dark: { STRENGTH: 0.7, RADIUS: 0.4, THRESHOLD: 0.6 },
+      light: { STRENGTH: 0, RADIUS: 0.4, THRESHOLD: 0.9 },
+    },
+    VIGNETTE: { dark: 0.2, light: 0.12 },
+    GRAIN: { dark: 0.035, light: 0.015 },
     // Brain point cloud lives as one big fixed object in the world. The centre
     // sits on the fly's cruise line between its start (0,4,0) and the escape
     // block (9,4,0), so the fly flies through the connectome.
