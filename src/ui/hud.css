@@ -1,0 +1,202 @@
+/* Deep Field HUD — faint capture-overlay instrumentation pushed to the edges.
+   No solid panels: hairlines and low opacity over the void, everything lifting
+   to --hud-bright on hover/focus. See docs/2026-09-09-visual-direction.md §3-§4.
+   This file is declarative glue — not unit-tested (vitest env is `node`). */
+
+@import "./fonts/fonts.css";
+
+/* ---- palette tokens (visual-direction.md §2.5) ------------------------------ */
+
+#hud[data-theme="dark"] {
+  --hud-line: rgba(200, 225, 255, 0.22);
+  --hud-text: rgba(214, 230, 255, 0.72);
+  --hud-bright: rgba(236, 245, 255, 0.96);
+  --hud-fill: #4a8fa8; /* `neuron` — resting connectome cyan-teal */
+}
+
+#hud[data-theme="light"] {
+  --hud-line: rgba(24, 44, 74, 0.24);
+  --hud-text: rgba(24, 44, 74, 0.78);
+  --hud-bright: rgba(10, 22, 42, 0.96);
+  --hud-fill: #3a7f98;
+}
+
+/* ---- layer --------------------------------------------------------------------
+   Full-viewport, click-through. Children opt back in with pointer-events:auto. */
+
+#hud {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  color: var(--hud-text);
+  font: 12px/1.4 "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+#hud [hidden] {
+  display: none !important;
+}
+
+#hud button {
+  font: inherit;
+  color: var(--hud-text);
+  background: none;
+  border: 1px solid var(--hud-line);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+#hud button:hover,
+#hud button:focus-visible {
+  color: var(--hud-bright);
+  border-color: var(--hud-bright);
+  outline: none;
+}
+
+/* ---- reticle frame: 1px inset rect with the four corners open --------------- */
+
+#hud::before {
+  content: "";
+  position: fixed;
+  inset: 10px;
+  border: 1px solid var(--hud-line);
+  pointer-events: none;
+  /* union of a full-width mid-band and a full-height mid-band leaves only the
+     four corner squares uncovered → the border reads as open-corner ticks. */
+  -webkit-mask:
+    linear-gradient(#000 0 0) center / calc(100% - 112px) 100% no-repeat,
+    linear-gradient(#000 0 0) center / 100% calc(100% - 112px) no-repeat;
+  mask:
+    linear-gradient(#000 0 0) center / calc(100% - 112px) 100% no-repeat,
+    linear-gradient(#000 0 0) center / 100% calc(100% - 112px) no-repeat;
+}
+
+/* ---- top-right header: project name + live sim_hz -------------------------- */
+
+.hud-header {
+  position: fixed;
+  top: 12px;
+  right: 24px;
+  display: flex;
+  gap: 14px;
+  align-items: baseline;
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--hud-text);
+}
+
+.hud-header__name {
+  color: var(--hud-text);
+}
+
+.hud-header__hz {
+  color: var(--hud-bright);
+}
+
+/* ---- left-edge vertical "depth" control ------------------------------------
+   Starts below y:384px to clear the Plan 2c docked card region. */
+
+.hud-depth {
+  position: fixed;
+  left: 18px;
+  top: 384px;
+  bottom: 120px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 10px;
+}
+
+.hud-depth__input {
+  pointer-events: auto;
+  flex: 1 1 auto;
+  /* vertical range: bottom = core_count, top = full N (log scale in scale.ts) */
+  writing-mode: vertical-lr;
+  direction: rtl;
+  inline-size: 4px;
+  accent-color: var(--hud-fill);
+  background: transparent;
+}
+
+.hud-depth__label {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--hud-text);
+  writing-mode: horizontal-tb;
+}
+
+.hud-depth__caption {
+  font-size: 11px;
+  color: var(--hud-text);
+  writing-mode: horizontal-tb;
+}
+
+/* ---- bottom meter row ----------------------------------------------------- */
+
+.hud-meters {
+  position: fixed;
+  left: 24px;
+  right: 24px;
+  bottom: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+}
+
+.hud-meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-meter__label {
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--hud-text);
+}
+
+.hud-meter__track {
+  position: relative;
+  inline-size: 64px;
+  block-size: 4px;
+  background: var(--hud-line);
+  overflow: hidden;
+}
+
+.hud-meter__fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: 0%;
+  background: var(--hud-fill);
+}
+
+.hud-meter__value {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--hud-text);
+  min-inline-size: 3ch;
+  text-align: right;
+}
+
+/* ---- pause toggle ------------------------------------------------------------ */
+
+.hud-pause {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.hud-pause[data-paused="true"] {
+  color: var(--hud-bright);
+  border-color: var(--hud-bright);
+}

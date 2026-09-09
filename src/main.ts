@@ -7,6 +7,8 @@ import graphUrl from "../pipeline/out/fixture/graph.bin?url";
 import groupsJson from "../pipeline/out/fixture/groups.json";
 import manifestJson from "../pipeline/out/fixture/manifest.json";
 
+import "./ui/hud.css";
+
 import { createSimBridge } from "./bridge/sim-bridge";
 import * as sensing from "./sensing/sensing";
 import { Body } from "./body/body";
@@ -22,6 +24,8 @@ import { updateFollowCamera } from "./viz/follow-camera";
 import { CONFIG } from "./app/config";
 import { worldQuery } from "./app/world-query";
 import { Loop, type FrameView } from "./app/loop";
+import { Hud } from "./ui/hud";
+import type { HudControls, HudModel } from "./ui/controls";
 import * as THREE from "three";
 import type { BufferAttribute } from "three";
 
@@ -33,7 +37,6 @@ async function fetchBuffer(url: string): Promise<ArrayBuffer> {
 
 async function main(): Promise<void> {
   const canvas = document.getElementById("view") as HTMLCanvasElement;
-  const hud = document.getElementById("hud")!;
 
   // 1. Fixture assets.
   const [neurons, graph] = await Promise.all([fetchBuffer(neuronsUrl), fetchBuffer(graphUrl)]);
@@ -54,10 +57,44 @@ async function main(): Promise<void> {
   const graphFile = parseGraph(graph);
 
   // 4. Init the sim on the fixture (transfers `neurons` + `graph` to the worker).
-  const { nNeurons, roleTable } = await bridge.init(
+  const { nNeurons, coreCount, roleTable } = await bridge.init(
     { neurons, graph, groups: groupsJson },
     { seed: CONFIG.sim.seed, snapMax: CONFIG.sim.snapMax },
   );
+
+  // --- Plan 02b: HUD ---
+  // Edge-instrument DOM overlay. Only `setActiveCount` / `setPaused` are wired
+  // this plan; the rest are no-op stubs until Tasks 8/9/10 implement them.
+  const groups = [...new Set(neuronsFile.groupId)].sort((a, b) => a - b);
+  let currentActiveCount = nNeurons;
+  const hudModel: HudModel = {
+    coreCount,
+    nNeurons,
+    groups,
+    lif: CONFIG.lif,
+    scene: SCENE,
+    theme: CONFIG.aesthetic.theme,
+    reservedRect: CONFIG.hud.reservedRect,
+  };
+  const controls: HudControls = {
+    setActiveCount: (n) => {
+      currentActiveCount = n;
+      bridge.setActiveCount(n);
+    },
+    setPaused: (p) => (p ? bridge.pause() : bridge.resume()),
+    setTheme: () => {}, // Task 8/9/10
+    setParams: () => {}, // Task 8/9/10
+    setGroupVisible: () => {}, // Task 8/9/10
+    setMuted: () => {}, // Task 8/9/10
+    setVolume: () => {}, // Task 8/9/10
+    addObject: () => {}, // Task 8/9/10
+    updateObject: () => {}, // Task 8/9/10
+    removeObject: () => {}, // Task 8/9/10
+    updateLight: () => {}, // Task 8/9/10
+    resetScene: () => {}, // Task 8/9/10
+  };
+  const hud = new Hud(document.getElementById("hud")!, controls, hudModel);
+  // --- end Plan 02b: HUD ---
 
   // 5. Renderer + brainviz + world + fly.
   const renderer = createRenderer(canvas);
@@ -116,8 +153,14 @@ async function main(): Promise<void> {
     renderer.camera.position.set(cam.position.x, cam.position.y, cam.position.z);
     renderer.camera.lookAt(cam.lookAt.x, cam.lookAt.y, cam.lookAt.z);
 
-    const fps = dt > 0 ? 1 / dt : 0;
-    hud.textContent = `sim ${view.simHz.toFixed(0)} Hz · ${fps.toFixed(0)} fps`;
+    // Plan 02b: HUD sink.
+    hud.update({
+      readouts: view.readouts,
+      sensory: view.sensory,
+      simHz: view.simHz,
+      activeCount: currentActiveCount,
+      paused: view.paused,
+    });
     renderer.render();
   };
 
