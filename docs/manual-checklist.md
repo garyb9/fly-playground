@@ -2,16 +2,23 @@
 
 ## Plan 02 — minimal brain→fly loop (verified 2026-09-09, commit `ac22595`)
 
-Ticked items are covered by an automated test in the suite (`yarn test`, 67
+Ticked items are covered by an automated test in the suite (`yarn test`, 68
 passing). Unticked items need a real browser + display: the headless suite
 cannot observe colour, motion, or camera feel, so they are left for a live
 check with the automated coverage that does exist noted alongside.
 
 - [x] Fly hovers with no drift-to-ground at rest readouts — holds altitude
-      within ±0.8 m over a 5 s rest run (`src/body/body.test.ts` › "with hover
-      readouts the fly holds altitude within a small band"; measured |dy| ≈
-      0.53 m after the Task 13 noise/drag tuning). The plan's ±N-over-10 s
-      wording is exercised at 300 steps / 5 s here.
+      within ±0.6 m over a full 10 s rest run (`src/body/body.test.ts` › "with
+      hover readouts the fly holds altitude within a small band"; measured
+      |dy| ≈ 0.41 m, bounded — not divergent). The at-rest roll bias is fixed
+      at source in `src/body/wrench.ts`: both wings take one shared noise
+      sample, so noise still jitters the symmetric lift/thrust term but cancels
+      out of the asymmetric roll term. The sibling test "with hover readouts
+      the fly never rolls" asserts `angVel.x` / `angVel.z` are exactly 0 and
+      the lift axis stays world-vertical, so the tilted-lift spiral into the
+      ground can no longer occur. (Heading still yaws slowly under constant
+      cruise thrust from the independent yaw-channel noise — expected wander of
+      a cruising fly, not the roll bug.)
 - [ ] Fly cruises +X and the block at (9,4,0) triggers a giant-fiber escape
       burst + veer-away — pending live check (needs a browser; automated
       coverage is piecewise end-to-end: `src/body/body.test.ts` › "cruise

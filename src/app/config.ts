@@ -24,7 +24,7 @@ export const CONFIG = {
     BOUNCE: 0.35,
     FLY_R: 0.25,
     CONTACT_STARTLE: 3,
-    NOISE_AMP: 0.02,
+    NOISE_AMP: 0.04,
     NOISE_HZ: 1.3,
   },
   sensing: {

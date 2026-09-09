@@ -24,8 +24,14 @@ export function mapReadouts(
   tSeconds: number,
 ): { wrench: Wrench; esc: EscapeState; firedImpulse: Vec3 | null } {
   const n = (ch: number) => noise.at(ch, tSeconds) * P.NOISE_AMP;
-  const wl = (readouts.wing_l ?? 0) + n(0);
-  const wr = (readouts.wing_r ?? 0) + n(1);
+  // One shared sample for both wings: the ValueNoise channels are not zero-mean
+  // over a short window, so independent wing noise left a standing `wl - wr` DC
+  // bias that slowly rolled a resting fly and made it spiral off. Correlated
+  // noise perturbs the symmetric term `s = (wl+wr)/2` (harmless lift/thrust
+  // jitter — the feature) but cancels out of the asymmetric term `a = wl - wr`.
+  const wingNoise = n(0);
+  const wl = (readouts.wing_l ?? 0) + wingNoise;
+  const wr = (readouts.wing_r ?? 0) + wingNoise;
   const thrust = (readouts.thrust ?? 0) + n(2);
   const yaw = (readouts.yaw_torque ?? 0) + n(3);
   const escape = readouts.escape ?? 0;
