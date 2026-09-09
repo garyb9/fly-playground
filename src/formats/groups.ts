@@ -6,6 +6,9 @@ export interface GroupsFile {
 }
 
 export function parseGroups(json: unknown): GroupsFile {
+  // Permissive by design (brief-verbatim, accepted in review): parse defensively
+  // from an untyped JSON blob and coerce each field below.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const j = json as any;
   if (!j || typeof j !== "object") throw new Error("groups.json not an object");
   return {

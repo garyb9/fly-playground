@@ -31,11 +31,15 @@ export function parseGraph(buf: ArrayBuffer): GraphFile {
 
   const offsets = new Uint32Array(buf.slice(32, 32 + offBytes));
   const targets = new Uint32Array(buf.slice(32 + offBytes, 32 + offBytes + tgtBytes));
-  const weights = new Int16Array(buf.slice(32 + offBytes + tgtBytes, 32 + offBytes + tgtBytes + wtBytes));
+  const weights = new Int16Array(
+    buf.slice(32 + offBytes + tgtBytes, 32 + offBytes + tgtBytes + wtBytes),
+  );
 
-  if (offsets[0] !== 0 || offsets[nNodes] !== nEdges) throw coded("graph.bin bad offsets", "BAD_OFFSETS");
+  if (offsets[0] !== 0 || offsets[nNodes] !== nEdges)
+    throw coded("graph.bin bad offsets", "BAD_OFFSETS");
   for (let i = 0; i < nNodes; i++)
-    if (offsets[i]! > offsets[i + 1]!) throw coded("graph.bin non-monotonic offsets", "BAD_OFFSETS");
+    if (offsets[i]! > offsets[i + 1]!)
+      throw coded("graph.bin non-monotonic offsets", "BAD_OFFSETS");
 
   // Target-range parity with the Rust decoder (`format.rs` rejects `t >= n_nodes`
   // with `BadOffsets`): an out-of-range target would otherwise `row()`-index a

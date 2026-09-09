@@ -1,9 +1,9 @@
 # fly-playground
 
-A browser playground where a simplified simulation of the *male Drosophila*
+A browser playground where a simplified simulation of the _male Drosophila_
 connectome (Janelia FlyEM / Google Research **MaleCNS v1.0**) drives a 3D fly
-flying freely through a small world. Sensory stimulus goes *into* the network,
-motor activity comes *out* of it, and the whole brain is drawn as a point cloud
+flying freely through a small world. Sensory stimulus goes _into_ the network,
+motor activity comes _out_ of it, and the whole brain is drawn as a point cloud
 that pulses while the fly flies.
 
 This is an **engineered mapping**, not a living fly and not a consciousness
@@ -36,13 +36,13 @@ world, sensing, UI, audio).
 
 ## Stack
 
-| Part | Tech |
-| --- | --- |
-| Offline data pipeline | Python (pandas, pyarrow, neuprint-python, navis) |
-| Simulation core | Rust → WASM (`wasm-pack`, `wasm-bindgen`) |
-| App shell | TypeScript + Three.js, bundled with Vite |
-| Audio | Web Audio API |
-| CI | `cargo test`, `wasm-pack build`, `vitest`, `tsc --noEmit`, `vite build` |
+| Part                  | Tech                                                                    |
+| --------------------- | ----------------------------------------------------------------------- |
+| Offline data pipeline | Python (pandas, pyarrow, neuprint-python, navis)                        |
+| Simulation core       | Rust → WASM (`wasm-pack`, `wasm-bindgen`)                               |
+| App shell             | TypeScript + Three.js, bundled with Vite                                |
+| Audio                 | Web Audio API                                                           |
+| CI                    | `cargo test`, `wasm-pack build`, `vitest`, `tsc --noEmit`, `vite build` |
 
 ## Quickstart (once implemented)
 
@@ -62,12 +62,12 @@ fixture under `pipeline/out/`.
 
 ## Controls (target)
 
-| Key / control | Action |
-| --- | --- |
-| Neuron slider | how much of the brain to integrate (core … 166k) |
-| Camera toggle | follow-the-fly ↔ free-fly through the brain |
-| Audio controls | mute / volume |
-| Readout + sensory meters | watch stimulus → brain → motion |
+| Key / control            | Action                                           |
+| ------------------------ | ------------------------------------------------ |
+| Neuron slider            | how much of the brain to integrate (core … 166k) |
+| Camera toggle            | follow-the-fly ↔ free-fly through the brain      |
+| Audio controls           | mute / volume                                    |
+| Readout + sensory meters | watch stimulus → brain → motion                  |
 
 ## Documentation
 
@@ -82,5 +82,5 @@ fixture under `pipeline/out/`.
 Project code: TBD.
 
 The MaleCNS dataset is **CC-BY 4.0**. Any build that ships derived connectome
-data must cite: *FlyEM / University of Cambridge / MRC LMB / Google Research —
-MaleCNS v1.0*. See [`docs/references.md`](docs/references.md).
+data must cite: _FlyEM / University of Cambridge / MRC LMB / Google Research —
+MaleCNS v1.0_. See [`docs/references.md`](docs/references.md).
