@@ -16,8 +16,13 @@ projects that inspired this and the data it is built on.
 Plan 01 (foundations + sim core) complete: repo toolchain, synthetic fixture,
 Rust + TypeScript decoders, and a deterministic Rust→WASM LIF `Sim`
 (`crates/fly-sim`) that steps the fixture with inject / readout / snapshot and a
-golden-trace lock. Next: Plan 02 (app shell — worker bridge, brainviz, body,
-world, sensing, UI, audio).
+golden-trace lock.
+
+Plan 02 (app shell) complete: the fixture brain flies the fly through a
+proximity + looming → escape loop in the browser, over a `SharedArrayBuffer`
+worker bridge with a `postMessage` fallback, with the connectome drawn as a
+Three.js point cloud. Next: Plan 02b (light / wind sensing, HUD slider + meters,
+brain camera mode, audio, object UI, aesthetic pass).
 
 ## What it does (target)
 

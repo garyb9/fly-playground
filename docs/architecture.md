@@ -71,6 +71,8 @@ messages.
 
 Implemented in Plan 01: `crates/fly-sim/src/core/{format,lif,rng,sim,roles}.rs`, `crates/fly-sim/src/lib.rs` (`Sim`), `src/formats/*.ts`, `pipeline/gen_fixture.py`.
 
+Implemented in Plan 02: `src/bridge/*` (SAB + postMessage `SimBridge`, 200 Hz worker), `src/sim/roles.ts`, `src/sensing/*`, `src/body/*`, `src/viz/*`, `src/app/{config,loop,world-query}.ts`, `src/scene.config.ts`, `src/main.ts`. Deferred to Plan 02b: `light_*` / `wind_*` sensing (slots are wired but held at zero), the HUD neuron-count slider and readout/sensory meters, the brain (OrbitControls) camera mode, and audio.
+
 ### `body/`
 6DOF rigid body: `position: Vec3`, `orientation: Quat`, `vel: Vec3`,
 `angVel: Vec3`. Per frame maps readouts → wrench:
