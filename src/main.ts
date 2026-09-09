@@ -1,2 +1,119 @@
-import { VERSION } from "./version";
-document.getElementById("app")!.textContent = `fly-playground ${VERSION}`;
+// Browser boot: load the synthetic fixture, spin up the sim worker, build the
+// brainviz + world + fly, and run the RAF loop. Not unit-tested (DOM + Worker)
+// but must `tsc`-compile and `vite build`.
+
+import neuronsUrl from "../pipeline/out/fixture/neurons.bin?url";
+import graphUrl from "../pipeline/out/fixture/graph.bin?url";
+import groupsJson from "../pipeline/out/fixture/groups.json";
+import manifestJson from "../pipeline/out/fixture/manifest.json";
+
+import { createSimBridge } from "./bridge/sim-bridge";
+import * as sensing from "./sensing/sensing";
+import { Body } from "./body/body";
+import type { Vec3 } from "./body/types";
+import { v } from "./body/types";
+import { SCENE } from "./scene.config";
+import { parseNeurons } from "./formats/neurons";
+import { parseGraph } from "./formats/graph";
+import { buildBrainPoints, buildCoreEdges, buildWorld } from "./viz/builders";
+import { createRenderer } from "./viz/renderer";
+import { Fly } from "./viz/fly";
+import { updateFollowCamera } from "./viz/follow-camera";
+import { CONFIG } from "./app/config";
+import { worldQuery } from "./app/world-query";
+import { Loop, type FrameView } from "./app/loop";
+import type { BufferAttribute } from "three";
+
+async function fetchBuffer(url: string): Promise<ArrayBuffer> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`failed to load ${url}: ${res.status}`);
+  return res.arrayBuffer();
+}
+
+async function main(): Promise<void> {
+  const canvas = document.getElementById("view") as HTMLCanvasElement;
+  const hud = document.getElementById("hud")!;
+
+  // 1. Fixture assets.
+  const [neurons, graph] = await Promise.all([fetchBuffer(neuronsUrl), fetchBuffer(graphUrl)]);
+  const scaleFactor = (manifestJson as { scale_factor?: number }).scale_factor ?? 1;
+
+  // 2. Sim bridge over a module worker.
+  const bridge = createSimBridge(
+    () => new Worker(new URL("./bridge/sim.worker.ts", import.meta.url), { type: "module" }),
+  );
+
+  // 3. Init the sim on the fixture.
+  const { nNeurons, roleTable } = await bridge.init(
+    { neurons, graph, groups: groupsJson },
+    { seed: CONFIG.sim.seed, snapMax: CONFIG.sim.snapMax },
+  );
+
+  // 4. Renderer + brainviz + world + fly.
+  const renderer = createRenderer(canvas);
+  const neuronsFile = parseNeurons(neurons);
+  const graphFile = parseGraph(graph);
+
+  const points = buildBrainPoints(neuronsFile, scaleFactor);
+  const edges = buildCoreEdges(graphFile, neuronsFile.coreCount);
+  // Constraint #1: buildCoreEdges' geometry is index-only — share the point
+  // cloud's position buffer so the LineSegments actually renders.
+  edges.geometry.setAttribute("position", points.geometry.getAttribute("position"));
+
+  const world3d = buildWorld(SCENE);
+  const fly = new Fly();
+  renderer.scene.add(points, edges, world3d, fly.object3d);
+
+  const aActivity = points.geometry.getAttribute("aActivity") as BufferAttribute;
+  const aActivityArr = aActivity.array as Float32Array;
+
+  // 5. Body + collision world.
+  const body = new Body(SCENE.fly.start, SCENE.fly.heading);
+  const world = worldQuery(SCENE);
+
+  // 6. Per-frame view sink.
+  let camPos: Vec3 = v(
+    SCENE.fly.start.x + CONFIG.camera.OFFSET.x,
+    SCENE.fly.start.y + CONFIG.camera.OFFSET.y,
+    SCENE.fly.start.z + CONFIG.camera.OFFSET.z,
+  );
+  let lastFrameMs = performance.now();
+
+  const onFrame = (view: FrameView): void => {
+    const now = performance.now();
+    const dt = Math.min((now - lastFrameMs) / 1000, CONFIG.loop.MAX_FRAME_DT);
+    lastFrameMs = now;
+
+    // Constraint #3: push per-neuron activity into the shader attribute.
+    const n = Math.min(view.activity.length, aActivityArr.length);
+    aActivityArr.set(view.activity.subarray(0, n));
+    aActivity.needsUpdate = true;
+
+    fly.update(view.readouts, view.pose, dt);
+
+    const cam = updateFollowCamera(camPos, view.pose, dt);
+    camPos = cam.position;
+    renderer.camera.position.set(cam.position.x, cam.position.y, cam.position.z);
+    renderer.camera.lookAt(cam.lookAt.x, cam.lookAt.y, cam.lookAt.z);
+
+    hud.textContent = `sim ${view.simHz.toFixed(0)} Hz`;
+    renderer.render();
+  };
+
+  const loop = new Loop({ bridge, body, sensing, roleTable, world, onFrame });
+
+  // 7. Size to the viewport.
+  const resize = (): void => renderer.resize(window.innerWidth, window.innerHeight);
+  window.addEventListener("resize", resize);
+  resize();
+
+  // 8. Run the whole cloud.
+  bridge.setActiveCount(nNeurons);
+  loop.start();
+}
+
+main().catch((err) => {
+  const hud = document.getElementById("hud");
+  if (hud) hud.textContent = `boot failed: ${String(err)}`;
+  throw err;
+});

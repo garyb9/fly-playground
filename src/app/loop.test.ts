@@ -1,0 +1,98 @@
+import { expect, test } from "vitest";
+import { Loop, type FrameView } from "./loop";
+import { Body } from "../body/body";
+import { v } from "../body/types";
+import type { WorldQuery } from "../body/types";
+import type { RoleTable } from "../sim/roles";
+import type { SimBridge } from "../bridge/sim-bridge";
+import * as sensing from "../sensing/sensing";
+
+const rt: RoleTable = {
+  input: { light_l: 0, light_r: 1, looming: 2, proximity: 3, wind_l: 4, wind_r: 5 },
+  readout: { escape: 0, thrust: 1, wing_l: 2, wing_r: 3, yaw_torque: 4 },
+  inputOrder: ["light_l", "light_r", "looming", "proximity", "wind_l", "wind_r"],
+  readoutOrder: ["escape", "thrust", "wing_l", "wing_r", "yaw_torque"],
+};
+
+function fakeBridge() {
+  const state = {
+    readouts: new Float32Array(5),
+    activity: new Float32Array(8),
+    simHz: 200,
+    tick: 0,
+  };
+  const stim: Float32Array[] = [];
+  const obj: SimBridge = {
+    init: async () => ({ nNeurons: 0, coreCount: 0, roleTable: rt }),
+    setStimulus: (x: Float32Array) => stim.push(x.slice()),
+    readState: () => state,
+    setActiveCount() {},
+    setParams() {},
+    pause() {},
+    resume() {},
+    reset() {},
+    dispose() {},
+  };
+  return { obj, stim, state };
+}
+
+const world: WorldQuery = { aabbs: [], bounds: { min: v(-20, 0, -20), max: v(20, 20, 20) } };
+
+test("frameOnce feeds sensing→bridge and builds a named Readouts view for the body", () => {
+  const fb = fakeBridge();
+  fb.state.readouts[rt.readout.wing_l!] = 0.3;
+  let seen: FrameView | undefined;
+  const loop = new Loop({
+    bridge: fb.obj,
+    body: new Body(v(0, 4, 0), 0),
+    sensing,
+    roleTable: rt,
+    world,
+    onFrame: (fv) => (seen = fv),
+  });
+  loop.frameOnce(0); // first call only seeds the clock — no pipeline, no push
+  loop.frameOnce(16);
+  loop.frameOnce(32);
+  expect(fb.stim.length).toBe(2); // two real frames
+  expect(fb.stim[1]!.length).toBe(6); // stimulus vector = nInputRoles
+  expect(seen!.readouts.wing_l).toBeCloseTo(0.3, 6); // Float32Array → named view (f32 round-trip)
+  expect(seen!.pose.position).toBeDefined();
+});
+
+test("dt is clamped so a long stall cannot tunnel", () => {
+  const fb = fakeBridge();
+  const body = new Body(v(0, 4, 0), 0);
+  const loop = new Loop({
+    bridge: fb.obj,
+    body,
+    sensing,
+    roleTable: rt,
+    world,
+    onFrame: () => {},
+  });
+  loop.frameOnce(0);
+  loop.frameOnce(10_000); // 10s stall
+  expect(Number.isFinite(body.pose().position.y)).toBe(true);
+  expect(Math.abs(body.pose().position.y)).toBeLessThan(1e4);
+});
+
+test("a collision this frame adds a proximity startle to next frame's stimulus", () => {
+  const fb = fakeBridge();
+  const wallWorld: WorldQuery = {
+    aabbs: [{ min: v(-1, 0, -1), max: v(1, 8, 1) }],
+    bounds: world.bounds,
+  };
+  const loop = new Loop({
+    bridge: fb.obj,
+    body: new Body(v(0.5, 4, 0), 0),
+    sensing,
+    roleTable: rt,
+    world: wallWorld,
+    onFrame: () => {},
+  });
+  loop.frameOnce(0);
+  loop.frameOnce(16); // body starts inside the wall → contact
+  loop.frameOnce(32);
+  const prox = fb.stim[fb.stim.length - 1]![rt.input.proximity!]!;
+  expect(prox).toBeGreaterThan(0);
+});
