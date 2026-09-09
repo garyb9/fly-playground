@@ -6,6 +6,7 @@ import type { WorldQuery } from "../body/types";
 import type { RoleTable } from "../sim/roles";
 import type { SimBridge } from "../bridge/sim-bridge";
 import * as sensing from "../sensing/sensing";
+import { CONFIG } from "./config";
 
 const rt: RoleTable = {
   input: { light_l: 0, light_r: 1, looming: 2, proximity: 3, wind_l: 4, wind_r: 5 },
@@ -77,22 +78,41 @@ test("dt is clamped so a long stall cannot tunnel", () => {
 });
 
 test("a collision this frame adds a proximity startle to next frame's stimulus", () => {
-  const fb = fakeBridge();
-  const wallWorld: WorldQuery = {
-    aabbs: [{ min: v(-1, 0, -1), max: v(1, 8, 1) }],
-    bounds: world.bounds,
+  // Run the identical fly + frame sequence twice, changing ONLY whether the
+  // fly's collision sphere clips an obstacle. The contacting AABB sits at a
+  // corner offset from the fly: `resolveSphere` reports contact (the sphere
+  // overlaps the radius-expanded box) but none of the six cardinal sensor rays
+  // enter the box, so `sensing` contributes ~0 proximity in BOTH runs. The
+  // frame-after-contact difference is therefore the raw CONTACT_STARTLE the loop
+  // injects — nothing else. (The old assertion `prox > 0` was vacuous: the fly
+  // started inside the AABB, so `sensing` alone already saturated proximity and
+  // the test passed even with the startle wiring deleted from loop.ts.)
+  const runFrames = (w: WorldQuery): number => {
+    const fb = fakeBridge();
+    const loop = new Loop({
+      bridge: fb.obj,
+      body: new Body(v(0, 4, 0), 0),
+      sensing,
+      roleTable: rt,
+      world: w,
+      onFrame: () => {},
+    });
+    loop.frameOnce(0);
+    loop.frameOnce(16); // contact (if any) happens in this frame's body.step
+    loop.frameOnce(32); // startle (if any) lands in this frame's stimulus
+    return fb.stim[fb.stim.length - 1]![rt.input.proximity!]!;
   };
-  const loop = new Loop({
-    bridge: fb.obj,
-    body: new Body(v(0.5, 4, 0), 0),
-    sensing,
-    roleTable: rt,
-    world: wallWorld,
-    onFrame: () => {},
+
+  const nonContactProx = runFrames({ aabbs: [], bounds: world.bounds });
+  const contactProx = runFrames({
+    aabbs: [{ min: v(0.1, 4.1, 0.1), max: v(3, 7, 3) }],
+    bounds: world.bounds,
   });
-  loop.frameOnce(0);
-  loop.frameOnce(16); // body starts inside the wall → contact
-  loop.frameOnce(32);
-  const prox = fb.stim[fb.stim.length - 1]![rt.input.proximity!]!;
-  expect(prox).toBeGreaterThan(0);
+
+  // The non-contacting run's proximity must stay well below PROX_MAX so the
+  // startle is unambiguously visible in the delta.
+  expect(nonContactProx).toBeLessThan(CONFIG.sensing.PROX_MAX - CONFIG.physics.CONTACT_STARTLE);
+  expect(contactProx).toBeCloseTo(nonContactProx + CONFIG.physics.CONTACT_STARTLE, 1);
+  expect(contactProx - nonContactProx).toBeGreaterThan(2.5);
+  expect(contactProx - nonContactProx).toBeLessThan(3.5);
 });

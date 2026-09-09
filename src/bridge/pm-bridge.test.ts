@@ -34,6 +34,41 @@ test("init resolves on ready and exposes roleTable", async () => {
   expect(info.roleTable.readoutOrder).toEqual(["escape"]);
 });
 
+test("init consumes (transfers) the caller's neurons/graph buffers", async () => {
+  // A FakeWorker that performs a REAL structured-clone transfer, so the source
+  // ArrayBuffers detach exactly as they do across a Worker boundary. This is the
+  // regression guard for the main.ts boot bug: `bridge.init` hands the caller's
+  // `neurons`/`graph` to the worker in the postMessage transfer list, which
+  // detaches them synchronously — so `main()` MUST `parseNeurons`/`parseGraph`
+  // BEFORE calling `bridge.init`, never after.
+  class TransferringWorker {
+    onmessage: ((e: { data: FromWorker }) => void) | null = null;
+    postMessage(m: ToWorker, transfer: Transferable[] = []) {
+      structuredClone(m, { transfer }); // really detaches everything in `transfer`
+      queueMicrotask(() =>
+        this.onmessage?.({
+          data: {
+            t: "ready",
+            nNeurons: 4,
+            coreCount: 2,
+            groups: { roles: { input: { a: [0] }, readout: { b: [1] } } },
+          },
+        }),
+      );
+    }
+    terminate() {}
+  }
+
+  const fw = new TransferringWorker();
+  const b = new PmBridge(() => fw as unknown as Worker);
+  const neurons = new ArrayBuffer(16);
+  const graph = new ArrayBuffer(16);
+  expect(neurons.byteLength).toBe(16);
+  await b.init({ neurons, graph, groups: {} }, { seed: 1, snapMax: 16 });
+  expect(neurons.byteLength).toBe(0);
+  expect(graph.byteLength).toBe(0);
+});
+
 test("setStimulus posts a stimulus message; readState returns last state", async () => {
   const fw = new FakeWorker();
   fw.handler = (m, reply) => {

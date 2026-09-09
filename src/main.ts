@@ -43,16 +43,23 @@ async function main(): Promise<void> {
     () => new Worker(new URL("./bridge/sim.worker.ts", import.meta.url), { type: "module" }),
   );
 
-  // 3. Init the sim on the fixture.
+  // 3. Parse the fixture buffers BEFORE init: both transports transfer
+  //    `neurons`/`graph` to the worker via the postMessage transfer list, which
+  //    detaches the source ArrayBuffers synchronously (byteLength -> 0).
+  //    `parseNeurons` builds fresh typed arrays and `parseGraph` uses
+  //    `buf.slice(...)`, so neither retains a view — the buffers can still be
+  //    transferred unchanged after parsing.
+  const neuronsFile = parseNeurons(neurons);
+  const graphFile = parseGraph(graph);
+
+  // 4. Init the sim on the fixture (transfers `neurons` + `graph` to the worker).
   const { nNeurons, roleTable } = await bridge.init(
     { neurons, graph, groups: groupsJson },
     { seed: CONFIG.sim.seed, snapMax: CONFIG.sim.snapMax },
   );
 
-  // 4. Renderer + brainviz + world + fly.
+  // 5. Renderer + brainviz + world + fly.
   const renderer = createRenderer(canvas);
-  const neuronsFile = parseNeurons(neurons);
-  const graphFile = parseGraph(graph);
 
   const points = buildBrainPoints(neuronsFile, scaleFactor);
   const edges = buildCoreEdges(graphFile, neuronsFile.coreCount);
@@ -67,11 +74,11 @@ async function main(): Promise<void> {
   const aActivity = points.geometry.getAttribute("aActivity") as BufferAttribute;
   const aActivityArr = aActivity.array as Float32Array;
 
-  // 5. Body + collision world.
+  // 6. Body + collision world.
   const body = new Body(SCENE.fly.start, SCENE.fly.heading);
   const world = worldQuery(SCENE);
 
-  // 6. Per-frame view sink.
+  // 7. Per-frame view sink.
   let camPos: Vec3 = v(
     SCENE.fly.start.x + CONFIG.camera.OFFSET.x,
     SCENE.fly.start.y + CONFIG.camera.OFFSET.y,
@@ -96,18 +103,19 @@ async function main(): Promise<void> {
     renderer.camera.position.set(cam.position.x, cam.position.y, cam.position.z);
     renderer.camera.lookAt(cam.lookAt.x, cam.lookAt.y, cam.lookAt.z);
 
-    hud.textContent = `sim ${view.simHz.toFixed(0)} Hz`;
+    const fps = dt > 0 ? 1 / dt : 0;
+    hud.textContent = `sim ${view.simHz.toFixed(0)} Hz · ${fps.toFixed(0)} fps`;
     renderer.render();
   };
 
   const loop = new Loop({ bridge, body, sensing, roleTable, world, onFrame });
 
-  // 7. Size to the viewport.
+  // 8. Size to the viewport.
   const resize = (): void => renderer.resize(window.innerWidth, window.innerHeight);
   window.addEventListener("resize", resize);
   resize();
 
-  // 8. Run the whole cloud.
+  // 9. Run the whole cloud.
   bridge.setActiveCount(nNeurons);
   loop.start();
 }
