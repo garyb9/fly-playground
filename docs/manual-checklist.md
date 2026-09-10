@@ -68,13 +68,38 @@ check with the automated coverage that does exist noted alongside.
    `vite.config.ts`, reload, confirm `crossOriginIsolated` is now `false`
    and the behaviour is unchanged (postMessage path).
 
-## Plan 02b / 03 — filled later
+## Plan 02b — rich loop + controls
 
-- [ ] Neuron-count slider visibly changes reported sim Hz.
-- [ ] A one-sided light induces a sustained turn toward / away from it.
+Every row below needs a real browser (`yarn dev`) — the headless vitest suite
+(env `node`) cannot observe colour, motion, audio, or `localStorage` round-trips
+through a live page. **All unchecked**: a human ticks them after the live pass.
+
+- [ ] Neuron-count "depth" slider visibly changes the reported `sim_hz`.
+- [ ] A one-sided light induces a **sustained** turn (record the direction).
+- [ ] Wind meters respond to the configured field; L and R differ when the fly faces across it.
+- [ ] LIF panel: raising `noiseSigma` visibly increases activity (in the Plan 2c panel + the
+      meters); lowering `vThreshold` raises firing; **Reset** restores baseline.
+- [ ] Readout + sensory meters track the demo (escape spikes on the burst, looming ramps on
+      approach, proximity spikes on contact); the looming meter warms toward the escape colour.
+- [ ] `setGroupVisible` wiring is live: toggling a group (from the Plan 2c panel) reaches
+      `HudControls` and the panel re-renders — the HUD itself shows no filter checkboxes.
+- [ ] Audio: unmuting starts the ambient bed; escape fires a blip; wing hum pitch tracks flapping;
+      volume + mute work; silent until the first gesture.
+- [ ] Place an object at the fly's position — it appears and the fly senses / collides with it.
+      Move a light — shading and the light meters change. Reload — the edited scene persists.
+      **Reset scene** — back to default.
+- [ ] **Theme toggle** — `dark` (Deep Field) ⇄ `light` (cool lab): both legible; exactly one warm
+      thing (the fly) in each; bloom only in dark; no cream in either.
+- [ ] Escape burst (02b part): white bloom at the fly + a brief camera kick that decays in ~0.3 s;
+      nothing else in the scene moves sharply.
+- [ ] `prefers-reduced-motion`: fly bob + camera sway/kick + banner type-in drop; wing flap,
+      physics, meters, escape bloom stay.
+- [ ] Still runs under SAB (`crossOriginIsolated`) and under `postMessage` (headers commented out).
+
+## Plan 03 — filled later
+
 - [ ] `light_*` / `wind_*` sensing produces a steering gradient.
 - [ ] Brain camera mode (OrbitControls through the connectome).
-- [ ] Ambient audio bed + reactive one-shots.
 
 ### Aesthetic — "Deep Field" ([`2026-09-09-visual-direction.md`](2026-09-09-visual-direction.md) §7 tracks code-side status; these are the by-eye rows)
 

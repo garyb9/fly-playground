@@ -77,11 +77,35 @@ Claude-Session: <your session URL>
 
 ---
 
-# PLAN 02b — "rich loop + controls"
+# PLAN 02b — "rich loop + controls" ✅ COMPLETE
 
-The back half of the Plan 02 design (spec §8, "→ Plan 02b"). Group the work into
-tasks roughly as below; the plan author decides the exact task boundaries and
-ordering during `writing-plans`.
+**Status:** executed as
+`docs/superpowers/plans/2026-09-09-fly-playground-02b-rich-loop.md` (12 tasks,
+branch `plan-02b-rich-loop`). Section-by-section outcome:
+
+- [x] **A. Sensing + steering** — per-eye inverse-square light, a rotating wind
+      vector field, both EMA'd in the pure `sensing.ts`; the yaw-noise channel
+      folded into the correlated-noise treatment (resting heading now bounded).
+      *Open:* with the seed-42 fixture the phototaxis turn is only observable
+      from a **left-side** light — documented in `sensing.ts`, ruling stands.
+- [x] **B. HUD** — `src/ui/*`: depth slider (log `core_count`→`N`), readout +
+      sensory meters, LIF panel through a fixed `setParams` worker branch,
+      theme + mute/volume cluster, scene editor. Region/class filter checkboxes
+      are deliberately **absent** — they belong to Plan 2c's docked panel.
+- [~] **C. Brain viz + camera** — **split out to Plan 2c.** 02b landed the
+      aesthetic half (palette, `EffectComposer`, world/fly, motion, load
+      sequence) and **froze `FrameView`** as 2c's seam. Still 2c's: the docked
+      connectome panel + region filters, per-segment core-edge brightness /
+      pathway pulse, connectome breath, the points-converge load phase, and the
+      orbit/free-fly brain camera (that camera mode → **Plan 03**).
+- [x] **D. Audio** — `src/audio/*`: lazy `AudioContext`, ambient bed, wing hum,
+      escape blip, HUD mute + volume, starts muted until a gesture.
+- [x] **E. Runtime world editing** — `src/world/*`: `SceneStore`, versioned
+      `localStorage` persistence, live world rebuild with GPU dispose, editor UI.
+- [x] **F. Carried-over cleanups** — one pause mechanism (`running`, with
+      `paused` published through the ring), `activityColour` blue-channel dip.
+
+Everything below is the original 02b brief, kept for provenance.
 
 ## A. Sensing + steering (`src/sensing/`, `src/body/`, `src/main.ts` wiring)
 
@@ -224,4 +248,6 @@ src/
   scene.config.ts   static world (SCENE)
 ```
 
-New in 02b: `src/ui/` (HUD), `src/audio/`.
+New in 02b: `src/ui/` (HUD + `scale.ts`), `src/audio/` (`audio.ts` + pure
+`mapping.ts`), `src/world/` (`scene-store.ts` + `scene-persist.ts`), and
+`src/viz/{motion,post,palette}.ts`.

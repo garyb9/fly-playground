@@ -71,7 +71,11 @@ messages.
 
 Implemented in Plan 01: `crates/fly-sim/src/core/{format,lif,rng,sim,roles}.rs`, `crates/fly-sim/src/lib.rs` (`Sim`), `src/formats/*.ts`, `pipeline/gen_fixture.py`.
 
-Implemented in Plan 02: `src/bridge/*` (SAB + postMessage `SimBridge`, 200 Hz worker), `src/sim/roles.ts`, `src/sensing/*`, `src/body/*`, `src/viz/*`, `src/app/{config,loop,world-query}.ts`, `src/scene.config.ts`, `src/main.ts`. Deferred to Plan 02b: `light_*` / `wind_*` sensing (slots are wired but held at zero), the HUD neuron-count slider and readout/sensory meters, the brain (OrbitControls) camera mode, and audio.
+Implemented in Plan 02: `src/bridge/*` (SAB + postMessage `SimBridge`, 200 Hz worker), `src/sim/roles.ts`, `src/sensing/*`, `src/body/*`, `src/viz/*`, `src/app/{config,loop,world-query}.ts`, `src/scene.config.ts`, `src/main.ts`.
+
+Implemented in Plan 02b (rich loop + controls): `src/ui/*` (the edge-instrument DOM HUD — depth slider, readout/sensory meters, LIF panel, theme + audio cluster, scene editor, `scale.ts` mappings), `src/audio/*` (lazy `AudioContext`, ambient bed, wing hum, escape blip, pure `mapping.ts`), `src/world/*` (runtime `SceneStore` + versioned `localStorage` persistence + live world rebuild), `src/viz/post.ts` (`EffectComposer`: bloom → vignette → grain → `OutputPass`) and `src/viz/motion.ts` (`bob` / `idleSway` / `escapeKick` / `loadEnvelope`), `light_*` / `wind_*` sensing (per-eye axes, inverse-square light, rotating wind field), the `setParams` LIF wiring through the bridge, and the dark ⇄ light theme toggle (`palette.ts` + `renderer.setTheme`). The **docked brain panel** (region filters, connectome breath, points-converge load phase, pathway pulse) is **Plan 2c** — `FrameView` is frozen as its seam.
+
+Deferred to Plan 03: the brain (OrbitControls) camera mode, region tints on resting points, and the `bounds` hairline mesh.
 
 ### `body/`
 6DOF rigid body: `position: Vec3`, `orientation: Quat`, `vel: Vec3`,

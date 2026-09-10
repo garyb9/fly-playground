@@ -23,7 +23,9 @@
   <body>
     <canvas id="view"></canvas>
     <div id="hud"></div>
-    <div id="boot-banner"></div>
+    <!-- Boot banner: main.ts reads this text once and types it in from the
+         load envelope, then adds `.done` to fade it out. -->
+    <div id="boot-banner">fly-playground</div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

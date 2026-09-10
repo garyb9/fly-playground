@@ -21,11 +21,17 @@ golden-trace lock.
 Plan 02 (app shell) complete: the fixture brain flies the fly through a
 proximity + looming → escape loop in the browser, over a `SharedArrayBuffer`
 worker bridge with a `postMessage` fallback, with the connectome drawn as a
-Three.js point cloud. Next: Plan 02b (light / wind sensing, HUD slider + meters,
-brain camera mode, audio, object UI, aesthetic pass — the aesthetic direction is
-specced as "Deep Field" in
-[`docs/2026-09-09-visual-direction.md`](docs/2026-09-09-visual-direction.md),
-with a status table the implementing agent keeps current).
+Three.js point cloud.
+
+Plan 02b (rich loop + controls) complete: light / wind sensing, the edge-instrument
+HUD (depth slider, readout + sensory meters, LIF panel, theme and audio controls,
+scene editor), reactive audio, runtime world editing with persistence, and the
+"Deep Field" aesthetic pass (palette + post-FX + motion + load sequence +
+reduced-motion). The aesthetic direction is specced in
+[`docs/2026-09-09-visual-direction.md`](docs/2026-09-09-visual-direction.md), with a
+status table the implementing agent keeps current. The **brain viz** (docked
+connectome panel, region filters, connectome breath, pathway pulse) moved to
+**Plan 2c**. Next: Plan 03.
 
 ## What it does (target)
 

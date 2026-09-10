@@ -332,16 +332,16 @@ status and reality never drift. `docs/manual-checklist.md` has the matching
 | # | item | spec | status |
 |---|------|------|--------|
 | A1 | `palette.ts` retokenised to §2; existing key names kept where they map (`bg→void`, `pointCold→neuron`, `pointHot→spark`, `edge→pathway`, fly pair→ember) | §2, §6.1 | `done` (Task 11) — dual `PALETTE_DARK`/`PALETTE_LIGHT` + `activePalette(theme)` + generic `applyTheme(root, theme)` |
-| A2 | `CONFIG.aesthetic` gains the motion + post-FX dials (`BREATH_*`, `BOB_*`, `ESCAPE_KICK`, `BLOOM_*`, `VIGNETTE`, `GRAIN`, `EXPOSURE`) | §5, §6.2 | `partial` (Task 11) — 02b dials in (`BOB_*`, `ESCAPE_KICK`, `LOAD`, `EXPOSURE`, `BLOOM`, `VIGNETTE`, `GRAIN`); `BREATH_*` is Plan 2c |
+| A2 | `CONFIG.aesthetic` gains the motion + post-FX dials (`BREATH_*`, `BOB_*`, `ESCAPE_KICK`, `BLOOM_*`, `VIGNETTE`, `GRAIN`, `EXPOSURE`) | §5, §6.2 | `done` (Task 12) — every 02b dial is in `CONFIG` **and consumed** (`BOB_*` + `IDLE_SWAY_*` → fly bob / camera sway, `ESCAPE_KICK` → camera kick, `LOAD` → boot envelope, `EXPOSURE`/`BLOOM`/`VIGNETTE`/`GRAIN` → the composer); `BREATH_*` is Plan 2c's to add |
 | A3 | `EffectComposer` post-FX stack in the render path | §6.2 | `done` (Task 11) — `src/viz/post.ts`: render → `UnrealBloomPass` → vignette → grain, ACES tone map + exposure on the renderer |
 | A4 | point-cloud blending → `AdditiveBlending` + `depthWrite:false` on `void`; soft radial alpha falloff | §6.3 | `todo` |
 | A5 | fly: `emissive: ember` + parented warm `PointLight` + fly & light on the bloom layer | §6.5 | `partial` (Task 11) — emissive + parented `emberLight` landed; bloom selectivity rides the luminance THRESHOLD, not a dedicated bloom layer — layer is a Task 12 call |
 | A6 | world: cool key light (drop the warm "sun"), `buoy` material + Fresnel rims, grid → radial ground disc, dim bounds hairline | §2.4, §6.6 | `partial` (Task 11) — cool key + hemi, buoy mats + Fresnel rim, radial ground disc, no grid; the dim bounds hairline has no mesh yet — follow-up |
 | A7 | core edges `pathway` colour, opacity ~0.15 at rest; escape pulse travels them | §2.3, §6.4 | `todo` |
 | A8 | `src/ui/` built to the §3 type split + §4 layout; `index.html` mono-everything stub retired | §3, §4 | `done` — §3 type split + §4 layout landed; region-filter checkboxes render in the Plan 2c panel (Task 8) |
-| A9 | `prefers-reduced-motion` branch | §5 | `todo` |
-| A10 | load sequence: points converge → banner types in → fly ignites → HUD fades in last | §5 | `todo` |
-| A11 | escape burst treatment: white bloom + pathway pulse + camera kick, decays ~0.3 s | §5 | `todo` |
+| A9 | `prefers-reduced-motion` branch | §5 | `partial` (Task 12) — 02b half: `reduced` gates fly bob, camera idle sway, camera kick, and the banner type-in; wing flap / physics / meters / ember ignite stay. Connectome breath + panel converge are Plan 2c. |
+| A10 | load sequence: points converge → banner types in → fly ignites → HUD fades in last | §5 | `partial` (Task 12) — 02b half: banner types in → fly ignites → HUD fades in last (`loadEnvelope`). The 'points converge out of the dark' phase is Plan 2c. |
+| A11 | escape burst treatment: white bloom + pathway pulse + camera kick, decays ~0.3 s | §5 | `partial` (Task 12) — 02b half: ember spike + camera kick (positional shove + roll, decays ~`ESCAPE_KICK.decayS`). The white bloom flash + pathway pulse are Plan 2c. |
 | A12 | final HUD contrast re-checked against the real `void` background | §2.5 | `partial` (Task 11) — HUD tokens are Deep Field §2.5 verbatim; the visual contrast re-check against the real running `void` background is Task 12's manual pass |
 | A13 | region tints (§2.2) on resting points, keyed by group | §2.2 | `deferred → Plan 03 ok` |
 

@@ -113,7 +113,7 @@ export function buildWorld(scene: SceneConfig, theme: Theme = CONFIG.aesthetic.t
 
   // One cool key light, high up — the warm "sun" is gone; the only warm source
   // in the frame is the fly's ember (§6.5/§6.6).
-  const key = new THREE.DirectionalLight(pal.pointHot, 0.6);
+  const key = new THREE.DirectionalLight(pal.keyLight, 0.6);
   key.position.set(10, 18, 6);
   group.add(key);
 

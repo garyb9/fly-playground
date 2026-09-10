@@ -67,6 +67,16 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     scene.background = new THREE.Color(p.bg);
     scene.fog = new THREE.Fog(p.abyss, FOG_NEAR, FOG_FAR);
     applyTheme(scene, theme);
+    // `applyTheme` only walks Mesh materials, so the world's lights kept their
+    // build-time colours across a toggle (Task 11 carry-forward). Re-key them
+    // here — they are `Light`s, not materials, so no `userData.themeKey` hook.
+    scene.traverse((o) => {
+      if (o instanceof THREE.DirectionalLight) o.color.setHex(p.keyLight);
+      else if (o instanceof THREE.HemisphereLight) {
+        o.color.setHex(p.bg);
+        o.groundColor.setHex(p.ground);
+      }
+    });
     composer?.setTheme(theme);
   }
 

@@ -30,7 +30,59 @@
   z-index: 10;
   pointer-events: none;
   color: var(--hud-text);
-  font: 12px/1.4 "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font:
+    12px/1.4 "IBM Plex Sans",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  /* Plan 02b: the HUD arrives last in the load sequence — main.ts drives
+     `style.opacity` from `loadEnvelope().hud` and this eases each step.
+     Starts at 0 so there is no flash of full-opacity HUD before frame 1. */
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+/* ---- boot banner ------------------------------------------------------------
+   Lives OUTSIDE #hud (it must show before the HUD exists), so it carries its own
+   copy of the --hud-text token rather than inheriting one. */
+
+#boot-banner {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  --hud-text: rgba(214, 230, 255, 0.72);
+  color: var(--hud-text);
+  font:
+    20px "IBM Plex Mono",
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.5s ease,
+    visibility 0s linear 0.5s;
+}
+
+@media (prefers-color-scheme: light) {
+  #boot-banner {
+    --hud-text: rgba(24, 44, 74, 0.78);
+  }
+}
+
+#boot-banner.done {
+  opacity: 0;
+  visibility: hidden;
 }
 
 #hud [hidden] {
@@ -154,7 +206,13 @@
 }
 
 .hud-meter__label {
-  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    "IBM Plex Sans",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   font-size: 12px;
   font-weight: 500;
   color: var(--hud-text);
@@ -193,7 +251,13 @@
   bottom: 14px;
   transform: translateX(-50%);
   pointer-events: auto;
-  font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family:
+    "IBM Plex Sans",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
 .hud-pause[data-paused="true"] {

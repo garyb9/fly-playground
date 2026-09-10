@@ -24,6 +24,8 @@ import { createRenderer } from "./viz/renderer";
 import { buildComposer } from "./viz/post";
 import { Fly } from "./viz/fly";
 import { updateFollowCamera } from "./viz/follow-camera";
+import { bob, idleSway, escapeKick, loadEnvelope } from "./viz/motion";
+import { detectEscapeOnset } from "./audio/mapping";
 import { CONFIG } from "./app/config";
 import { worldQuery } from "./app/world-query";
 import { Loop, type FrameView } from "./app/loop";
@@ -214,6 +216,40 @@ async function main(): Promise<void> {
   );
   let lastFrameMs = performance.now();
 
+  // --- Plan 02b: motion + load ---
+  // Render-only motion (§5) + the boot load sequence. Nothing here touches
+  // `body` or the sim — every offset is applied to the three.js transforms after
+  // the physics step, so pausing or reduced-motion changes nothing but looks.
+  const reduced =
+    typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const bannerEl = document.getElementById("boot-banner");
+  const bannerText = bannerEl?.textContent ?? "";
+  const hudRoot = document.getElementById("hud");
+  // The ember's constructed intensity is the "fully lit" reference — read once
+  // so the ignite ramp and the escape spike stay relative to `fly.ts`'s value.
+  const emberBase = fly.emberLight.intensity;
+  // Peak escape bloom = emberBase * (1 + ESCAPE_EMBER_GAIN); decays with the kick.
+  const ESCAPE_EMBER_GAIN = 1.5;
+  // Collision shudder: the same curve, half the shove and half the window.
+  const COLLISION_KICK = {
+    posShove: CONFIG.aesthetic.ESCAPE_KICK.posShove * 0.5,
+    rollDeg: CONFIG.aesthetic.ESCAPE_KICK.rollDeg * 0.5,
+    decayS: CONFIG.aesthetic.ESCAPE_KICK.decayS * 0.5,
+  };
+
+  let bootT = 0;
+  let bannerShown = -1; // last rendered character count, so we only touch the DOM on change
+  let bannerDone = false;
+  // One kick slot: an escape outranks a collision shudder while it is running.
+  let kickCfg: { posShove: number; rollDeg: number; decayS: number } | null = null;
+  let kickElapsed = 0;
+  let kickIsEscape = false;
+  let escapeArmed = true;
+  let prevEscape = 0;
+  let prevProx = 0;
+  // --- end Plan 02b: motion + load ---
+
   // FrameView is frozen — Plan 2c's docked panel consumes { activity, readouts, sensory, paused }
   const onFrame = (view: FrameView): void => {
     const now = performance.now();
@@ -227,10 +263,85 @@ async function main(): Promise<void> {
 
     fly.update(view.readouts, view.pose, dt);
 
-    const cam = updateFollowCamera(camPos, view.pose, dt);
+    // --- Plan 02b: motion + load (per frame) ---
+    bootT += dt;
+    const env = loadEnvelope(bootT, CONFIG.aesthetic.LOAD);
+
+    // Banner types in, then fades once the HUD has finished arriving.
+    if (bannerEl && !bannerDone) {
+      const chars = reduced ? bannerText.length : Math.round(env.banner * bannerText.length);
+      if (chars !== bannerShown) {
+        bannerEl.textContent = bannerText.slice(0, chars);
+        bannerShown = chars;
+      }
+      if (env.hud >= 1) {
+        bannerEl.classList.add("done");
+        bannerDone = true;
+      }
+    }
+
+    // HUD fades in last. Reduced motion still fades opacity (a cross-fade, not
+    // motion) but skips the type-in above; the CSS transition does the easing.
+    if (hudRoot) hudRoot.style.opacity = String(reduced ? 1 : env.hud);
+
+    // Escape rising edge — the same pure detector the audio blip uses, so the
+    // camera kick, the blip and the ember spike all fire on one frame.
+    const esc = view.readouts.escape ?? 0;
+    const edge = detectEscapeOnset(
+      prevEscape,
+      esc,
+      CONFIG.physics.ESCAPE_TH,
+      CONFIG.physics.ESCAPE_HYST,
+    );
+    prevEscape = esc;
+    if (edge.onset && escapeArmed) {
+      kickCfg = CONFIG.aesthetic.ESCAPE_KICK;
+      kickElapsed = 0;
+      kickIsEscape = true;
+      escapeArmed = false;
+    } else if (edge.armed) {
+      escapeArmed = true;
+    }
+
+    // Collision shudder — a hard jump in proximity means the fly just clipped
+    // something (the loop's contact startle fires on the same frame).
+    const prox = view.sensory.proximity ?? 0;
+    if (!kickIsEscape && prox - prevProx >= CONFIG.physics.CONTACT_STARTLE * 0.8) {
+      kickCfg = COLLISION_KICK;
+      kickElapsed = 0;
+    }
+    prevProx = prox;
+
+    // Ember: ignite ramp during boot, spiking on an escape.
+    const lit = emberBase * (reduced ? 1 : env.ignite);
+    const glow = kickIsEscape && kickCfg ? Math.exp(-kickElapsed / (kickCfg.decayS / 3)) : 0;
+    fly.emberLight.intensity = Math.max(lit, emberBase * (1 + ESCAPE_EMBER_GAIN) * glow);
+
+    // Fly bob — render-only, applied after `fly.update` wrote the pose.
+    if (!reduced)
+      fly.object3d.position.y += bob(bootT, CONFIG.aesthetic.BOB_HZ, CONFIG.aesthetic.BOB_AMP);
+
+    const sway = reduced
+      ? undefined
+      : idleSway(bootT, CONFIG.camera.IDLE_SWAY_HZ, CONFIG.camera.IDLE_SWAY_AMP);
+    const kick = kickCfg && !reduced ? escapeKick(kickElapsed, kickCfg) : undefined;
+    if (kickCfg) {
+      kickElapsed += dt;
+      if (kickElapsed > kickCfg.decayS) {
+        kickCfg = null;
+        kickIsEscape = false;
+      }
+    }
+    // --- end Plan 02b: motion + load (per frame) ---
+
+    const cam = updateFollowCamera(camPos, view.pose, dt, { sway, kick });
+    // The offsets ride on the returned position, so they feed back into the
+    // spring next frame — that re-damps them, which is the point: the kick
+    // shoves and the spring eases the camera home.
     camPos = cam.position;
     renderer.camera.position.set(cam.position.x, cam.position.y, cam.position.z);
     renderer.camera.lookAt(cam.lookAt.x, cam.lookAt.y, cam.lookAt.z);
+    if (cam.roll !== 0) renderer.camera.rotateZ(cam.roll);
 
     // Plan 02b: audio + HUD sinks.
     audio.update(view, dt);
@@ -280,7 +391,12 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  const hud = document.getElementById("hud");
-  if (hud) hud.textContent = `boot failed: ${String(err)}`;
+  // `#hud` is the DOM overlay div now (Plan 02b) — writing text into it would
+  // wipe the whole HUD tree. The boot banner is the right place for this.
+  const banner = document.getElementById("boot-banner");
+  if (banner) {
+    banner.classList.remove("done");
+    banner.textContent = `boot failed: ${String(err)}`;
+  }
   throw err;
 });
