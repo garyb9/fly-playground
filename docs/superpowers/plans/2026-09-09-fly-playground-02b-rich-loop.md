@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- **Branch:** all work on `plan-02b-rich-loop` (already created, off `main` @ `9c6ea39`, spec committed at `c2f4b73`). The maintainer has authorized pushing **this branch** (not `main`); open no PR — the maintainer merges.
+- **Branch:** all work on `plan-02b-rich-loop` (already created, off `main` @ `9c6ea39`, spec committed at `c2f4b73`). The implementing session pushes the branch **and** fast-forwards `origin/main` once the plan's review passes (maintainer directive, 2026-09-10 — supersedes the earlier "maintainer merges" line). No PR ceremony.
 - **Per-change gate (run before every commit):** `npx vitest run && npx tsc --noEmit && npx eslint src && npx prettier --check "src/**/*.{ts,js}" && yarn build`. **Full gate at plan close:** `yarn ci` + `yarn rs:smoke`.
 - **TDD:** failing test → run and watch it fail → minimal implementation → run and watch it pass → commit. At least one commit per task.
 - **Commit messages:** Conventional Commits. End every commit body with, verbatim:

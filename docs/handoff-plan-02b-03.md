@@ -28,7 +28,10 @@ npx vitest run && npx tsc --noEmit && npx eslint src \
 ```
 
 `yarn ci` is the full gate (adds Rust fmt/lint/test, wasm build, pytest, fixture
-byte-check). Branch off `main`; **the maintainer merges + pushes** — do not push.
+byte-check). Branch off `main`. **The implementing session merges and pushes** —
+keep `origin/main` current, fast-forwarding it after each plan's review passes
+rather than batching at the end (maintainer directive, 2026-09-10). Fast-forward
+merges only; no PR ceremony required.
 
 ### Commit trailer (every commit body ends with)
 
