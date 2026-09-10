@@ -260,6 +260,8 @@ async function main(): Promise<void> {
   let bootT = 0;
   let bannerShown = -1; // last rendered character count, so we only touch the DOM on change
   let bannerDone = false;
+  let hudFaded = false; // stop rewriting #hud opacity once it has settled at 1
+  let firstFrame = true; // no collision shudder off the seed frame (prevProx starts at 0)
   // One kick slot: an escape outranks a collision shudder while it is running.
   let kickCfg: { posShove: number; rollDeg: number; decayS: number } | null = null;
   let kickElapsed = 0;
@@ -293,15 +295,21 @@ async function main(): Promise<void> {
         bannerEl.textContent = bannerText.slice(0, chars);
         bannerShown = chars;
       }
-      if (env.hud >= 1) {
+      // Reduced motion shows the banner whole this same frame — dismiss it at
+      // once rather than leaving it hanging until the HUD envelope finishes.
+      if (env.hud >= 1 || reduced) {
         bannerEl.classList.add("done");
         bannerDone = true;
       }
     }
 
-    // HUD fades in last. Reduced motion still fades opacity (a cross-fade, not
-    // motion) but skips the type-in above; the CSS transition does the easing.
-    if (hudRoot) hudRoot.style.opacity = String(reduced ? 1 : env.hud);
+    // HUD fades in last (CSS transition eases it). Once it reaches full opacity
+    // — immediately, under reduced motion — stop touching the property.
+    if (hudRoot && !hudFaded) {
+      const o = reduced ? 1 : env.hud;
+      hudRoot.style.opacity = String(o);
+      if (o >= 1) hudFaded = true;
+    }
 
     // Escape rising edge — the same pure detector the audio blip uses, so the
     // camera kick, the blip and the ember spike all fire on one frame.
@@ -325,11 +333,12 @@ async function main(): Promise<void> {
     // Collision shudder — a hard jump in proximity means the fly just clipped
     // something (the loop's contact startle fires on the same frame).
     const prox = view.sensory.proximity ?? 0;
-    if (!kickIsEscape && prox - prevProx >= CONFIG.physics.CONTACT_STARTLE * 0.8) {
+    if (!firstFrame && !kickIsEscape && prox - prevProx >= CONFIG.physics.CONTACT_STARTLE * 0.8) {
       kickCfg = COLLISION_KICK;
       kickElapsed = 0;
     }
     prevProx = prox;
+    firstFrame = false;
 
     // Ember: ignite ramp during boot, spiking on an escape.
     const lit = emberBase * (reduced ? 1 : env.ignite);
