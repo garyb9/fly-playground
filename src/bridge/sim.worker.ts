@@ -67,11 +67,15 @@ function loop() {
   const now = performance.now();
   const elapsed = now - lastTs;
   lastTs = now;
-  const frame = core.frame(running ? elapsed : 0);
   if (views) {
+    // SAB branch: apply THIS iteration's stimulus BEFORE stepping, otherwise the
+    // sim steps on the previous iteration's input (Task 3 regression).
     core.setStimulus(readInput(views));
+    const frame = core.frame(running ? elapsed : 0);
     writeOutput(views, { ...frame, paused: running ? 0 : 1 });
   } else {
+    // PM branch: stimulus arrives by `postMessage`, not read here.
+    const frame = core.frame(running ? elapsed : 0);
     const enc = encodeState({ ...frame, paused: !running });
     post(enc.payload, enc.transfer);
   }

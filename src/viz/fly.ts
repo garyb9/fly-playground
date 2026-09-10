@@ -55,7 +55,7 @@ function wingMaterial(theme: Theme): THREE.MeshStandardMaterial {
     roughness: 0.4,
     metalness: 0,
     transparent: true,
-    opacity: 0.18,
+    opacity: 0.14,
     side: THREE.DoubleSide,
     depthWrite: false,
     flatShading: true,
@@ -111,12 +111,14 @@ export class Fly {
       this.tilt.add(eye);
     }
 
-    const wingGeom = new THREE.PlaneGeometry(1.4, 0.6);
+    // ~30% smaller than the original 1.4 x 0.6 (T2 — wings read too large/opaque).
+    const wingGeom = new THREE.PlaneGeometry(0.98, 0.42);
+    const wingHalf = 0.49; // half the new width — keeps the pivot at the root edge
 
     this.wingL = new THREE.Group();
     this.wingL.position.set(0.02, 0.2, 0.12);
     const wingMeshL = new THREE.Mesh(wingGeom, wings);
-    wingMeshL.position.set(0, 0, 0.7); // pivot at the root edge
+    wingMeshL.position.set(0, 0, wingHalf); // pivot at the root edge
     wingMeshL.rotation.x = Math.PI / 2;
     this.wingL.add(wingMeshL);
     this.tilt.add(this.wingL);
@@ -124,7 +126,7 @@ export class Fly {
     this.wingR = new THREE.Group();
     this.wingR.position.set(0.02, 0.2, -0.12);
     const wingMeshR = new THREE.Mesh(wingGeom, wings);
-    wingMeshR.position.set(0, 0, -0.7);
+    wingMeshR.position.set(0, 0, -wingHalf);
     wingMeshR.rotation.x = Math.PI / 2;
     this.wingR.add(wingMeshR);
     this.tilt.add(this.wingR);

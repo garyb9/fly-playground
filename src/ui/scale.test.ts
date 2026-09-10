@@ -5,6 +5,7 @@ import {
   meterFraction,
   lifSlider,
   lifSliderPos,
+  loomingWarnColour,
   volumeGain,
 } from "./scale";
 
@@ -48,6 +49,27 @@ test("lifSlider clamps to the declared range and inverts", () => {
   expect(lifSlider("noiseSigma", 1, ranges)).toBeCloseTo(0.3, 6);
   expect(lifSlider("tauMMs", -5, ranges)).toBe(2);
   expect(lifSliderPos("tauMMs", lifSlider("tauMMs", 0.4, ranges), ranges)).toBeCloseTo(0.4, 6);
+});
+
+test("loomingWarnColour warns neuron -> ember -> escape-warm across [0,1]", () => {
+  const rgbRe = /^rgb\((\d+), (\d+), (\d+)\)$/;
+  const red = (s: string): number => {
+    const m = rgbRe.exec(s);
+    if (!m) throw new Error(`not an rgb() string: ${s}`);
+    return Number(m[1]);
+  };
+  expect(loomingWarnColour(0)).toBe("rgb(74, 143, 168)"); // neuron #4A8FA8
+  expect(loomingWarnColour(0.5)).toBe("rgb(255, 178, 90)"); // ember #FFB25A
+  expect(loomingWarnColour(1)).toBe("rgb(255, 241, 218)"); // escape-warm #FFF1DA
+  for (const x of [-1, 0, 0.2, 0.5, 0.8, 1, 2]) {
+    expect(loomingWarnColour(x)).toMatch(rgbRe);
+  }
+  // red channel climbs (monotone-ish) as the looming warning rises
+  expect(red(loomingWarnColour(0))).toBeLessThan(red(loomingWarnColour(0.5)));
+  expect(red(loomingWarnColour(0.5))).toBeLessThanOrEqual(red(loomingWarnColour(1)));
+  // clamped outside [0,1]
+  expect(loomingWarnColour(-3)).toBe(loomingWarnColour(0));
+  expect(loomingWarnColour(9)).toBe(loomingWarnColour(1));
 });
 
 test("volumeGain is a convex perceptual curve on [0,1]", () => {

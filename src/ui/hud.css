@@ -74,10 +74,12 @@
     visibility 0s linear 0.5s;
 }
 
-@media (prefers-color-scheme: light) {
-  #boot-banner {
-    --hud-text: rgba(24, 44, 74, 0.78);
-  }
+/* Keyed off the live app theme (#hud's data-theme), NOT the browser's
+   prefers-color-scheme: a light-theme session in a dark-preferring browser must
+   still get readable banner text. #boot-banner is the adjacent sibling of #hud
+   in index.html. */
+#hud[data-theme="light"] + #boot-banner {
+  --hud-text: rgba(24, 44, 74, 0.78);
 }
 
 #boot-banner.done {
@@ -148,12 +150,13 @@
 }
 
 /* ---- left-edge vertical "depth" control ------------------------------------
-   Starts below y:384px to clear the Plan 2c docked card region. */
+   Starts below --reserved-bottom (model.reservedRect, set on #hud by the Hud
+   ctor; falls back to 384px) to clear the Plan 2c docked card region. */
 
 .hud-depth {
   position: fixed;
   left: 18px;
-  top: 384px;
+  top: var(--reserved-bottom, 384px);
   bottom: 120px;
   display: flex;
   flex-direction: column-reverse;
@@ -191,7 +194,9 @@
 .hud-meters {
   position: fixed;
   left: 24px;
-  right: 24px;
+  /* Stop before the bottom-right toggle cluster so the two bands never overlap
+     (visual-direction.md §4 — distinct bands). */
+  right: 264px;
   bottom: 14px;
   display: flex;
   flex-wrap: wrap;
@@ -248,7 +253,9 @@
 .hud-pause {
   position: fixed;
   left: 50%;
-  bottom: 14px;
+  /* Above the meter row (visual-direction.md §4 wants distinct bands) — the
+     meters sit at bottom:14px. */
+  bottom: 44px;
   transform: translateX(-50%);
   pointer-events: auto;
   font-family:
@@ -284,7 +291,6 @@
   font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 11px;
   letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--hud-text);
 }
 
@@ -308,13 +314,14 @@
 }
 
 /* ---- left-edge tuning stack: LIF panel + scene editor --------------------
-   Sits right of the thin depth slider, below the Plan 2c reservedRect card
-   region, clear of the centre. Scrolls internally if a panel is expanded. */
+   Sits right of the thin depth slider, below --reserved-bottom (the Plan 2c
+   reservedRect card region), clear of the centre. Scrolls internally if a
+   panel is expanded. */
 
 .hud-left-stack {
   position: fixed;
   left: 64px;
-  top: 384px;
+  top: var(--reserved-bottom, 384px);
   bottom: 56px;
   inline-size: 224px;
   display: flex;
@@ -423,7 +430,6 @@
 
 .hud-scene__field-label {
   letter-spacing: 0.04em;
-  text-transform: uppercase;
   opacity: 0.75;
 }
 

@@ -146,10 +146,16 @@ export function material(key: string, theme: Theme = "dark"): THREE.MeshStandard
   const rimKey = RIM[key] ?? "buoyRimA";
   const mat = new THREE.MeshStandardMaterial({
     color: pal.buoy,
+    // Faint self-glow in the buoy colour so the obstacles read as objects in the
+    // void instead of flat black cards (T3). `emissiveKey` keeps `applyTheme` in
+    // sync on a theme swap. Conservative — a real-GPU tune is a follow-up.
+    emissive: new THREE.Color(pal.buoy),
+    emissiveIntensity: 0.15,
     roughness: 0.85,
     metalness: 0,
   });
   mat.userData.themeKey = "buoy";
+  mat.userData.emissiveKey = "buoy";
   mat.userData.rimKey = rimKey;
 
   const uRimColor = { value: new THREE.Color(pal[rimKey]) };
@@ -164,9 +170,12 @@ export function material(key: string, theme: Theme = "dark"): THREE.MeshStandard
         "uniform vec3 uRimColor;\nuniform float uRimStrength;\nvoid main() {",
       )
       .replace(
-        "#include <opaque_fragment>",
+        // Add the rim in DISPLAY space — after tonemapping + colorspace — so ACES
+        // doesn't compress it away (T3). Injecting after `<opaque_fragment>` put
+        // it before those chunks.
+        "#include <colorspace_fragment>",
         [
-          "#include <opaque_fragment>",
+          "#include <colorspace_fragment>",
           "float rimF = 1.0 - abs(dot(normalize(vNormal), normalize(vViewPosition)));",
           "gl_FragColor.rgb += uRimColor * pow(clamp(rimF, 0.0, 1.0), 3.0) * uRimStrength;",
         ].join("\n"),

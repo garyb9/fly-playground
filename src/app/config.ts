@@ -107,7 +107,7 @@ export const CONFIG = {
       light: { STRENGTH: 0, RADIUS: 0.4, THRESHOLD: 0.9 },
     },
     VIGNETTE: { dark: 0.2, light: 0.12 },
-    GRAIN: { dark: 0.035, light: 0.015 },
+    GRAIN: { dark: 0.018, light: 0.015 },
     // Brain point cloud lives as one big fixed object in the world. The centre
     // sits on the fly's cruise line between its start (0,4,0) and the escape
     // block (9,4,0), so the fly flies through the connectome.

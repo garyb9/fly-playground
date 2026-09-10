@@ -13,6 +13,7 @@ import {
   countToSlider,
   lifSlider,
   lifSliderPos,
+  loomingWarnColour,
   meterFraction,
   sliderToCount,
   type MeterKind,
@@ -106,12 +107,29 @@ export class Hud {
   private readonly sceneLegend: HTMLLegendElement;
   private paused = false;
   private collapsed = false;
+  // --- scene-editor reconcile state (F1) --------------------------------------
+  // Structural signature of the last `syncScene` build: the object-id list and
+  // the light count. When both are unchanged we DON'T tear down the DOM — we
+  // just refresh idle (non-focused) slider positions via `sceneReconcile`.
+  private sceneObjIds: readonly string[] = [];
+  private sceneLightCount = -1;
+  private sceneReconcile: ((scene: SceneConfig) => void) | null = null;
+  private objSel: HTMLSelectElement | null = null;
+  private lightSel: HTMLSelectElement | null = null;
 
   constructor(root: HTMLElement, controls: HudControls, model: HudModel) {
     this.root = root;
     this.controls = controls;
     root.id = "hud";
     root.dataset.theme = model.theme;
+
+    // Plan 2c reservedRect (viewport fractions) → CSS custom props the left-edge
+    // stacks anchor against, so they track the docked-card region instead of a
+    // 1080p pixel literal (`top: 384px`). `hud.css` reads these with a 384px
+    // fallback.
+    const rr = model.reservedRect;
+    root.style.setProperty("--reserved-bottom", `${(rr.y + rr.h) * 100}vh`);
+    root.style.setProperty("--reserved-right", `${(rr.x + rr.w) * 100}vw`);
 
     const body = el("div", "hud-body");
     this.body = body;
@@ -123,8 +141,8 @@ export class Hud {
     hz.append(document.createTextNode("sim "));
     this.hzSpan = el("span");
     this.hzSpan.dataset.role = "simhz";
-    this.hzSpan.textContent = "0";
-    hz.append(this.hzSpan, document.createTextNode(" hz"));
+    this.hzSpan.textContent = "0 hz";
+    hz.append(this.hzSpan);
     header.append(hz);
 
     // --- left-edge vertical "depth" control (log scale via scale.ts) ----
@@ -297,12 +315,18 @@ export class Hud {
   }
 
   update(frame: HudFrame): void {
-    this.hzSpan.textContent = frame.simHz.toFixed(0);
+    // `worker-core.frame(0)` skips the Hz EMA while paused, so `frame.simHz`
+    // freezes at its last live value — show "paused" instead of a stale number.
+    this.hzSpan.textContent = frame.paused ? "paused" : `${frame.simHz.toFixed(0)} hz`;
     this.depthLabel.textContent = String(frame.activeCount);
     for (const { fill, value, spec } of this.meters) {
       const src = spec.source === "readouts" ? frame.readouts : frame.sensory;
       const raw = src[spec.key] ?? 0;
-      fill.style.inlineSize = `${meterFraction(raw, spec.kind) * 100}%`;
+      const frac = meterFraction(raw, spec.kind);
+      fill.style.inlineSize = `${frac * 100}%`;
+      // The looming meter warns as the fraction climbs toward ESCAPE_TH
+      // (spec §5.1 / §12.4); every other meter keeps the static --hud-fill.
+      if (spec.kind === "looming") fill.style.backgroundColor = loomingWarnColour(frac);
       value.textContent = raw.toFixed(2);
     }
     if (this.paused !== frame.paused) this.setPaused(frame.paused);
@@ -312,15 +336,42 @@ export class Hud {
     this.root.dataset.theme = theme;
   }
 
-  // Rebuild the scene-editor body from scratch each call (a handful of elements).
-  // Zero business logic: range values map straight to `controls.*` calls; a small
-  // trailing debounce coalesces continuous `input` streams. main.ts calls this
-  // once at boot and again on every store mutation.
+  // Sync the scene-editor body to `scene`. main.ts calls this once at boot and
+  // again on EVERY store mutation, so a full teardown-and-rebuild here would
+  // (a) replace the range/select under the pointer mid-drag and (b) reset every
+  // <select> to option 0. So: if the object-id list and light count are
+  // structurally unchanged, DON'T touch the DOM tree — just refresh the idle
+  // (non-focused) slider positions. Only an id-list change forces a rebuild, and
+  // that captures + restores the <select> values.
   syncScene(scene: SceneConfig): void {
+    const objIds = scene.objects.map((o) => o.id);
+    const lightCount = scene.lights.length;
+
+    const structuralMatch =
+      this.sceneReconcile !== null &&
+      objIds.length === this.sceneObjIds.length &&
+      objIds.every((id, i) => id === this.sceneObjIds[i]) &&
+      lightCount === this.sceneLightCount;
+    if (structuralMatch && this.sceneReconcile) {
+      this.sceneReconcile(scene);
+      return;
+    }
+
+    // Rebuild required — remember the current selections to restore them after.
+    const prevObj = this.objSel?.value;
+    const prevLight = this.lightSel?.value;
+
     for (const child of [...this.sceneEditor.children]) {
       if (child !== this.sceneLegend) child.remove();
     }
+    this.objSel = null;
+    this.lightSel = null;
+    this.sceneReconcile = null;
+
     const wrap = el("div", "hud-scene__body");
+    // Re-pointed by `sceneReconcile` so the load closures always read the latest
+    // store snapshot without needing a rebuild.
+    let curScene = scene;
 
     const bmin = scene.bounds.min;
     const bmax = scene.bounds.max;
@@ -349,6 +400,14 @@ export class Hud {
       }
       return s;
     };
+    // Write an <input> value ONLY when it is not the focused element — never
+    // yank a control out from under an in-flight drag/selection.
+    const setIdle = (input: HTMLInputElement, value: string): void => {
+      if (input !== document.activeElement && input.value !== value) input.value = value;
+    };
+
+    // Per-section refreshers run by `sceneReconcile` on a structural-match sync.
+    const refreshers: (() => void)[] = [];
 
     // --- add row: kind + material + "add at fly" -------------------------------
     const kindSel = select(["box", "sphere", "torus"]);
@@ -367,7 +426,9 @@ export class Hud {
 
     // --- object editor: pick an id, drag position / uniform scale, delete ------
     if (scene.objects.length > 0) {
-      const objSel = select(scene.objects.map((o) => o.id));
+      const objSel = select(objIds);
+      this.objSel = objSel;
+      if (prevObj !== undefined && objIds.includes(prevObj)) objSel.value = prevObj;
       const ox = range(bmin.x - 2, bmax.x + 2, 0.1, 0);
       const oy = range(bmin.y - 2, bmax.y + 2, 0.1, 0);
       const oz = range(bmin.z - 2, bmax.z + 2, 0.1, 0);
@@ -375,13 +436,17 @@ export class Hud {
       const delBtn = el("button", "hud-scene__btn", "delete");
       delBtn.type = "button";
 
+      const currentObj = (): SceneObject | undefined =>
+        curScene.objects.find((x) => x.id === objSel.value);
       const loadObj = (): void => {
-        const o = scene.objects.find((x) => x.id === objSel.value);
+        const o = currentObj();
         if (!o) return;
-        ox.value = String(o.position.x);
-        oy.value = String(o.position.y);
-        oz.value = String(o.position.z);
-        os.value = String(o.scale.x);
+        setIdle(ox, String(o.position.x));
+        setIdle(oy, String(o.position.y));
+        setIdle(oz, String(o.position.z));
+        // Uniform slider tracks the LARGEST axis so a non-uniform object keeps a
+        // meaningful handle (F5).
+        setIdle(os, String(Math.max(o.scale.x, o.scale.y, o.scale.z)));
       };
       loadObj();
       objSel.addEventListener("change", loadObj);
@@ -391,9 +456,15 @@ export class Hud {
           position: v(Number(ox.value), Number(oy.value), Number(oz.value)),
         });
       }, 120);
+      // Multiply every axis by newMax/currentMax so a non-uniform object (e.g.
+      // scale 1,0.35,1) keeps its ratio instead of flattening to v(s,s,s) (F5).
       const pushScale = debounce(() => {
+        const o = currentObj();
+        if (!o) return;
+        const curMax = Math.max(o.scale.x, o.scale.y, o.scale.z);
+        const k = curMax > 0 ? Number(os.value) / curMax : 1;
         this.controls.updateObject(objSel.value, {
-          scale: v(Number(os.value), Number(os.value), Number(os.value)),
+          scale: v(o.scale.x * k, o.scale.y * k, o.scale.z * k),
         });
       }, 120);
       for (const r of [ox, oy, oz]) r.addEventListener("input", pushPos);
@@ -410,11 +481,14 @@ export class Hud {
         delBtn,
       );
       wrap.append(objRow);
+      refreshers.push(loadObj);
     }
 
     // --- light editor: pick an index, drag position / intensity / colour ------
     if (scene.lights.length > 0) {
       const lightSel = select(scene.lights.map((_, i) => String(i)));
+      this.lightSel = lightSel;
+      if (prevLight !== undefined && Number(prevLight) < lightCount) lightSel.value = prevLight;
       const lx = range(bmin.x - 2, bmax.x + 2, 0.1, 0);
       const ly = range(bmin.y - 2, bmax.y + 2, 0.1, 0);
       const lz = range(bmin.z - 2, bmax.z + 2, 0.1, 0);
@@ -423,13 +497,13 @@ export class Hud {
       colour.type = "color";
 
       const loadLight = (): void => {
-        const l = scene.lights[Number(lightSel.value)];
+        const l = curScene.lights[Number(lightSel.value)];
         if (!l) return;
-        lx.value = String(l.position.x);
-        ly.value = String(l.position.y);
-        lz.value = String(l.position.z);
-        li.value = String(l.intensity);
-        colour.value = `#${l.color.toString(16).padStart(6, "0")}`;
+        setIdle(lx, String(l.position.x));
+        setIdle(ly, String(l.position.y));
+        setIdle(lz, String(l.position.z));
+        setIdle(li, String(l.intensity));
+        setIdle(colour, `#${l.color.toString(16).padStart(6, "0")}`);
       };
       loadLight();
       lightSel.addEventListener("change", loadLight);
@@ -454,6 +528,7 @@ export class Hud {
         field("col", colour),
       );
       wrap.append(lightRow);
+      refreshers.push(loadLight);
     }
 
     // --- reset scene --------------------------------------------------------
@@ -463,6 +538,13 @@ export class Hud {
     wrap.append(resetBtn);
 
     this.sceneEditor.append(wrap);
+
+    this.sceneObjIds = objIds;
+    this.sceneLightCount = lightCount;
+    this.sceneReconcile = (s: SceneConfig): void => {
+      curScene = s;
+      for (const refresh of refreshers) refresh();
+    };
   }
 
   dispose(): void {

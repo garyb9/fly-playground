@@ -82,7 +82,26 @@ async function main(): Promise<void> {
   // The static `SCENE` is now runtime-mutable. A persisted scene (localStorage)
   // wins over the compiled default; `store` mutations flow through `subscribe`
   // below (rebuild world3d + collision query + HUD editor, then debounced save).
-  const initialScene: SceneConfig = loadScene() ?? SCENE;
+  // A malformed persisted scene (an object missing `position` / `scale`) throws
+  // inside `buildWorld` / `worldQuery` at boot, and the store re-persists on
+  // every edit so there is no self-heal — the app stays bricked until site data
+  // is cleared. Validate the persisted scene with the cheap, pure `worldQuery`
+  // pass; on any throw, fall back to the compiled `SCENE` and drop the bad blob.
+  const persistedScene = loadScene();
+  let initialScene: SceneConfig = persistedScene ?? SCENE;
+  if (persistedScene) {
+    try {
+      worldQuery(persistedScene);
+    } catch (err) {
+      console.warn("fly-playground: discarding malformed persisted scene", err);
+      initialScene = SCENE;
+      try {
+        localStorage.removeItem("fly-playground.scene.v1");
+      } catch {
+        /* storage unavailable */
+      }
+    }
+  }
   const store = createSceneStore(initialScene);
   const saveDebounced = debounce((s: SceneConfig) => saveScene(s), 300);
   // --- end Plan 02b: world editing ---

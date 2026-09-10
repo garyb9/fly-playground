@@ -30,10 +30,28 @@ export function deserializeScene(json: string): SceneConfig | null {
       return null;
     }
 
+    const isVec3 = (val: unknown): boolean => {
+      if (typeof val !== "object" || val === null) return false;
+      const r = val as Record<string, unknown>;
+      return (
+        typeof r.x === "number" &&
+        typeof r.y === "number" &&
+        typeof r.z === "number" &&
+        Number.isFinite(r.x) &&
+        Number.isFinite(r.y) &&
+        Number.isFinite(r.z)
+      );
+    };
     const objectsOk = scene.objects.every((o) => {
       if (typeof o !== "object" || o === null) return false;
       const rec = o as Record<string, unknown>;
-      return typeof rec.id === "string" && typeof rec.kind === "string";
+      return (
+        typeof rec.id === "string" &&
+        typeof rec.kind === "string" &&
+        isVec3(rec.position) &&
+        isVec3(rec.scale) &&
+        isVec3(rec.rotation)
+      );
     });
     if (!objectsOk) return null;
 
