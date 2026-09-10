@@ -474,3 +474,151 @@
 .hud-scene__reset {
   margin-block-start: 10px;
 }
+
+/* Docked brain clearance is measured by BrainPanel's ResizeObserver. */
+.hud-depth {
+  left: 24px;
+  width: 280px;
+  height: 24px;
+  bottom: auto;
+  flex-direction: row;
+  gap: 10px;
+}
+.hud-depth__input {
+  writing-mode: horizontal-tb;
+  direction: ltr;
+  inline-size: 180px;
+  min-width: 0;
+}
+.hud-left-stack {
+  left: 24px;
+  top: calc(var(--reserved-bottom, 400px) + 40px);
+  width: 280px;
+  bottom: 130px;
+}
+.hud-meters {
+  bottom: 52px;
+  right: 24px;
+}
+.hud-pause {
+  left: 24px;
+  bottom: 12px;
+  transform: none;
+}
+@media (max-width: 1000px) {
+  .hud-meter__track {
+    inline-size: 40px;
+  }
+  .hud-meters {
+    gap: 6px 14px;
+  }
+  .hud-left-stack {
+    bottom: 130px;
+  }
+}
+@media (max-width: 599px) {
+  .hud-header {
+    left: 16px;
+    right: 16px;
+    justify-content: space-between;
+    font-size: 10px;
+  }
+  .hud-depth {
+    left: 16px;
+    width: 280px;
+  }
+  .hud-left-stack {
+    left: 16px;
+    width: 280px;
+    bottom: 150px;
+  }
+  .hud-meters {
+    left: 16px;
+    right: 16px;
+    bottom: 54px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px 12px;
+    max-height: 105px;
+    overflow-y: auto;
+    pointer-events: auto;
+  }
+  .hud-meter {
+    gap: 5px;
+    justify-content: space-between;
+  }
+  .hud-meter__label {
+    font-size: 10px;
+    min-width: 50px;
+  }
+  .hud-meter__value {
+    font-size: 10px;
+  }
+  .hud-pause {
+    left: 16px;
+  }
+  .hud-cluster {
+    right: 16px;
+    gap: 6px;
+  }
+  .hud-cluster__volume {
+    inline-size: 52px;
+  }
+}
+
+/* Camera controls sit below the project status, away from the brain and meters. */
+.hud-camera {
+  position: fixed;
+  top: 44px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+  font-size: 11px;
+}
+.hud-camera__mode {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  color: var(--hud-bright);
+}
+.hud-camera__hint {
+  color: var(--hud-text);
+}
+#hud .hud-camera button {
+  pointer-events: auto;
+}
+#view {
+  cursor: grab;
+}
+#view:active {
+  cursor: grabbing;
+}
+#view:focus-visible {
+  outline: 1px solid #5ba1b8;
+  outline-offset: -3px;
+}
+@media (max-width: 599px) {
+  .hud-camera {
+    top: auto;
+    bottom: 174px;
+    left: 16px;
+    right: 16px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+  .hud-camera__hint {
+    max-width: 95px;
+    text-align: center;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 599px) {
+  .hud-left-stack {
+    bottom: 220px;
+  }
+}

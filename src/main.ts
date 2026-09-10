@@ -5,26 +5,27 @@
 import neuronsUrl from "../pipeline/out/fixture/neurons.bin?url";
 import graphUrl from "../pipeline/out/fixture/graph.bin?url";
 import groupsJson from "../pipeline/out/fixture/groups.json";
-import manifestJson from "../pipeline/out/fixture/manifest.json";
+import { parseGroups } from "./formats/groups";
+import { BrainPanel } from "./viz/brain-panel/brain-panel";
 
 import "./ui/hud.css";
 
 import { createSimBridge, type LifParams } from "./bridge/sim-bridge";
 import * as sensing from "./sensing/sensing";
 import { Body } from "./body/body";
-import type { Vec3 } from "./body/types";
 import { v } from "./body/types";
 import { SCENE, type SceneConfig } from "./scene.config";
 import { createSceneStore } from "./world/scene-store";
 import { loadScene, saveScene } from "./world/scene-persist";
 import { parseNeurons } from "./formats/neurons";
 import { parseGraph } from "./formats/graph";
-import { buildBrainPoints, buildCoreEdges, buildWorld } from "./viz/builders";
+import { buildWorld } from "./viz/builders";
 import { createRenderer } from "./viz/renderer";
 import { buildComposer } from "./viz/post";
 import { Fly } from "./viz/fly";
-import { updateFollowCamera } from "./viz/follow-camera";
-import { bob, idleSway, escapeKick, loadEnvelope } from "./viz/motion";
+import { CameraControls } from "./viz/camera-controls";
+import { qRotate } from "./body/quat";
+import { bob, loadEnvelope } from "./viz/motion";
 import { detectEscapeOnset } from "./audio/mapping";
 import { CONFIG } from "./app/config";
 import { worldQuery } from "./app/world-query";
@@ -33,7 +34,6 @@ import { Hud } from "./ui/hud";
 import type { HudControls, HudModel, Theme } from "./ui/controls";
 import { AudioEngine } from "./audio/audio";
 import * as THREE from "three";
-import type { BufferAttribute } from "three";
 
 async function fetchBuffer(url: string): Promise<ArrayBuffer> {
   const res = await fetch(url);
@@ -43,12 +43,20 @@ async function fetchBuffer(url: string): Promise<ArrayBuffer> {
 
 // Trailing-edge debounce — coalesces the LIF sliders' continuous `oninput`
 // stream into one worker `setParams` hop after the drag settles.
-function debounce<A extends unknown[]>(fn: (...a: A) => void, ms: number): (...a: A) => void {
+function debounce<A extends unknown[]>(
+  fn: (...a: A) => void,
+  ms: number,
+): ((...a: A) => void) & { cancel(): void } {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  return (...a: A): void => {
+  const schedule = (...a: A): void => {
     if (timer !== undefined) clearTimeout(timer);
     timer = setTimeout(() => fn(...a), ms);
   };
+  return Object.assign(schedule, {
+    cancel: () => {
+      if (timer !== undefined) clearTimeout(timer);
+    },
+  });
 }
 
 async function main(): Promise<void> {
@@ -56,7 +64,6 @@ async function main(): Promise<void> {
 
   // 1. Fixture assets.
   const [neurons, graph] = await Promise.all([fetchBuffer(neuronsUrl), fetchBuffer(graphUrl)]);
-  const scaleFactor = (manifestJson as { scale_factor?: number }).scale_factor ?? 1;
 
   // 2. Sim bridge over a module worker.
   const bridge = createSimBridge(
@@ -134,7 +141,7 @@ async function main(): Promise<void> {
   // Plan 2c's docked panel sets `panelHandle.current`; a safe no-op until then.
   // A holder object (not a bare `let`) so the `setGroupVisible` closure keeps the
   // handle branch — an effectively-const `let` narrows its capture to null.
-  const panelHandle: { current: { setGroupVisible(g: number, v: boolean): void } | null } = {
+  const panelHandle: { current: BrainPanel | null } = {
     current: null,
   };
   const setParamsDebounced = debounce((p: Partial<LifParams>) => bridge.setParams(p), 50);
@@ -152,6 +159,7 @@ async function main(): Promise<void> {
       hud.setTheme(t);
       renderer.setTheme(t);
       fly.setTheme(t);
+      panelHandle.current?.setTheme(t);
       try {
         localStorage.setItem("fly-playground.theme", t);
       } catch {
@@ -199,39 +207,31 @@ async function main(): Promise<void> {
   renderer.setComposer(composer);
   // --- end Plan 02b: aesthetic ---
 
-  const points = buildBrainPoints(neuronsFile, scaleFactor);
-  const edges = buildCoreEdges(graphFile, neuronsFile.coreCount);
-  // Constraint #1: buildCoreEdges' geometry is index-only — share the point
-  // cloud's position buffer so the LineSegments actually renders.
-  edges.geometry.setAttribute("position", points.geometry.getAttribute("position"));
-
-  // Brain point cloud + core edges share one position buffer, so they must
-  // inherit one world transform — wrap them in a Group placed as a big fixed
-  // object on the fly's cruise line (see CONFIG.aesthetic.brainCenter/Scale).
-  const brain = new THREE.Group();
-  brain.add(points, edges);
-  const { brainCenter, brainScale } = CONFIG.aesthetic;
-  brain.position.set(brainCenter.x, brainCenter.y, brainCenter.z);
-  brain.scale.setScalar(brainScale);
-  // 500 points — never worth culling, and culling was half of why it went missing.
-  points.frustumCulled = false;
+  const brainPanel = new BrainPanel(
+    neuronsFile,
+    graphFile,
+    parseGroups(groupsJson),
+    controls.setGroupVisible,
+    currentTheme,
+  );
+  panelHandle.current = brainPanel;
 
   let world3d = buildWorld(initialScene, currentTheme);
   const fly = new Fly(currentTheme);
-  renderer.scene.add(brain, world3d, fly.object3d);
-
-  const aActivity = points.geometry.getAttribute("aActivity") as BufferAttribute;
-  const aActivityArr = aActivity.array as Float32Array;
+  renderer.scene.add(world3d, fly.object3d);
 
   // 6. Body + collision world.
   const body = new Body(initialScene.fly.start, initialScene.fly.heading);
   const world = worldQuery(initialScene);
 
   // 7. Per-frame view sink.
-  let camPos: Vec3 = v(
-    initialScene.fly.start.x + CONFIG.camera.OFFSET.x,
-    initialScene.fly.start.y + CONFIG.camera.OFFSET.y,
-    initialScene.fly.start.z + CONFIG.camera.OFFSET.z,
+  fly.update({}, body.pose(), 0);
+  const cameraTarget = new THREE.Vector3();
+  const cameraControls = new CameraControls(
+    canvas,
+    renderer.camera,
+    fly.cameraTarget(cameraTarget),
+    qRotate(body.pose().orientation, CONFIG.camera.OFFSET),
   );
   let lastFrameMs = performance.now();
 
@@ -248,27 +248,15 @@ async function main(): Promise<void> {
   // The ember's constructed intensity is the "fully lit" reference — read once
   // so the ignite ramp and the escape spike stay relative to `fly.ts`'s value.
   const emberBase = fly.emberLight.intensity;
-  // Peak escape bloom = emberBase * (1 + ESCAPE_EMBER_GAIN); decays with the kick.
+  // Peak escape bloom = emberBase * (1 + ESCAPE_EMBER_GAIN); decays after the escape.
   const ESCAPE_EMBER_GAIN = 1.5;
-  // Collision shudder: the same curve, half the shove and half the window.
-  const COLLISION_KICK = {
-    posShove: CONFIG.aesthetic.ESCAPE_KICK.posShove * 0.5,
-    rollDeg: CONFIG.aesthetic.ESCAPE_KICK.rollDeg * 0.5,
-    decayS: CONFIG.aesthetic.ESCAPE_KICK.decayS * 0.5,
-  };
-
   let bootT = 0;
   let bannerShown = -1; // last rendered character count, so we only touch the DOM on change
   let bannerDone = false;
   let hudFaded = false; // stop rewriting #hud opacity once it has settled at 1
-  let firstFrame = true; // no collision shudder off the seed frame (prevProx starts at 0)
-  // One kick slot: an escape outranks a collision shudder while it is running.
-  let kickCfg: { posShove: number; rollDeg: number; decayS: number } | null = null;
-  let kickElapsed = 0;
-  let kickIsEscape = false;
+  let escapeGlowElapsed = Infinity;
   let escapeArmed = true;
   let prevEscape = 0;
-  let prevProx = 0;
   // --- end Plan 02b: motion + load ---
 
   // FrameView is frozen — Plan 2c's docked panel consumes { activity, readouts, sensory, paused }
@@ -277,16 +265,12 @@ async function main(): Promise<void> {
     const dt = Math.min((now - lastFrameMs) / 1000, CONFIG.loop.MAX_FRAME_DT);
     lastFrameMs = now;
 
-    // Constraint #3: push per-neuron activity into the shader attribute.
-    const n = Math.min(view.activity.length, aActivityArr.length);
-    aActivityArr.set(view.activity.subarray(0, n));
-    aActivity.needsUpdate = true;
-
     fly.update(view.readouts, view.pose, dt);
 
     // --- Plan 02b: motion + load (per frame) ---
     bootT += dt;
     const env = loadEnvelope(bootT, CONFIG.aesthetic.LOAD);
+    brainPanel.update(view, bootT, dt);
 
     // Banner types in, then fades once the HUD has finished arriving.
     if (bannerEl && !bannerDone) {
@@ -312,7 +296,7 @@ async function main(): Promise<void> {
     }
 
     // Escape rising edge — the same pure detector the audio blip uses, so the
-    // camera kick, the blip and the ember spike all fire on one frame.
+    // blip and the ember spike fire on the same response.
     const esc = view.readouts.escape ?? 0;
     const edge = detectEscapeOnset(
       prevEscape,
@@ -322,54 +306,25 @@ async function main(): Promise<void> {
     );
     prevEscape = esc;
     if (edge.onset && escapeArmed) {
-      kickCfg = CONFIG.aesthetic.ESCAPE_KICK;
-      kickElapsed = 0;
-      kickIsEscape = true;
+      escapeGlowElapsed = 0;
       escapeArmed = false;
     } else if (edge.armed) {
       escapeArmed = true;
     }
 
-    // Collision shudder — a hard jump in proximity means the fly just clipped
-    // something (the loop's contact startle fires on the same frame).
-    const prox = view.sensory.proximity ?? 0;
-    if (!firstFrame && !kickIsEscape && prox - prevProx >= CONFIG.physics.CONTACT_STARTLE * 0.8) {
-      kickCfg = COLLISION_KICK;
-      kickElapsed = 0;
-    }
-    prevProx = prox;
-    firstFrame = false;
-
     // Ember: ignite ramp during boot, spiking on an escape.
     const lit = emberBase * (reduced ? 1 : env.ignite);
-    const glow = kickIsEscape && kickCfg ? Math.exp(-kickElapsed / (kickCfg.decayS / 3)) : 0;
+    const glow = Math.exp(-escapeGlowElapsed / (CONFIG.aesthetic.ESCAPE_KICK.decayS / 3));
     fly.emberLight.intensity = Math.max(lit, emberBase * (1 + ESCAPE_EMBER_GAIN) * glow);
 
     // Fly bob — render-only, applied after `fly.update` wrote the pose.
     if (!reduced)
       fly.object3d.position.y += bob(bootT, CONFIG.aesthetic.BOB_HZ, CONFIG.aesthetic.BOB_AMP);
 
-    const sway = reduced
-      ? undefined
-      : idleSway(bootT, CONFIG.camera.IDLE_SWAY_HZ, CONFIG.camera.IDLE_SWAY_AMP);
-    const kick = kickCfg && !reduced ? escapeKick(kickElapsed, kickCfg) : undefined;
-    if (kickCfg) {
-      kickElapsed += dt;
-      if (kickElapsed > kickCfg.decayS) {
-        kickCfg = null;
-        kickIsEscape = false;
-      }
-    }
+    escapeGlowElapsed += dt;
     // --- end Plan 02b: motion + load (per frame) ---
 
-    const cam = updateFollowCamera(camPos, view.pose, dt, { sway, kick });
-    // The offsets ride on the returned position, so they feed back into the
-    // spring next frame — that re-damps them, which is the point: the kick
-    // shoves and the spring eases the camera home.
-    camPos = cam.position;
-    renderer.camera.position.set(cam.position.x, cam.position.y, cam.position.z);
-    renderer.camera.lookAt(cam.lookAt.x, cam.lookAt.y, cam.lookAt.z);
-    if (cam.roll !== 0) renderer.camera.rotateZ(cam.roll);
+    cameraControls.update(fly.cameraTarget(cameraTarget));
 
     // Plan 02b: audio + HUD sinks.
     audio.update(view, dt);
@@ -388,7 +343,7 @@ async function main(): Promise<void> {
   // --- Plan 02b: world editing (live rebuild) ---
   // Every store mutation: swap world3d (disposing the old geometry/materials),
   // recompute the collision query, refresh the HUD editor, debounce-persist.
-  store.subscribe((s) => {
+  const unsubscribe = store.subscribe((s) => {
     renderer.scene.remove(world3d);
     world3d.traverse((o) => {
       if (o instanceof THREE.Mesh) {
@@ -405,7 +360,10 @@ async function main(): Promise<void> {
   // --- end Plan 02b: world editing (live rebuild) ---
 
   // 8. Size to the viewport.
-  const resize = (): void => renderer.resize(window.innerWidth, window.innerHeight);
+  const resize = (): void => {
+    renderer.resize(window.innerWidth, window.innerHeight);
+    brainPanel.setViewport(window.innerWidth, window.innerHeight);
+  };
   window.addEventListener("resize", resize);
   resize();
 
@@ -416,6 +374,41 @@ async function main(): Promise<void> {
   // 9. Run the whole cloud.
   bridge.setActiveCount(nNeurons);
   loop.start();
+  let disposed = false;
+  const dispose = (): void => {
+    if (disposed) return;
+    disposed = true;
+    saveDebounced.cancel();
+    setParamsDebounced.cancel();
+    loop.stop();
+    bridge.dispose();
+    audio.dispose();
+    hud.dispose();
+    brainPanel.dispose();
+    cameraControls.dispose();
+    panelHandle.current = null;
+    unsubscribe();
+    window.removeEventListener("resize", resize);
+    window.removeEventListener("pagehide", onPageHide);
+    for (const pass of composer.composer.passes) pass.dispose();
+    composer.composer.dispose();
+    const geometries = new Set<THREE.BufferGeometry>();
+    const materials = new Set<THREE.Material>();
+    renderer.scene.traverse((o) => {
+      if (o instanceof THREE.Mesh) {
+        geometries.add(o.geometry);
+        for (const m of Array.isArray(o.material) ? o.material : [o.material]) materials.add(m);
+      }
+    });
+    geometries.forEach((g) => g.dispose());
+    materials.forEach((m) => m.dispose());
+    renderer.gl.dispose();
+  };
+  const onPageHide = (event: PageTransitionEvent): void => {
+    if (!event.persisted) dispose();
+  };
+  window.addEventListener("pagehide", onPageHide);
+  import.meta.hot?.dispose(dispose);
 }
 
 main().catch((err) => {

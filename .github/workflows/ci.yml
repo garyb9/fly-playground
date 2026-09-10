@@ -10,7 +10,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with: { targets: wasm32-unknown-unknown, components: rustfmt, clippy }
       - uses: taiki-e/install-action@v2
-        with: { tool: wasm-pack }
+        with: { tool: wasm-pack@0.15.0 }
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
       - run: pip install -e "pipeline[dev]"

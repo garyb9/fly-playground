@@ -75,6 +75,7 @@ export class Fly {
   private readonly wingL: THREE.Group;
   private readonly wingR: THREE.Group;
   private elapsed = 0;
+  private readonly bodyCenter = new THREE.Vector3();
 
   constructor(theme: Theme = CONFIG.aesthetic.theme) {
     this.object3d = new THREE.Group();
@@ -103,6 +104,9 @@ export class Fly {
     head.scale.set(0.34, 0.34, 0.34);
     head.position.set(0.42, 0.05, 0);
     this.tilt.add(head);
+    const bodyBounds = new THREE.Box3();
+    for (const mesh of [thorax, abdomen, head]) bodyBounds.expandByObject(mesh);
+    bodyBounds.getCenter(this.bodyCenter);
 
     for (const sign of [-1, 1] as const) {
       const eye = new THREE.Mesh(sphere, accent);
@@ -153,6 +157,11 @@ export class Fly {
 
     // Nose pitches down slightly as thrust rises (rotation about the lateral z axis).
     this.tilt.rotation.z = -(readouts.thrust ?? 0) * 0.18;
+  }
+
+  /** Stable body center, excluding flapping wings; includes pose, tilt and render bob. */
+  cameraTarget(out: THREE.Vector3): THREE.Vector3 {
+    return this.tilt.localToWorld(out.copy(this.bodyCenter));
   }
 
   /** Recolour the fly's materials for `theme` (they carry `userData.themeKey`). */

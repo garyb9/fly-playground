@@ -170,3 +170,62 @@ test("setWorld swaps the world the loop feeds to sensing + body on the next fram
   loop.frameOnce(32);
   expect(steps.at(-1)).toBe(w2);
 });
+
+test("pause freezes body, sensing and injections, and resume excludes paused time", () => {
+  const run = (pause: boolean) => {
+    const fb = fakeBridge();
+    const body = new Body(v(0, 4, 0), 0);
+    let view: FrameView | undefined;
+    const loop = new Loop({
+      bridge: fb.obj,
+      body,
+      sensing,
+      roleTable: rt,
+      world,
+      onFrame: (x) => {
+        view = x;
+      },
+    });
+    loop.frameOnce(0);
+    loop.frameOnce(16);
+    const pose = structuredClone(body.pose());
+    const sensors = structuredClone(view!.sensory);
+    if (pause) {
+      fb.state.paused = true;
+      loop.frameOnce(1000);
+      loop.frameOnce(10000);
+      expect(body.pose()).toEqual(pose);
+      expect(view!.sensory).toEqual(sensors);
+      expect(view!.paused).toBe(true);
+      expect(fb.stim).toHaveLength(1);
+      fb.state.paused = false;
+    }
+    loop.frameOnce(pause ? 10016 : 32);
+    expect(view!.paused).toBe(false);
+    return body.pose();
+  };
+  expect(run(true)).toEqual(run(false));
+});
+
+test("starting paused publishes a stationary frame without injecting", () => {
+  const fb = fakeBridge();
+  fb.state.paused = true;
+  const body = new Body(v(0, 4, 0), 0);
+  const pose = structuredClone(body.pose());
+  let view: FrameView | undefined;
+  const loop = new Loop({
+    bridge: fb.obj,
+    body,
+    sensing,
+    roleTable: rt,
+    world,
+    onFrame: (x) => {
+      view = x;
+    },
+  });
+  loop.frameOnce(0);
+  loop.frameOnce(16);
+  expect(view!.pose).toEqual(pose);
+  expect(view!.sensory).toEqual({});
+  expect(fb.stim).toHaveLength(0);
+});

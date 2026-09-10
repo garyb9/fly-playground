@@ -112,3 +112,37 @@ through a live page. **All unchecked**: a human ticks them after the live pass.
 - [ ] Load sequence: points converge out of the dark → banner → fly ignites → HUD last.
 - [ ] `prefers-reduced-motion` drops the ambient motion but keeps wing flap, physics, meters, escape bloom.
 - [ ] Matches the style-frame: <https://claude.ai/code/artifact/1de23900-b352-4a62-be19-512f36365675>
+
+## Plan 2c — browser acceptance (2026-09-10)
+
+Verified with Chrome 152 via DevTools automation and screenshot inspection.
+This records the 2c checks only; unchecked older visual/art-direction rows above
+are not retroactively certified.
+
+- [x] Docked panel visible; large world-space brain removed.
+- [x] Desktop, 800×600 and 390×844 card/HUD clearance; narrow card expands/collapses.
+- [x] Dark/light panel, group disclosure and checkboxes, open editor layout.
+- [x] Depth reduction updates simulated count to 48 and clears inactive points.
+- [x] Paused body regression plus unchanged browser sensory readings; resume works.
+- [x] Real WASM looming stimulus produces escape and panel glow/pulse.
+- [x] Reduced-motion frames at different presentation times are pixel-identical.
+- [x] Context loss recovery message, restored rendering, and panel disposal.
+- [x] SAB development app and postMessage production build both render/update.
+- [x] Full repository CI passes (114 TypeScript tests, Rust/Python checks and builds).
+- [ ] Confirm 60fps rendering on a named hardware GPU; software headless sample
+      was median 50ms per frame. Simulation Hz is a separate measurement.
+- [ ] Real anatomical region/skeleton rendering and full-connectome behavior — Plan 03.
+
+## Plan 2d — camera acceptance (2026-09-10)
+
+- [x] Left-drag orbits around the moving fly and retains angle after release.
+- [x] Wheel zooms in/out; unit tests cover bounds and delta-mode normalization.
+- [x] Right-click centers the fly while preserving zoom and angle; target projects to screen center.
+- [x] Ordinary clicks and sub-threshold movement do not start orbiting.
+- [x] Overlay wheel input does not affect the world camera.
+- [x] Release outside the canvas and window blur cancel dragging cleanly.
+- [x] Disposed camera controls leave no active wheel handler or controls widget.
+- [x] Space on center fly activates the button without toggling simulation pause.
+- [x] Camera remains usable while paused and under reduced motion.
+- [x] Desktop, compact and narrow layouts checked in Chrome; dark and light themes.
+- [x] Full CI: 119 TypeScript tests plus Rust/Python checks and builds.

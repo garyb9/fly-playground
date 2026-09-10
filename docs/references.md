@@ -6,6 +6,25 @@
   "Deep Field" aesthetic spec (palette, type, motion, post-FX), grounded in the
   region-colour convention below and defined against `fly-escape`'s sunlit look.
 
+## Additional references for upcoming work
+
+Added by the maintainer on 2026-09-10 for later visual and implementation review.
+
+- **What Is a Brain? — fly / palm**
+  <https://whatisabrain.com/fly/palm.html#1>
+  Reference to review for presentation and interaction; detailed review pending.
+- **FlyWire Codex — FAFB**
+  <https://codex.flywire.ai/?dataset=fafb>
+  Connectome exploration reference for neuron search, anatomy, connectivity,
+  and 3D inspection. This link selects the female adult fly brain dataset;
+  keep its neuron identities separate from our MaleCNS data. Interactive
+  exploration requires sign-in.
+- **fly-effect** (dj-thank)
+  <https://github.com/dj-thank/fly-effect>
+  Research project on neural circuits, bodies, and simulated organisms,
+  starting with Drosophila. Reference for later embodied-simulation and
+  implementation review; detailed comparison pending.
+
 ## The dataset
 
 - **Announcement — Google blog:** *A map of the male fruit fly brain*
@@ -54,6 +73,7 @@ edges after aggregation. Native coordinates are 8 nm voxel units.
 
 - `neuprint-python` — <https://connectome-neuprint.github.io/neuprint-python/>
 - `navis` — <https://navis.readthedocs.io/> (skeleton / mesh handling)
-- `wasm-pack` / `wasm-bindgen` — <https://rustwasm.github.io/wasm-pack/>
+- `wasm-pack` — <https://wasm-bindgen.github.io/wasm-pack/>
+- `wasm-bindgen` — <https://wasm-bindgen.github.io/wasm-bindgen/>
 - Three.js — <https://threejs.org/>
 - Vite — <https://vitejs.dev/>

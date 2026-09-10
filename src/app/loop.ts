@@ -34,6 +34,7 @@ export class Loop {
   private seeded = false;
   private sensingState: SensingState = initSensingState();
   private pendingStartle = 0;
+  private lastSensory: Readouts = {};
   private raf = 0;
 
   constructor(deps: LoopDeps) {
@@ -59,6 +60,21 @@ export class Loop {
 
     const { bridge, body, sensing, roleTable, onFrame } = this.deps;
     const world = this.world;
+    const raw = bridge.readState();
+    const readouts: Readouts = Object.fromEntries(
+      roleTable.readoutOrder.map((name, i) => [name, raw.readouts[i] ?? 0]),
+    );
+    if (raw.paused) {
+      onFrame({
+        pose: body.pose(),
+        readouts,
+        sensory: this.lastSensory,
+        activity: raw.activity,
+        simHz: raw.simHz,
+        paused: true,
+      });
+      return;
+    }
 
     const pose = body.pose();
     const { stimulus, state } = sensing.sample(pose, world, dt, this.sensingState, roleTable);
@@ -71,14 +87,11 @@ export class Loop {
 
     bridge.setStimulus(stimulus);
 
-    const raw = bridge.readState();
-    const readouts: Readouts = Object.fromEntries(
-      roleTable.readoutOrder.map((name, i) => [name, raw.readouts[i] ?? 0]),
-    );
     // Named view of the stimulus actually injected this frame (post startle add).
     const sensory: Readouts = Object.fromEntries(
       roleTable.inputOrder.map((name, i) => [name, stimulus[i] ?? 0]),
     );
+    this.lastSensory = sensory;
 
     const { contact } = body.step(dt, readouts, world);
     if (contact) this.pendingStartle = CONFIG.physics.CONTACT_STARTLE;

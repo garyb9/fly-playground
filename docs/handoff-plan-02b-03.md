@@ -1,5 +1,11 @@
 # Handoff — fly-playground Plan 02b + Plan 03
 
+**Current handoff (2026-09-10):** Plan 2c is implemented. Continue from the
+[2c implementation/validation record](superpowers/plans/2026-09-10-fly-playground-2c-brain-panel.md),
+which supersedes the historical parallel-branch and camera assumptions below.
+Next work is real anatomy and circuit-driven behavior (Plan 03); hardware-GPU
+performance verification remains open. Do not restart from the old 2c worktree.
+
 **Written:** 2026-09-09 · for an agent picking up the next two plan cycles.
 **Repo state at handoff:** `main` + the brain-viz visibility fix (branch
 `fix/brain-point-cloud-visible`, commit `ffc7f93`) + a follow-up "dark spots"

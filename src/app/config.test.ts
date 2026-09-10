@@ -14,7 +14,14 @@ test("CONFIG is fully populated and sane", () => {
   expect(CONFIG.sim.snapMax).toBeGreaterThanOrEqual(CONFIG.sim.coreFloor);
   expect(CONFIG.loop.MAX_FRAME_DT).toBeGreaterThan(0);
   expect(CONFIG.worker.MAX_CATCHUP_MS).toBeGreaterThanOrEqual(CONFIG.worker.TICK_MS);
-  expect(CONFIG.aesthetic.brainScale).toBeGreaterThanOrEqual(1);
+  expect("brainScale" in CONFIG.aesthetic).toBe(false);
+  expect("brainCenter" in CONFIG.aesthetic).toBe(false);
+  expect(Object.values(CONFIG.brainPanel).every(Number.isFinite)).toBe(true);
+  for (const key of ["firingThreshold", "hotRowThreshold", "regionTintMix"] as const) {
+    expect(CONFIG.brainPanel[key]).toBeGreaterThanOrEqual(0);
+    expect(CONFIG.brainPanel[key]).toBeLessThanOrEqual(1);
+  }
+  expect(CONFIG.brainPanel.escapeDecayS).toBeGreaterThan(0);
 });
 
 test("Plan 02b CONFIG blocks are present and sane", () => {

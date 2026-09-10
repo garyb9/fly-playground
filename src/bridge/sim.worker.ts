@@ -19,7 +19,7 @@ function post(m: FromWorker, transfer: Transferable[] = []) {
 }
 
 async function onInit(msg: Extract<ToWorker, { t: "init" }> & { sab?: SharedArrayBuffer }) {
-  await initWasm(wasmUrl);
+  await initWasm({ module_or_path: wasmUrl });
   const sim = new Sim(
     new Uint8Array(msg.assets.neurons),
     new Uint8Array(msg.assets.graph),

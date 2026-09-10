@@ -1,0 +1,213 @@
+.brain-panel {
+  --panel-text: #becfe2;
+  --panel-dim: #8198b2;
+  --panel-line: #2b3e55;
+  --panel-spark: #eaf7ff;
+  --panel-fill: #5ba1b8;
+  position: fixed;
+  z-index: 12;
+  box-sizing: border-box;
+  border: 1px solid var(--panel-line);
+  border-radius: 5px;
+  background: linear-gradient(160deg, rgba(19, 33, 52, 0.96), rgba(7, 13, 24, 0.97));
+  color: var(--panel-text);
+  box-shadow: 0 12px 40px #0003;
+  font:
+    12px/1.5 "IBM Plex Sans",
+    sans-serif;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--panel-line) transparent;
+}
+.brain-panel[data-theme="light"] {
+  --panel-text: #233e55;
+  --panel-dim: #50697e;
+  --panel-line: #bacbd6;
+  --panel-spark: #103e4e;
+  --panel-fill: #397c91;
+  background: linear-gradient(160deg, #f5f9fc, #e4edf4);
+}
+.brain-panel [hidden] {
+  display: none !important;
+}
+.brain-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 13px 16px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.brain-panel__title {
+  font:
+    500 15px "IBM Plex Sans",
+    sans-serif;
+  letter-spacing: 0.03em;
+}
+.brain-panel__title::before {
+  content: "−";
+  margin-right: 9px;
+  color: var(--panel-dim);
+}
+.brain-panel__header[aria-expanded="false"] .brain-panel__title::before {
+  content: "+";
+}
+.brain-panel__state {
+  font:
+    10px "IBM Plex Mono",
+    monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.brain-panel__state::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #6fbf8e;
+  margin-right: 7px;
+}
+.brain-panel[data-paused="true"] .brain-panel__state::before {
+  background: var(--panel-dim);
+}
+.brain-panel__body {
+  padding: 0 16px 12px;
+}
+.brain-panel__meta {
+  font:
+    10px "IBM Plex Mono",
+    monospace;
+  color: var(--panel-dim);
+  letter-spacing: 0.04em;
+}
+.brain-panel__cloud {
+  position: relative;
+  margin: 8px -8px 0;
+}
+.brain-panel__canvas {
+  display: block;
+  width: 100%;
+  height: 150px;
+}
+.brain-panel__recovery {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #101a28ee;
+  color: #eaf7ff;
+}
+.brain-panel__count {
+  font:
+    22px "IBM Plex Mono",
+    monospace;
+  color: var(--panel-spark);
+  font-variant-numeric: tabular-nums;
+}
+.brain-panel__legend {
+  color: var(--panel-dim);
+  font-size: 10px;
+  margin: 3px 0 12px;
+}
+.brain-panel__regions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.brain-panel__region {
+  flex: 1;
+  padding-top: 4px;
+  position: relative;
+  font:
+    9px "IBM Plex Mono",
+    monospace;
+}
+.brain-panel__region--0 {
+  color: #6fbf8e;
+}
+.brain-panel__region--1 {
+  color: #9b84e0;
+}
+.brain-panel__region--2 {
+  color: #5aa0d6;
+}
+.brain-panel summary {
+  padding: 8px 0;
+  border-top: 1px solid var(--panel-line);
+  cursor: pointer;
+  font-size: 11px;
+}
+.brain-panel__row {
+  display: grid;
+  grid-template-columns: 72px 1fr 32px;
+  gap: 10px;
+  align-items: center;
+  min-height: 21px;
+  font-size: 11px;
+}
+.brain-panel__track {
+  height: 3px;
+  background: var(--panel-line);
+}
+.brain-panel__fill {
+  display: block;
+  height: 100%;
+  background: var(--panel-fill);
+}
+.brain-panel__value {
+  font:
+    10px "IBM Plex Mono",
+    monospace;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.brain-panel__row[data-hot="true"] .brain-panel__fill {
+  background: var(--panel-spark);
+  box-shadow: 0 0 8px var(--panel-fill);
+}
+.brain-panel__row[data-ramp="warn"] .brain-panel__fill {
+  background: linear-gradient(90deg, var(--panel-fill), #ffb25a, #fff1da);
+}
+.brain-panel__filters {
+  margin-top: 8px;
+}
+.brain-panel__groups {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  font:
+    11px "IBM Plex Mono",
+    monospace;
+}
+.brain-panel__groups label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+.brain-panel input {
+  accent-color: var(--panel-fill);
+}
+.brain-panel__note {
+  font-size: 10px;
+  color: var(--panel-dim);
+  margin-bottom: 0;
+}
+.brain-panel :focus-visible {
+  outline: 2px solid var(--panel-fill);
+  outline-offset: 2px;
+}
+
+.brain-panel__region::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  border-top: 2px solid;
+  opacity: var(--region-opacity, 0.25);
+}

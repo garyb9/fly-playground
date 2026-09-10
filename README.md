@@ -29,9 +29,16 @@ scene editor), reactive audio, runtime world editing with persistence, and the
 "Deep Field" aesthetic pass (palette + post-FX + motion + load sequence +
 reduced-motion). The aesthetic direction is specced in
 [`docs/2026-09-09-visual-direction.md`](docs/2026-09-09-visual-direction.md), with a
-status table the implementing agent keeps current. The **brain viz** (docked
-connectome panel, region filters, connectome breath, pathway pulse) moved to
-**Plan 2c**. Next: Plan 03.
+status table the implementing agent keeps current. Plan 2c (docked brain panel) is implemented: a separate connectome view with
+mean neural activity, threshold counts, synthetic-group filters, escape glow,
+load convergence, dark/light themes, and reduced motion. Pause now freezes body
+and sensors as well as the simulation. Browser acceptance covers desktop and
+compact layouts, both transports, and context recovery; the 60 fps hardware-GPU
+performance target still needs verification. See the
+[implementation and validation record](docs/superpowers/plans/2026-09-10-fly-playground-2c-brain-panel.md).
+Plan 2d adds fly-centered mouse camera controls: left-drag orbit, wheel zoom,
+and right-click / **center fly** to recenter while retaining zoom and angle.
+Next: Plan 03 — real anatomical geometry and verified connectome-driven behavior.
 
 ## What it does (target)
 
@@ -58,7 +65,13 @@ connectome panel, region filters, connectome breath, pathway pulse) moved to
 | Audio                 | Web Audio API                                                           |
 | CI                    | `cargo test`, `wasm-pack build`, `vitest`, `tsc --noEmit`, `vite build` |
 
-## Quickstart (once implemented)
+## Quickstart
+
+Use `wasm-pack` 0.15.0 (also pinned in CI). To install or upgrade:
+
+```bash
+cargo +stable install wasm-pack --version 0.15.0 --locked --force
+```
 
 ```bash
 # 1. Generate data assets (one-time, needs ~1.1 GB download)
@@ -74,14 +87,18 @@ npm install && npm run dev
 Until the pipeline is run, the app and tests use a small synthetic connectome
 fixture under `pipeline/out/`.
 
-## Controls (target)
+## Controls
 
-| Key / control            | Action                                           |
-| ------------------------ | ------------------------------------------------ |
-| Neuron slider            | how much of the brain to integrate (core … 166k) |
-| Camera toggle            | follow-the-fly ↔ free-fly through the brain      |
-| Audio controls           | mute / volume                                    |
-| Readout + sensory meters | watch stimulus → brain → motion                  |
+| Key / control            | Action                                                  |
+| ------------------------ | ------------------------------------------------------- |
+| Left-drag in the world   | Orbit around the moving fly                             |
+| Scroll wheel             | Zoom in / out                                           |
+| Right-click / center fly | Recenter on the fly; retain zoom and viewing direction  |
+| Space / pause            | Pause or resume the simulation and body                 |
+| Neuron slider            | Simulated depth (48–500 in the current fixture)         |
+| Brain group filters      | Show/hide groups without changing simulation membership |
+| Audio controls           | Mute / volume                                           |
+| Readout + sensory meters | Watch stimulus → brain → motion                         |
 
 ## Documentation
 

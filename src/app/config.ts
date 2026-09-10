@@ -69,7 +69,28 @@ export const CONFIG = {
     // Plan 2c docked-card region the HUD keeps clear (viewport fracs, 1080p ref).
     reservedRect: { x: 0.0125, y: 0.022, w: 0.156, h: 0.322 },
   },
+  brainPanel: {
+    width: 300,
+    cloudHeight: 150,
+    cloudRotateHz: 0.017,
+    breathHz: 0.14,
+    breathAmp: 0.04,
+    edgeOpacity: 0.15,
+    firingThreshold: 0.32,
+    hotRowThreshold: 0.5,
+    escapeDecayS: 0.3,
+    regionTintMix: 0.33,
+    loadS: 1.2,
+  },
   camera: {
+    mouse: {
+      minDistance: 1.5,
+      maxDistance: 60,
+      maxElevation: 1.45,
+      rotateSpeed: 0.005,
+      zoomSpeed: 0.0015,
+      dragThreshold: 4,
+    },
     OFFSET: { x: -3.2, y: 1.4, z: 0 },
     LOOKAHEAD: 2.5,
     omega: 14,
@@ -108,10 +129,5 @@ export const CONFIG = {
     },
     VIGNETTE: { dark: 0.2, light: 0.12 },
     GRAIN: { dark: 0.018, light: 0.015 },
-    // Brain point cloud lives as one big fixed object in the world. The centre
-    // sits on the fly's cruise line between its start (0,4,0) and the escape
-    // block (9,4,0), so the fly flies through the connectome.
-    brainScale: 10,
-    brainCenter: { x: 6, y: 5, z: 0 },
   },
 } as const;

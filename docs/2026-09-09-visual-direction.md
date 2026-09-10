@@ -12,11 +12,9 @@
 
 ## 0. The one-sentence brief
 
-You pilot a single warm ember of a fly through a vast, cool, bioluminescent
-connectome floating in an astronomical-twilight void. The field is calm; the
-giant-fiber escape is the one violent moment. Professional because it reads like
-a captured scientific volume; fun because it is genuinely beautiful to move
-through.
+A single warm ember of a fly moves through a cool, quiet world. Its connectome
+is a captured instrument volume in a docked panel, with neural activity readable
+beside the behavior. The escape response is the sharpest event in the scene.
 
 The name **Deep Field** is the working handle for the direction — an astronomy
 deep-field exposure and the neural field, the same picture.
@@ -219,8 +217,8 @@ A calm field with exactly one violent gesture.
 |---|---|
 | **fly at rest / cruise** | weightless drift; a slow vertical bob (~0.15 units, ~0.5 Hz) on top of the physics; wings a translucent blur. |
 | **follow camera** | the existing critically-damped spring, plus a small idle sway (positional, sub-degree, ~0.1 Hz) so a static scene still breathes. |
-| **connectome idle** | a slow global "breath" — brightness/point-size ×(1 ± 0.04) over ~7 s — and per-point activity sparkle straight from the sim snapshot. |
-| **brain camera mode** | very slow drift-orbit of the whole cloud (~1°/s) while free-flying. |
+| **docked connectome idle** | a slow global "breath" — brightness/point-size ×(1 ± 0.04) over ~7 s — and per-point activity sparkle straight from the sim snapshot. |
+| **panel orientation** | slow cloud rotation in the docked view; fixed three-quarter view under reduced motion. |
 | **escape burst** | THE moment. One sub-frame white bloom at the fly; a fast bright pulse travelling the `pathway` edges loom→GF→motor; a short camera kick (positional shove + ~1.5° roll, decays in ~0.3 s). Then the calm drift resumes. Contrast is the whole effect — nothing else in the scene moves sharply. |
 | **load** | points converge out of the dark and fade up over ~1.2 s → boot banner types in → the fly *ignites* (an `ember` point blooms in at the start position) → sim starts, HUD fades in last. This is the hero moment; hold it, don't rush it. |
 | **collision startle** | a brief `neuron→spark` ripple through nearby points and a tiny camera shudder — a smaller cousin of the escape, so a wall tap still registers. |
@@ -280,7 +278,7 @@ otherwise add FXAA last. **No** chromatic aberration, **no** lens-dirt texture,
 - **Colour.** `mix(uCold, uHot, aActivity)`, then optionally
   `mix(that, regionTint, uRegionMix * (1.0 - aActivity))` so active points burn
   toward `spark` regardless of region.
-- **Size.** Keep the `POINT_MAX` clamp (the fly flies *through* the cloud). Core
+- **Size.** The panel uses bounded pixel point sizes; the old world-space `POINT_MAX` clamp is no longer its sizing model. Core
   points slightly larger as now. Add the `§5` breath as a global multiplier on
   `gl_PointSize` and the additive intensity.
 - **Depth.** Fog + additive falloff carry it; a DoF/bokeh pass is optional and
@@ -334,16 +332,16 @@ status and reality never drift. `docs/manual-checklist.md` has the matching
 | A1 | `palette.ts` retokenised to §2; existing key names kept where they map (`bg→void`, `pointCold→neuron`, `pointHot→spark`, `edge→pathway`, fly pair→ember) | §2, §6.1 | `done` (Task 11) — dual `PALETTE_DARK`/`PALETTE_LIGHT` + `activePalette(theme)` + generic `applyTheme(root, theme)` |
 | A2 | `CONFIG.aesthetic` gains the motion + post-FX dials (`BREATH_*`, `BOB_*`, `ESCAPE_KICK`, `BLOOM_*`, `VIGNETTE`, `GRAIN`, `EXPOSURE`) | §5, §6.2 | `done` (Task 12) — every 02b dial is in `CONFIG` **and consumed** (`BOB_*` + `IDLE_SWAY_*` → fly bob / camera sway, `ESCAPE_KICK` → camera kick, `LOAD` → boot envelope, `EXPOSURE`/`BLOOM`/`VIGNETTE`/`GRAIN` → the composer); `BREATH_*` is Plan 2c's to add |
 | A3 | `EffectComposer` post-FX stack in the render path | §6.2 | `done` (Task 11) — `src/viz/post.ts`: render → `UnrealBloomPass` → vignette → grain, ACES tone map + exposure on the renderer |
-| A4 | point-cloud blending → `AdditiveBlending` + `depthWrite:false` on `void`; soft radial alpha falloff | §6.3 | `todo` |
+| A4 | point-cloud blending → `AdditiveBlending` + `depthWrite:false` on `void`; soft radial alpha falloff | §6.3 | `done` (Plan 2c) — radial additive points in dark; normal blending in light |
 | A5 | fly: `emissive: ember` + parented warm `PointLight` + fly & light on the bloom layer | §6.5 | `partial` (Task 11) — emissive + parented `emberLight` landed; bloom selectivity rides the luminance THRESHOLD, not a dedicated bloom layer — layer is a Task 12 call |
 | A6 | world: cool key light (drop the warm "sun"), `buoy` material + Fresnel rims, grid → radial ground disc, dim bounds hairline | §2.4, §6.6 | `partial` (Task 11) — cool key + hemi, buoy mats + Fresnel rim, radial ground disc, no grid; the dim bounds hairline has no mesh yet — follow-up |
-| A7 | core edges `pathway` colour, opacity ~0.15 at rest; escape pulse travels them | §2.3, §6.4 | `todo` |
+| A7 | core edges `pathway` colour, opacity ~0.15 at rest; escape pulse travels them | §2.3, §6.4 | `done` (Plan 2c) — endpoint activity and directed illustrative escape pulse in the panel |
 | A8 | `src/ui/` built to the §3 type split + §4 layout; `index.html` mono-everything stub retired | §3, §4 | `done` — §3 type split + §4 layout landed; region-filter checkboxes render in the Plan 2c panel (Task 8) |
 | A9 | `prefers-reduced-motion` branch | §5 | `partial` (Task 12) — 02b half: `reduced` gates fly bob, camera idle sway, camera kick, and the banner type-in; wing flap / physics / meters / ember ignite stay. Connectome breath + panel converge are Plan 2c. |
 | A10 | load sequence: points converge → banner types in → fly ignites → HUD fades in last | §5 | `partial` (Task 12) — 02b half: banner types in → fly ignites → HUD fades in last (`loadEnvelope`). The 'points converge out of the dark' phase is Plan 2c. |
 | A11 | escape burst treatment: white bloom + pathway pulse + camera kick, decays ~0.3 s | §5 | `partial` (Task 12) — 02b half: ember spike + camera kick (positional shove + roll, decays ~`ESCAPE_KICK.decayS`). The white bloom flash + pathway pulse are Plan 2c. |
 | A12 | final HUD contrast re-checked against the real `void` background | §2.5 | `partial` (Task 11) — HUD tokens are Deep Field §2.5 verbatim; the visual contrast re-check against the real running `void` background is Task 12's manual pass |
-| A13 | region tints (§2.2) on resting points, keyed by group | §2.2 | `deferred → Plan 03 ok` |
+| A13 | region tints (§2.2) on resting points, keyed by group | §2.2 | `done` (Plan 2c) — low-mix synthetic group tint; real regions remain Plan 03 |
 
 `A13` and the per-segment `A7` pulse are the safe things to push to Plan 03 if
 02b runs long. Everything A1–A12 is the Deep Field floor.
@@ -369,3 +367,22 @@ status and reality never drift. `docs/manual-checklist.md` has the matching
   <https://fly-escape.vercel.app/>
 - Deep-sea bioluminescence palettes — cool cyan/teal points on near-black,
   darkness as material; the reference for `neuron`/`spark`/`void`.
+
+### Plan 2c implementation note — 2026-09-10
+
+The panel consumes the shared main-thread clock for convergence, rotation,
+breathing, and escape flash. This completes the panel halves of A9–A11.
+Reduced motion preserves activity brightness while suppressing motion; two
+controlled frames at different times were pixel-identical. The card uses actual
+measured HUD clearance and scrolls at constrained heights, superseding the
+original fixed 348px/fractional layout. The world no longer contains a brain
+object. No fly-through or orbit camera is implemented. Core-edge effects in
+§6.4 occur only in the panel. Hardware-GPU frame-budget validation remains open.
+
+### Plan 2d camera update — 2026-09-10
+
+The main world camera now orbits the moving fly with left-drag, zooms with the
+wheel, and recenters with right-click / center fly. User-controlled centering
+supersedes the earlier camera sway/kick treatment; those automatic camera
+motions are no longer applied. Fly bob, wing motion, ember glow, and panel
+activity remain. This is world-camera orbit, not the deferred brain inspector.
