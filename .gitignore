@@ -12,3 +12,6 @@ __pycache__/
 
 # SDD workspace (subagent-driven-development scratch)
 .superpowers/
+
+# Claude Code worktrees + local session state
+.claude/
