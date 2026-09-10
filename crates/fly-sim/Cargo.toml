@@ -2,6 +2,10 @@
 name = "fly-sim"
 version = "0.1.0"
 edition = "2021"
+description = "Deterministic LIF neuron simulation core for fly-playground, compiled to WASM."
+repository = "https://github.com/garyb9/fly-playground"
+license = "MIT"
+publish = false
 
 [lib]
 crate-type = ["cdylib", "rlib"]
