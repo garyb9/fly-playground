@@ -34,6 +34,9 @@ export interface Palette {
   /** the single cool `DirectionalLight` key (§6.5) — a light colour, not a
    * surface colour, so it is deliberately near-white in both themes. */
   keyLight: number;
+  /** Broad ambient illumination; light colors must not use dark surface tokens. */
+  skyLight: number;
+  groundLight: number;
   /** bounds hairline. */
   bounds: number;
   /** obstacle body — §2.4 `buoy`. */
@@ -55,6 +58,8 @@ export const PALETTE_DARK: Readonly<Palette> = Object.freeze({
   escapeWarm: 0xfff1da,
   ground: 0x0a1220,
   keyLight: 0xeaf7ff,
+  skyLight: 0xb7c7df,
+  groundLight: 0x526176,
   bounds: 0x22344d,
   buoy: 0x101a28,
   buoyRimA: 0x5aa0d6,
@@ -76,6 +81,8 @@ export const PALETTE_LIGHT: Readonly<Palette> = Object.freeze({
   // Near-white, NOT the light theme's near-black `pointHot` — keying the sun off
   // a surface token turned the light world almost unlit (Task 11 carry-forward).
   keyLight: 0xf4f7fa,
+  skyLight: 0xe7efff,
+  groundLight: 0xa1aab4,
   bounds: 0xb9c6d2,
   buoy: 0xd3dce4,
   buoyRimA: 0x5aa0d6,

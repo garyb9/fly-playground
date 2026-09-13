@@ -1,4 +1,14 @@
-const CTRL_INTS = 7;
+import type { EmbodiedSnapshot } from "./embodied";
+import type { MovementMode } from "../body/movement";
+const MODES: MovementMode[] = [
+  "neural",
+  "assisted",
+  "landing",
+  "grounded",
+  "taking off",
+  "wall recovery",
+];
+const CTRL_INTS = 8;
 const SEQ = 0,
   ACTIVE = 1,
   HZ_MILLI = 2,
@@ -19,13 +29,18 @@ export class RingLayout {
   ) {
     this.inputOffset = CTRL_INTS * 4;
     this.outputOffset = this.inputOffset + nInput * 4;
-    this.bytes = this.outputOffset + (nReadout + snapMax) * 4;
+    this.bytes = this.outputOffset + (nReadout + snapMax + 14 + nInput) * 4;
   }
   views(sab: SharedArrayBuffer) {
     return {
       control: new Int32Array(sab, this.controlOffset, CTRL_INTS),
       input: new Float32Array(sab, this.inputOffset, this.nInput),
       output: new Float32Array(sab, this.outputOffset, this.nReadout + this.snapMax),
+      body: new Float32Array(
+        sab,
+        this.outputOffset + (this.nReadout + this.snapMax) * 4,
+        14 + this.nInput,
+      ),
       _nReadout: this.nReadout,
     };
   }
@@ -42,6 +57,7 @@ export function readInput(v: V): Float32Array {
 export function writeOutput(
   v: V,
   d: {
+    embodied?: EmbodiedSnapshot;
     readouts: Float32Array;
     activity: Float32Array;
     nSnapshot: number;
@@ -56,6 +72,27 @@ export function writeOutput(
   Atomics.store(v.control, SEQ, odd);
   v.output.set(d.readouts.subarray(0, v._nReadout), 0);
   v.output.set(d.activity.subarray(0, d.nSnapshot), v._nReadout);
+  Atomics.store(v.control, 7, d.embodied ? 1 : 0);
+  if (d.embodied) {
+    const { state: s, mode, stimulus } = d.embodied;
+    v.body.set([
+      s.position.x,
+      s.position.y,
+      s.position.z,
+      s.orientation.x,
+      s.orientation.y,
+      s.orientation.z,
+      s.orientation.w,
+      s.vel.x,
+      s.vel.y,
+      s.vel.z,
+      s.angVel.x,
+      s.angVel.y,
+      s.angVel.z,
+      MODES.indexOf(mode),
+    ]);
+    v.body.set(stimulus, 14);
+  }
   Atomics.store(v.control, ACTIVE, d.activeCount | 0);
   Atomics.store(v.control, HZ_MILLI, Math.round(d.simHz * 1000));
   Atomics.store(v.control, PAUSED, d.paused | 0);
@@ -75,7 +112,21 @@ export function readOutput(v: V) {
   const tick =
     Atomics.load(v.control, TICK_HI) * 0x100000000 + (Atomics.load(v.control, TICK_LO) >>> 0);
   const paused = Atomics.load(v.control, PAUSED) !== 0;
+  let embodied: EmbodiedSnapshot | undefined;
+  if (Atomics.load(v.control, 7)) {
+    const b = v.body.slice();
+    embodied = {
+      state: {
+        position: { x: b[0]!, y: b[1]!, z: b[2]! },
+        orientation: { x: b[3]!, y: b[4]!, z: b[5]!, w: b[6]! },
+        vel: { x: b[7]!, y: b[8]!, z: b[9]! },
+        angVel: { x: b[10]!, y: b[11]!, z: b[12]! },
+      },
+      mode: MODES[b[13]!] ?? "neural",
+      stimulus: b.slice(14),
+    };
+  }
   const s2 = Atomics.load(v.control, SEQ);
   if (s2 !== s1) return null;
-  return { readouts, activity, simHz: hz, tick, paused };
+  return { readouts, activity, simHz: hz, tick, paused, embodied };
 }

@@ -25,6 +25,8 @@ async function onInit(msg: Extract<ToWorker, { t: "init" }> & { sab?: SharedArra
     new Uint8Array(msg.assets.graph),
     BigInt(msg.config.seed),
   );
+  if (msg.config.tonicDrive)
+    sim.set_bias(Uint32Array.from(msg.config.tonicDrive.cells), msg.config.tonicDrive.amplitude);
   const groups = parseGroups(msg.assets.groups);
   const rt = buildRoleTable(groups);
   const lists = roleNeuronLists(groups, rt);
@@ -42,11 +44,13 @@ async function onInit(msg: Extract<ToWorker, { t: "init" }> & { sab?: SharedArra
     {
       ...CONFIG.worker,
       snapMax: msg.config.snapMax,
-      coreFloor: CONFIG.sim.coreFloor,
+      coreFloor: sim.core_count(),
+      seed: msg.config.seed,
+      embodied: msg.config.embodied,
       lif: { ...CONFIG.lif.defaults, ...(msg.config.lif ?? {}) },
     },
   );
-  core.setActiveCount(sim.neuron_count());
+  core.setActiveCount(sim.core_count());
   if (msg.sab) {
     const layout = new RingLayout(rt.inputOrder.length, rt.readoutOrder.length, msg.config.snapMax);
     views = layout.views(msg.sab);
@@ -79,15 +83,20 @@ function loop() {
     const enc = encodeState({ ...frame, paused: !running });
     post(enc.payload, enc.transfer);
   }
-  setTimeout(loop, 0);
+  setTimeout(loop, 16);
 }
 
 self.onmessage = (e: MessageEvent<ToWorker>) => {
   const m = e.data;
   try {
-    if (m.t === "init") void onInit(m);
+    if (m.t === "init") void onInit(m).catch((err) => post({ t: "error", message: String(err) }));
     else if (m.t === "stimulus") core?.setStimulus(m.v);
+    else if (m.t === "world") core?.embodied?.setWorld(m.world);
+    else if (m.t === "inputs") core?.embodied?.setInputs(m.modalities, m.flow);
+    else if (m.t === "movement") core?.embodied?.command(m.command);
+    else if (m.t === "resetBody") core?.embodied?.reset(m.start, m.heading);
     else if (m.t === "setActiveCount") core?.setActiveCount(m.n);
+    else if (m.t === "intervene") core?.intervene(m.command);
     else if (m.t === "pause") running = false;
     else if (m.t === "resume") {
       running = true;

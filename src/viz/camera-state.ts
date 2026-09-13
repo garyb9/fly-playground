@@ -4,7 +4,8 @@ import { CONFIG } from "../app/config";
 import { add, len, type Vec3 } from "../body/types";
 
 export interface CameraState {
-  mode: "follow" | "orbit";
+  mode: "follow" | "orbit" | "pan";
+  pan: Vec3;
   target: Vec3;
   distance: number;
   azimuth: number;
@@ -17,6 +18,7 @@ export function initialCamera(target: Vec3, offset: Vec3 = CONFIG.camera.OFFSET)
   const distance = len(offset);
   return {
     mode: "follow",
+    pan: { x: 0, y: 0, z: 0 },
     target: { ...target },
     distance: clamp(distance, cfg.minDistance, cfg.maxDistance),
     azimuth: Math.atan2(offset.z, offset.x),
@@ -28,18 +30,18 @@ export function initialCamera(target: Vec3, offset: Vec3 = CONFIG.camera.OFFSET)
   };
 }
 export function followTarget(state: CameraState, target: Vec3): CameraState {
-  return { ...state, target: { ...target } };
+  return { ...state, target: add(target, state.pan) };
 }
 export function centerFly(state: CameraState, target: Vec3): CameraState {
-  return { ...state, mode: "follow", target: { ...target } };
+  return { ...state, mode: "follow", pan: { x: 0, y: 0, z: 0 }, target: { ...target } };
 }
 export function orbitCamera(state: CameraState, dx: number, dy: number): CameraState {
   if (!Number.isFinite(dx) || !Number.isFinite(dy)) return state;
   return {
     ...state,
     mode: "orbit",
-    azimuth: (state.azimuth - dx * cfg.rotateSpeed) % (Math.PI * 2),
-    elevation: clamp(state.elevation + dy * cfg.rotateSpeed, -cfg.maxElevation, cfg.maxElevation),
+    azimuth: (state.azimuth + dx * cfg.rotateSpeed) % (Math.PI * 2),
+    elevation: clamp(state.elevation - dy * cfg.rotateSpeed, -cfg.maxElevation, cfg.maxElevation),
   };
 }
 /** DOM deltaMode: pixels=0, lines=1, pages=2. Exponential zoom is reversible. */
@@ -64,4 +66,17 @@ export function cameraPosition(state: CameraState): Vec3 {
     y: Math.sin(state.elevation) * state.distance,
     z: Math.sin(state.azimuth) * horizontal,
   });
+}
+
+/** Translate in the camera's screen plane, preserving the offset as the fly moves. */
+export function panCamera(state: CameraState, right: number, up: number): CameraState {
+  if (!Number.isFinite(right) || !Number.isFinite(up)) return state;
+  const a = state.azimuth,
+    e = state.elevation;
+  const delta = {
+    x: Math.sin(a) * right - Math.cos(a) * Math.sin(e) * up,
+    y: Math.cos(e) * up,
+    z: -Math.cos(a) * right - Math.sin(a) * Math.sin(e) * up,
+  };
+  return { ...state, mode: "pan", pan: add(state.pan, delta), target: add(state.target, delta) };
 }

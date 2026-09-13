@@ -5,6 +5,7 @@ import {
   followTarget,
   centerFly,
   orbitCamera,
+  panCamera,
   zoomCamera,
   cameraPosition,
 } from "./camera-state";
@@ -35,8 +36,8 @@ test("orbit follows the moving fly, and recenter retains distance and orbital di
 });
 test("orbiting cannot cross vertical poles or create invalid camera transforms", () => {
   const s = orbitCamera(initialCamera(target), 1e6, 1e6);
-  expect(s.elevation).toBe(CONFIG.camera.mouse.maxElevation);
-  expect(orbitCamera(s, 0, -1e6).elevation).toBe(-CONFIG.camera.mouse.maxElevation);
+  expect(s.elevation).toBe(-CONFIG.camera.mouse.maxElevation);
+  expect(orbitCamera(s, 0, -1e6).elevation).toBe(CONFIG.camera.mouse.maxElevation);
   expect(Object.values(cameraPosition(s)).every(Number.isFinite)).toBe(true);
 });
 test("moving fly center projects to viewport center across zoom and orbit angles", () => {
@@ -53,4 +54,28 @@ test("moving fly center projects to viewport center across zoom and orbit angles
       expect(ndc.x).toBeCloseTo(0, 10);
       expect(ndc.y).toBeCloseTo(0, 10);
     }
+});
+
+test("pan stays in the screen plane, tracks the fly, and resets on center", () => {
+  const s = initialCamera(target);
+  const p = panCamera(s, 2, 3);
+  const camera = new PerspectiveCamera(55, 1.6, 0.1, 500);
+  const pos = cameraPosition(s);
+  camera.position.set(pos.x, pos.y, pos.z);
+  camera.lookAt(s.target.x, s.target.y, s.target.z);
+  camera.updateMatrixWorld();
+  const delta = new Vector3(p.pan.x, p.pan.y, p.pan.z).applyQuaternion(
+    camera.quaternion.clone().invert(),
+  );
+  expect(delta.x).toBeCloseTo(2);
+  expect(delta.y).toBeCloseTo(3);
+  expect(delta.z).toBeCloseTo(0);
+  expect(followTarget(p, { x: 0, y: 0, z: 0 }).target).toEqual(p.pan);
+  expect(centerFly(p, target)).toEqual(s);
+});
+test("left drag reverses the previous orbit direction", () => {
+  const s = initialCamera(target);
+  const p = orbitCamera(s, 20, 20);
+  expect(p.azimuth).toBeGreaterThan(s.azimuth);
+  expect(p.elevation).toBeLessThan(s.elevation);
 });

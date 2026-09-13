@@ -24,6 +24,8 @@ pub enum FormatError {
         got: u32,
     },
     BadOffsets,
+    /// Declared arrays cannot fit the address space or the u32 CSR offsets.
+    SizeOverflow,
     /// `neurons.bin` header claims more core neurons than total neurons. Left
     /// unchecked this reaches `set_active_count`'s `n.clamp(core_count, n)` with
     /// `min > max`, which panics and poisons the wasm module instance.
@@ -99,7 +101,10 @@ impl NeuronsFile {
                 count: count as u32,
             });
         }
-        let need = 16 + count * NEURON_REC;
+        let need = count
+            .checked_mul(NEURON_REC)
+            .and_then(|n| n.checked_add(16))
+            .ok_or(FormatError::SizeOverflow)?;
         if b.len() < need {
             return Err(FormatError::TooShort { need, got: b.len() });
         }
@@ -182,18 +187,31 @@ impl GraphFile {
         }
         let version = u32_at(b, 4);
         let n_nodes = u32_at(b, 8) as usize;
-        let n_edges = u64_at(b, 16) as usize;
+        let edge_count = u64_at(b, 16);
+        // CSR offsets are u32 even on a 64-bit host. Never truncate the u64
+        // header on wasm32 before validating it.
+        if edge_count > u32::MAX as u64 {
+            return Err(FormatError::SizeOverflow);
+        }
+        let n_edges = usize::try_from(edge_count).map_err(|_| FormatError::SizeOverflow)?;
         let w_norm = f32_at(b, 24);
 
-        let off_bytes = (n_nodes + 1) * 4;
-        let tgt_bytes = n_edges * 4;
-        let wt_bytes = n_edges * 2;
-        let need = 32 + off_bytes + tgt_bytes + wt_bytes;
+        let offset_count = n_nodes.checked_add(1).ok_or(FormatError::SizeOverflow)?;
+        let off_bytes = offset_count
+            .checked_mul(4)
+            .ok_or(FormatError::SizeOverflow)?;
+        let tgt_bytes = n_edges.checked_mul(4).ok_or(FormatError::SizeOverflow)?;
+        let wt_bytes = n_edges.checked_mul(2).ok_or(FormatError::SizeOverflow)?;
+        let need = 32usize
+            .checked_add(off_bytes)
+            .and_then(|n| n.checked_add(tgt_bytes))
+            .and_then(|n| n.checked_add(wt_bytes))
+            .ok_or(FormatError::SizeOverflow)?;
         if b.len() < need {
             return Err(FormatError::TooShort { need, got: b.len() });
         }
 
-        let mut offsets = Vec::with_capacity(n_nodes + 1);
+        let mut offsets = Vec::with_capacity(offset_count);
         for k in 0..=n_nodes {
             offsets.push(u32_at(b, 32 + k * 4));
         }
@@ -313,6 +331,40 @@ mod tests {
                 core_count: 99,
                 count: 3
             })
+        ));
+    }
+
+    #[test]
+    fn rejects_edge_counts_that_cannot_be_addressed_by_csr() {
+        for count in [u32::MAX as u64 + 1, (1u64 << 32) + 10, u64::MAX] {
+            let mut b = graph();
+            b[16..24].copy_from_slice(&count.to_le_bytes());
+            assert!(matches!(
+                GraphFile::parse(&b),
+                Err(FormatError::SizeOverflow)
+            ));
+        }
+    }
+
+    #[test]
+    fn rejects_huge_array_headers_before_allocation() {
+        let mut nb = neurons();
+        nb[8..12].copy_from_slice(&u32::MAX.to_le_bytes());
+        assert!(matches!(
+            NeuronsFile::parse(&nb),
+            Err(FormatError::SizeOverflow | FormatError::TooShort { .. })
+        ));
+        let mut gb = graph();
+        gb[8..12].copy_from_slice(&u32::MAX.to_le_bytes());
+        assert!(matches!(
+            GraphFile::parse(&gb),
+            Err(FormatError::SizeOverflow | FormatError::TooShort { .. })
+        ));
+        gb[8..12].copy_from_slice(&500u32.to_le_bytes());
+        gb[16..24].copy_from_slice(&(u32::MAX as u64).to_le_bytes());
+        assert!(matches!(
+            GraphFile::parse(&gb),
+            Err(FormatError::SizeOverflow | FormatError::TooShort { .. })
         ));
     }
 

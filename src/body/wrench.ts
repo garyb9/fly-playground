@@ -22,6 +22,7 @@ export function mapReadouts(
   dt: number,
   noise: ValueNoise,
   tSeconds: number,
+  neuralFlight = false,
 ): { wrench: Wrench; esc: EscapeState; firedImpulse: Vec3 | null } {
   const n = (ch: number) => noise.at(ch, tSeconds) * P.NOISE_AMP;
   // One shared sample for both wings: the ValueNoise channels are not zero-mean
@@ -30,9 +31,11 @@ export function mapReadouts(
   // noise perturbs the symmetric term `s = (wl+wr)/2` (harmless lift/thrust
   // jitter — the feature) but cancels out of the asymmetric term `a = wl - wr`.
   const wingNoise = n(0);
-  const wl = (readouts.wing_l ?? 0) + wingNoise;
-  const wr = (readouts.wing_r ?? 0) + wingNoise;
-  const thrust = (readouts.thrust ?? 0) + n(2);
+  const separated = readouts.power_l !== undefined && readouts.power_r !== undefined;
+  const wl = (separated ? readouts.power_l! : (readouts.wing_l ?? 0)) + wingNoise;
+  const wr = (separated ? readouts.power_r! : (readouts.wing_r ?? 0)) + wingNoise;
+  // Power is one actuator; its forward component below shares the same budget.
+  const thrust = (separated ? 0 : (readouts.thrust ?? 0)) + n(2);
   // n(3) alone is not zero-mean over a short window, so it fed a slow DC yaw-torque
   // bias → the resting fly wandered ~50°/15s in heading. A finite difference of the
   // same noise channel is the increment of a stationary process: mean-zero, so its
@@ -55,13 +58,19 @@ export function mapReadouts(
 
   const underLockout = lockout > 0;
   const s = (wl + wr) / 2;
-  const a = wl - wr;
+  const a = separated ? (readouts.steer_l ?? 0) - (readouts.steer_r ?? 0) : wl - wr;
 
   let force = v();
   let torque = v();
   if (!underLockout) {
-    const lift = P.GRAVITY * P.MASS + P.LIFT_K * (s - P.HOVER_S);
-    force = add(scale(pose.up, lift), scale(pose.forward, P.CRUISE_THRUST + P.THRUST_K * thrust));
+    const lift = neuralFlight
+      ? (P.GRAVITY * P.MASS * Math.max(0, s)) / 0.5
+      : P.GRAVITY * P.MASS + P.LIFT_K * (s - P.HOVER_S);
+    const liftAxis = separated ? norm(add(pose.up, scale(pose.forward, 0.12))) : pose.up;
+    force = add(
+      scale(liftAxis, lift),
+      scale(pose.forward, (neuralFlight ? 0 : P.CRUISE_THRUST) + P.THRUST_K * thrust),
+    );
     torque = add(scale(pose.forward, P.ROLL_K * a), scale(pose.up, P.YAW_A_K * a + P.YAW_K * yaw));
   }
   return { wrench: { force, torque }, esc: { armed, lockout }, firedImpulse };

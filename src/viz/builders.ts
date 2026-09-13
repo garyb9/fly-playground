@@ -40,7 +40,9 @@ export function buildCoreEdges(graph: GraphFile, coreCount: number): THREE.LineS
 function geometryFor(kind: SceneConfig["objects"][number]["kind"]): THREE.BufferGeometry {
   switch (kind) {
     case "box":
-      return new THREE.BoxGeometry(1, 1, 1);
+      return new THREE.BoxGeometry(2, 2, 2);
+    case "flower":
+      return new THREE.SphereGeometry(1, 12, 8);
     case "sphere":
       return new THREE.SphereGeometry(0.5, 24, 16);
     case "torus":
@@ -91,6 +93,45 @@ export function buildWorld(scene: SceneConfig, theme: Theme = CONFIG.aesthetic.t
   const pal = activePalette(theme);
 
   for (const obj of scene.objects) {
+    if (obj.kind === "flower") {
+      const flower = new THREE.Group();
+      flower.name = obj.id;
+      const stem = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.045, 0.065, obj.scale.y, 6),
+        new THREE.MeshStandardMaterial({ color: 0x527c67, roughness: 0.85 }),
+      );
+      stem.position.y = -obj.scale.y / 2;
+      flower.add(stem);
+      const color = { rose: 0xe797ad, lilac: 0xb5a1ec, gold: 0xefc777 }[obj.material] ?? 0xe797ad;
+      for (let p = 0; p < 6; p++) {
+        const angle = (p * Math.PI) / 3;
+        const petal = new THREE.Mesh(
+          new THREE.SphereGeometry(1, 10, 6),
+          new THREE.MeshStandardMaterial({
+            color,
+            emissive: color,
+            emissiveIntensity: 0.12,
+            roughness: 0.7,
+          }),
+        );
+        petal.scale.set(obj.scale.x * 0.55, obj.scale.x * 0.22, obj.scale.x * 0.32);
+        petal.rotation.y = -angle;
+        petal.position.set(
+          Math.cos(angle) * obj.scale.x * 0.45,
+          0,
+          Math.sin(angle) * obj.scale.x * 0.45,
+        );
+        flower.add(petal);
+      }
+      const center = new THREE.Mesh(
+        new THREE.SphereGeometry(obj.scale.x * 0.25, 10, 6),
+        new THREE.MeshStandardMaterial({ color: 0xffdf8c }),
+      );
+      flower.add(center);
+      flower.position.set(obj.position.x, obj.position.y, obj.position.z);
+      group.add(flower);
+      continue;
+    }
     const mesh = new THREE.Mesh(geometryFor(obj.kind), material(obj.material, theme));
     mesh.position.set(obj.position.x, obj.position.y, obj.position.z);
     mesh.rotation.set(obj.rotation.x, obj.rotation.y, obj.rotation.z);
@@ -111,13 +152,16 @@ export function buildWorld(scene: SceneConfig, theme: Theme = CONFIG.aesthetic.t
     group.add(marker);
   }
 
-  // One cool key light, high up — the warm "sun" is gone; the only warm source
-  // in the frame is the fly's ember (§6.5/§6.6).
+  // Distant cool illumination keeps the habitat readable without a bright lamp.
   const key = new THREE.DirectionalLight(pal.keyLight, 0.6);
   key.position.set(10, 18, 6);
   group.add(key);
 
-  group.add(new THREE.HemisphereLight(pal.bg, pal.ground, 0.4));
+  const fill = new THREE.DirectionalLight(pal.keyLight, 0.65);
+  fill.name = "distant-fill";
+  fill.position.set(-30, 40, -25);
+  group.add(fill);
+  group.add(new THREE.HemisphereLight(pal.skyLight, pal.groundLight, 0.55));
 
   group.add(groundDisc(theme));
 

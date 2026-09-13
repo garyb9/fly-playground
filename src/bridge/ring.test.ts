@@ -1,7 +1,35 @@
 import { expect, test } from "vitest";
 import { RingLayout, writeOutput, readOutput, writeInput, readInput } from "./ring";
+import { v } from "../body/types";
 
 const L = new RingLayout(6, 5, 16);
+test("body pose, mode, sensory input and neural tick round-trip in the same snapshot", () => {
+  const views = L.views(new SharedArrayBuffer(L.bytes));
+  const embodied = {
+    state: {
+      position: v(1, 2, 3),
+      orientation: { x: 0, y: 0, z: 0, w: 1 },
+      vel: v(4, 5, 6),
+      angVel: v(),
+    },
+    mode: "grounded" as const,
+    stimulus: Float32Array.from([1, 2, 3, 4, 5, 6]),
+  };
+  writeOutput(views, {
+    embodied,
+    readouts: new Float32Array(5),
+    activity: new Float32Array(16),
+    nSnapshot: 16,
+    activeCount: 16,
+    tick: 89,
+    simHz: 200,
+    paused: 1,
+  });
+  const got = readOutput(views)!;
+  expect(got.embodied).toEqual(embodied);
+  expect(got.tick).toBe(89);
+  expect(got.paused).toBe(true);
+});
 
 test("output round-trips through the ring", () => {
   const sab = new SharedArrayBuffer(L.bytes);

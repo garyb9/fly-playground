@@ -22,6 +22,7 @@ export interface SceneStore {
   /** Shallow-merge `patch` into `lights[index]` (no-op if out of range). */
   updateLight(index: number, patch: Partial<SceneLight>): void;
   /** Restore the compiled default `SCENE`. */
+  replace(scene: SceneConfig): void;
   reset(): void;
 }
 
@@ -85,6 +86,12 @@ export function createSceneStore(initial: SceneConfig): SceneStore {
         ...scene,
         lights: scene.lights.map((l, i) => (i === index ? structuredClone({ ...l, ...patch }) : l)),
       };
+      notify();
+    },
+
+    replace(next) {
+      scene = structuredClone(next);
+      counter = nextCounter(scene);
       notify();
     },
 

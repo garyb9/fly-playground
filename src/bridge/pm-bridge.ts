@@ -48,6 +48,7 @@ export class PmBridge implements SimBridge {
   private onMessage(m: FromWorker) {
     if (m.t === "state")
       this.last = {
+        embodied: m.embodied,
         readouts: m.readouts,
         activity: m.activity,
         simHz: m.simHz,
@@ -59,6 +60,21 @@ export class PmBridge implements SimBridge {
     this.worker.postMessage(m, transfer);
   }
 
+  intervene(command: import("./sim-bridge").Intervention) {
+    this.worker.postMessage({ t: "intervene", command } satisfies ToWorker);
+  }
+  setWorld(world: import("../body/types").WorldQuery) {
+    this.post({ t: "world", world });
+  }
+  setInputs(modalities: boolean, flow: boolean) {
+    this.post({ t: "inputs", modalities, flow });
+  }
+  movement(command: import("../body/movement").MovementCommand) {
+    this.post({ t: "movement", command });
+  }
+  resetBody(start: import("../body/types").Vec3, heading: number) {
+    this.post({ t: "resetBody", start, heading });
+  }
   setStimulus(v: Float32Array) {
     this.stim = v.slice();
     this.post({ t: "stimulus", v: this.stim }, [this.stim.buffer]);

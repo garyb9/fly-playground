@@ -6,6 +6,7 @@ import {
   followTarget,
   centerFly,
   orbitCamera,
+  panCamera,
   zoomCamera,
   cameraPosition,
   type CameraState,
@@ -13,6 +14,7 @@ import {
 
 interface Drag {
   id: number;
+  button: number;
   x: number;
   y: number;
   startX: number;
@@ -26,6 +28,8 @@ export class CameraControls {
   private state: CameraState;
   private flyTarget: Vec3;
   private drag: Drag | null = null;
+  private readonly keys = new Set<string>();
+  private lastCycle = -Infinity;
   private readonly events = new AbortController();
   private readonly widget: HTMLDivElement;
   private readonly modeLabel: HTMLSpanElement;
@@ -38,6 +42,7 @@ export class CameraControls {
     private readonly camera: THREE.PerspectiveCamera,
     target: Vec3,
     offset: Vec3 = CONFIG.camera.OFFSET,
+    private readonly cycleFly?: (direction: number) => void,
   ) {
     this.state = initialCamera(target, offset);
     this.flyTarget = { ...target };
@@ -46,7 +51,10 @@ export class CameraControls {
     this.originalTabIndex = canvas.getAttribute("tabindex");
     canvas.tabIndex = 0;
     this.originalLabel = canvas.getAttribute("aria-label");
-    canvas.setAttribute("aria-label", "3D world. Drag to orbit, scroll to zoom.");
+    canvas.setAttribute(
+      "aria-label",
+      "3D world. Left drag to orbit, right drag or WASD and arrows to pan, wheel to zoom, middle click to center, Shift and wheel to switch flies.",
+    );
     const signal = this.events.signal;
     canvas.addEventListener("pointerdown", this.onDown, { signal });
     canvas.addEventListener("pointermove", this.onMove, { signal });
@@ -55,18 +63,25 @@ export class CameraControls {
     canvas.addEventListener("lostpointercapture", this.onCancel, { signal });
     canvas.addEventListener("contextmenu", this.onContext, { signal });
     canvas.addEventListener("wheel", this.onWheel, { signal, passive: false });
-    window.addEventListener("blur", this.cancelDrag, { signal });
+    window.addEventListener(
+      "blur",
+      () => {
+        this.cancelDrag();
+        this.keys.clear();
+      },
+      { signal },
+    );
+    window.addEventListener("keydown", this.onKeyDown, { signal });
+    window.addEventListener("keyup", (event) => this.keys.delete(event.code), { signal });
+    window.addEventListener("focusin", () => this.keys.clear(), { signal });
     this.widget = document.createElement("div");
     this.widget.className = "hud-camera";
     this.modeLabel = document.createElement("span");
     this.modeLabel.className = "hud-camera__mode";
-    const hint = document.createElement("span");
-    hint.className = "hud-camera__hint";
-    hint.textContent = "drag to orbit · scroll to zoom";
     const button = document.createElement("button");
     button.type = "button";
     button.textContent = "center fly";
-    button.title = "Center and follow the fly (right click in the world)";
+    button.title = "Center and follow the fly (middle click in the world)";
     button.addEventListener("click", () => this.recenter(), { signal });
     // Let native Space/Enter activate the button without the HUD's Space pause shortcut.
     button.addEventListener(
@@ -76,16 +91,22 @@ export class CameraControls {
       },
       { signal },
     );
-    this.widget.append(this.modeLabel, hint, button);
+    this.widget.append(this.modeLabel, button);
     document.getElementById("hud")!.append(this.widget);
     this.render();
   }
   private onDown = (event: PointerEvent): void => {
-    if (event.button !== 0 || !event.isPrimary || this.drag) return;
+    if (!event.isPrimary || this.drag || event.button > 2) return;
+    if (event.button === 1) {
+      event.preventDefault();
+      this.recenter();
+      return;
+    }
     event.preventDefault();
     this.canvas.focus({ preventScroll: true });
     this.drag = {
       id: event.pointerId,
+      button: event.button,
       x: event.clientX,
       y: event.clientY,
       startX: event.clientX,
@@ -97,7 +118,7 @@ export class CameraControls {
   private onMove = (event: PointerEvent): void => {
     const drag = this.drag;
     if (!drag || drag.id !== event.pointerId) return;
-    if (!(event.buttons & 1)) {
+    if (!(event.buttons & (drag.button === 2 ? 2 : 1))) {
       this.cancelDrag();
       return;
     }
@@ -109,7 +130,15 @@ export class CameraControls {
         return;
       drag.active = true;
     }
-    this.state = orbitCamera(this.state, event.clientX - drag.x, event.clientY - drag.y);
+    const dx = event.clientX - drag.x,
+      dy = event.clientY - drag.y;
+    const scale =
+      (2 * this.state.distance * Math.tan((this.camera.fov * Math.PI) / 360)) /
+      Math.max(1, this.canvas.clientHeight);
+    this.state =
+      drag.button === 2
+        ? panCamera(this.state, -dx * scale, dy * scale)
+        : orbitCamera(this.state, dx, dy);
     drag.x = event.clientX;
     drag.y = event.clientY;
     this.render();
@@ -127,12 +156,18 @@ export class CameraControls {
   };
   private onContext = (event: MouseEvent): void => {
     event.preventDefault();
-    this.recenter();
   };
   private onWheel = (event: WheelEvent): void => {
     // Preserve browser accessibility zoom (Ctrl/trackpad pinch).
     if (event.ctrlKey || event.metaKey) return;
     event.preventDefault();
+    if (event.shiftKey) {
+      if (event.deltaY && performance.now() - this.lastCycle > 160) {
+        this.lastCycle = performance.now();
+        this.cycleFly?.(Math.sign(event.deltaY));
+      }
+      return;
+    }
     this.state = zoomCamera(this.state, event.deltaY, event.deltaMode, this.canvas.clientHeight);
     this.render();
   };
@@ -141,9 +176,37 @@ export class CameraControls {
     this.state = centerFly(this.state, this.flyTarget);
     this.render();
   }
-  update(target: Vec3): void {
+  private onKeyDown = (event: KeyboardEvent): void => {
+    if (
+      event.ctrlKey ||
+      event.metaKey ||
+      event.altKey ||
+      (event.target instanceof Element &&
+        event.target.closest("input, textarea, select, button, summary, [contenteditable]"))
+    )
+      return;
+    if (
+      !["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"].includes(
+        event.code,
+      )
+    )
+      return;
+    event.preventDefault();
+    this.keys.add(event.code);
+  };
+  update(target: Vec3, dt = 0): void {
     this.flyTarget = { ...target };
     this.state = followTarget(this.state, target);
+    const right =
+      Number(this.keys.has("KeyD") || this.keys.has("ArrowRight")) -
+      Number(this.keys.has("KeyA") || this.keys.has("ArrowLeft"));
+    const up =
+      Number(this.keys.has("KeyW") || this.keys.has("ArrowUp")) -
+      Number(this.keys.has("KeyS") || this.keys.has("ArrowDown"));
+    if (right || up) {
+      const speed = (this.state.distance * Math.min(Math.max(dt, 0), 0.05)) / Math.hypot(right, up);
+      this.state = panCamera(this.state, right * speed, up * speed);
+    }
     this.render();
   }
   private render(): void {
@@ -152,7 +215,12 @@ export class CameraControls {
     this.camera.up.set(0, 1, 0);
     this.camera.lookAt(this.state.target.x, this.state.target.y, this.state.target.z);
     this.canvas.dataset.cameraMode = this.state.mode;
-    this.modeLabel.textContent = this.state.mode === "follow" ? "following fly" : "fly orbit";
+    this.modeLabel.textContent =
+      this.state.mode === "follow"
+        ? "following fly"
+        : this.state.mode === "pan"
+          ? "camera pan"
+          : "fly orbit";
   }
   dispose(): void {
     this.cancelDrag();

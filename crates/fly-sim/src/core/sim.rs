@@ -47,12 +47,14 @@ pub struct SimCore {
     weights_sim: Vec<f32>, // pre-multiplied by w_norm
 
     sign: Vec<f32>, // +1.0 or -1.0 per neuron
+    silenced: Vec<bool>,
     bias: Vec<f32>, // tonic drive per neuron (0 for now)
 
     state: LifState,
     input_cur: Vec<f32>,
     input_next: Vec<f32>,
     activity: Vec<f32>,
+    activity_extent: usize,
 
     roles: Roles,
 }
@@ -85,11 +87,13 @@ impl SimCore {
             targets: graph.targets.clone(),
             weights_sim,
             sign,
+            silenced: vec![false; n],
             bias: vec![0.0; n],
             state: LifState::new(n),
             input_cur: vec![0.0; n],
             input_next: vec![0.0; n],
             activity: vec![0.0; n],
+            activity_extent: 0,
             roles: Roles::new(),
         }
     }
@@ -120,6 +124,44 @@ impl SimCore {
             self.input_cur[i] += amount;
         }
     }
+    pub fn inject_cells(&mut self, ids: &[u32], value: f32) {
+        if !value.is_finite() {
+            return;
+        }
+        for &id in ids {
+            self.add_input(id as usize, value.clamp(-5.0, 5.0));
+        }
+    }
+    pub fn set_bias(&mut self, ids: &[u32], value: f32) {
+        if !value.is_finite() {
+            return;
+        }
+        for &id in ids {
+            if let Some(bias) = self.bias.get_mut(id as usize) {
+                *bias = value.clamp(0.0, 2.0);
+            }
+        }
+    }
+    pub fn silence_cells(&mut self, ids: &[u32], value: bool) {
+        for &id in ids {
+            if let Some(cell) = self.silenced.get_mut(id as usize) {
+                *cell = value;
+            }
+        }
+    }
+    pub fn clear_interventions(&mut self) {
+        self.silenced.fill(false);
+    }
+    pub fn reset(&mut self, seed: u64) {
+        self.rng = SplitMix64::new(seed);
+        self.state = LifState::new(self.n);
+        self.input_cur.fill(0.0);
+        self.input_next.fill(0.0);
+        self.activity.fill(0.0);
+        self.activity_extent = 0;
+        self.clear_interventions();
+    }
+
     pub fn activity(&self) -> &[f32] {
         &self.activity
     }
@@ -146,8 +188,20 @@ impl SimCore {
         if ids.is_empty() {
             return 0.0;
         }
-        let sum: f32 = ids.iter().map(|&i| self.activity[i as usize]).sum();
-        sum / ids.len() as f32
+        // Inactive cells can retain frozen activity; they must not drive a body.
+        let mut sum = 0.0;
+        let mut count = 0;
+        for &i in ids {
+            if (i as usize) < self.active {
+                sum += self.activity[i as usize];
+                count += 1;
+            }
+        }
+        if count == 0 {
+            0.0
+        } else {
+            sum / count as f32
+        }
     }
     pub fn activity_snapshot(&self) -> Vec<f32> {
         self.activity[..self.active].to_vec()
@@ -160,6 +214,7 @@ impl SimCore {
 
     pub fn step(&mut self, ticks: u32) {
         let inv_tau = 1.0 / self.activity_tau;
+        self.activity_extent = self.activity_extent.max(self.active);
         for _ in 0..ticks {
             for i in 0..self.active {
                 let noise = if self.params.noise_sigma > 0.0 {
@@ -167,6 +222,12 @@ impl SimCore {
                 } else {
                     0.0
                 };
+                if self.silenced[i] {
+                    self.state.v[i] = self.params.v_reset;
+                    self.state.refrac[i] = 0;
+                    self.state.spike[i] = 0;
+                    continue;
+                }
                 let input = self.input_cur[i] + self.bias[i] + noise;
                 let (v_new, fired, refrac_new) =
                     integrate_one(self.state.v[i], self.state.refrac[i], input, &self.params);
@@ -186,8 +247,8 @@ impl SimCore {
                     }
                 }
             }
-            // activity EMA over ALL neurons (inactive ones decay toward 0)
-            for i in 0..self.n {
+            // Preserve decay for previously active neurons; untouched zero tail needs no work.
+            for i in 0..self.activity_extent {
                 let sp = if i < self.active {
                     self.state.spike[i] as f32
                 } else {
@@ -305,6 +366,38 @@ mod tests {
         s.step(1); // propagate: 1 and 2 each get 100 * w_norm * sign[0](-1)
         assert!(s.debug_v(1) < 0.0);
         assert!(s.debug_v(2) < 0.0);
+    }
+
+    #[test]
+    fn silencing_blocks_spikes_and_downstream_propagation_then_reset_replays() {
+        let (nb, gb) = tiny();
+        let mut s = core_from(&nb, &gb, 42);
+        s.silence_cells(&[0], true);
+        s.inject_cells(&[0], 5.0);
+        s.step(2);
+        assert_eq!(s.spikes()[0], 0);
+        assert_eq!(s.debug_v(1), 0.0);
+        s.reset(42);
+        s.inject_cells(&[0], 2.0);
+        s.step(2);
+        assert!(s.debug_v(1) > 0.0);
+        let expected = s.activity_snapshot();
+        s.reset(42);
+        s.inject_cells(&[0], 2.0);
+        s.step(2);
+        assert_eq!(s.activity_snapshot(), expected);
+    }
+
+    #[test]
+    fn inactive_readout_does_not_reuse_frozen_activity() {
+        let (nb, gb) = tiny();
+        let mut s = core_from(&nb, &gb, 42);
+        let role = s.define_readout_role("leg", &[1]);
+        s.inject_cells(&[1], 5.0);
+        s.step(1);
+        assert!(s.readout(role) > 0.0);
+        s.set_active_count(1);
+        assert_eq!(s.readout(role), 0.0);
     }
 
     #[test]

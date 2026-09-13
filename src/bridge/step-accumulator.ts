@@ -13,13 +13,17 @@ export function stepAccumulator(
   sim: SimLike,
   inputRoleIds: number[],
   cfg: { TICK_MS: number; MAX_CATCHUP_MS: number; hzEmaTau: number },
+  beforeStep?: () => void,
+  afterStep?: () => void,
 ): AccState {
   let acc = Math.min(state.acc + elapsedMs, cfg.MAX_CATCHUP_MS);
   let tick = state.tick;
   let ticksThisCall = 0;
   while (acc >= cfg.TICK_MS) {
+    beforeStep?.();
     for (let k = 0; k < inputRoleIds.length; k++) sim.inject(inputRoleIds[k]!, latched[k] ?? 0);
     sim.step(1);
+    afterStep?.();
     acc -= cfg.TICK_MS;
     tick++;
     ticksThisCall++;

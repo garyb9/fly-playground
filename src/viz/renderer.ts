@@ -73,8 +73,8 @@ export function createRenderer(canvas: HTMLCanvasElement): Renderer {
     scene.traverse((o) => {
       if (o instanceof THREE.DirectionalLight) o.color.setHex(p.keyLight);
       else if (o instanceof THREE.HemisphereLight) {
-        o.color.setHex(p.bg);
-        o.groundColor.setHex(p.ground);
+        o.color.setHex(p.skyLight);
+        o.groundColor.setHex(p.groundLight);
       }
     });
     composer?.setTheme(theme);

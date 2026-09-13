@@ -55,6 +55,21 @@ export class SabBridge implements SimBridge {
     );
   }
 
+  intervene(command: import("./sim-bridge").Intervention) {
+    this.worker.postMessage({ t: "intervene", command } satisfies ToWorker);
+  }
+  setWorld(world: import("../body/types").WorldQuery) {
+    this.worker.postMessage({ t: "world", world } satisfies ToWorker);
+  }
+  setInputs(modalities: boolean, flow: boolean) {
+    this.worker.postMessage({ t: "inputs", modalities, flow } satisfies ToWorker);
+  }
+  movement(command: import("../body/movement").MovementCommand) {
+    this.worker.postMessage({ t: "movement", command } satisfies ToWorker);
+  }
+  resetBody(start: import("../body/types").Vec3, heading: number) {
+    this.worker.postMessage({ t: "resetBody", start, heading } satisfies ToWorker);
+  }
   setStimulus(v: Float32Array) {
     writeInput(this.views, v);
   }

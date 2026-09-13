@@ -1,0 +1,73 @@
+{
+  "version": "3c1a54fda20b54ea44f92c4204cd46fd230b3df3b5615d53060e90df0038bdac",
+  "files": {
+    "ATTRIBUTION.md": {
+      "sha256": "48eba807819749c1da55d739379303c79370610e7133cf26f1fbcd2a00adb275",
+      "bytes": 1445
+    },
+    "cells.json": {
+      "sha256": "e9ce2cd5c7ad26c57a09cf4cdd39ce50c6140618590290560997e2ac78eb7fa4",
+      "bytes": 174387
+    },
+    "context.bin": {
+      "sha256": "9c4b4d9b5650ea12c17a2493aa2aa11a47f3d1ab801631a4828c509625267759",
+      "bytes": 1480596
+    },
+    "full/cells.json": {
+      "sha256": "044f5f540b96ed02440c0c020d976bd2af0bad3f99a6615028efe3dc66afa0d2",
+      "bytes": 20287914
+    },
+    "full/graph.bin": {
+      "sha256": "60cb182151d80d910a9f23a1550908fefe2233234fa7f33bb7bc0f3d70311c39",
+      "bytes": 63789422
+    },
+    "full/groups.json": {
+      "sha256": "9c0650410311a541c746405749cfd71c1a6987c1ea8a2c741d6efddd2ade4dc8",
+      "bytes": 2116
+    },
+    "full/manifest.json": {
+      "sha256": "e38fa534fadc3ea905a06084c112bcc850f6a9c244db58a4ce4776aab0352dc5",
+      "bytes": 1830
+    },
+    "full/neurons.bin": {
+      "sha256": "488b0de56256a40f1644e04144c8ac904c9b92a57b2a071be8d797d7095c867f",
+      "bytes": 4000816
+    },
+    "graph.bin": {
+      "sha256": "38a89871fcad4f5adfe83aff428868d92b50b000d4e840f8789a5f07d3bc4b07",
+      "bytes": 462538
+    },
+    "groups.json": {
+      "sha256": "0dca8c2106ba12329e160ddbe564dada8b66088b92c748d7197d89d55072a810",
+      "bytes": 1835
+    },
+    "manifest.json": {
+      "sha256": "795c97c1bb21578cbdd79b47a01c30fc9f5dd9e46453f3a0bb6f5bb2401cc122",
+      "bytes": 1490
+    },
+    "neurons.bin": {
+      "sha256": "9fbde7eab023808561276071fc8fbd4d12b60b1bfbfb2593d695e87453741ecc",
+      "bytes": 38056
+    },
+    "region-membership.json": {
+      "sha256": "6e9d79b58ea1377b29312f94f143839d3746a5a1530b2e5882101c53d9aa738b",
+      "bytes": 5100014
+    },
+    "regions.bin": {
+      "sha256": "a038989eb30d8d56b486177c463af31eac343276c36dc9f2bc53bbb86716f455",
+      "bytes": 6291276
+    },
+    "regions.json": {
+      "sha256": "28dc51bcf0772faeb1c7798ea8446a04d37c74efc97eca603514e185c2c9d198",
+      "bytes": 19962
+    },
+    "sensory-mappings.json": {
+      "sha256": "fce5be80faca913df38de93f61903a04c1a9b11a3172e478a03a2d5813df05e8",
+      "bytes": 25371
+    },
+    "skeletons.json": {
+      "sha256": "7c31595428d9bb05b0aa5e23c3cd0917613f458d04b1d24c52237c316f8bdb21",
+      "bytes": 3837435
+    }
+  }
+}

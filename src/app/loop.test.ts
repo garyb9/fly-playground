@@ -229,3 +229,25 @@ test("starting paused publishes a stationary frame without injecting", () => {
   expect(view!.sensory).toEqual({});
   expect(fb.stim).toHaveLength(0);
 });
+test("simulation-clock bodies wait for neural ticks and ignore render cadence", () => {
+  const a = fakeBridge(),
+    b = fakeBridge();
+  const bodyA = new Body(v(0, 4, 0), 0),
+    bodyB = new Body(v(0, 4, 0), 0);
+  const make = (bridge: SimBridge, body: Body) =>
+    new Loop({ bridge, body, sensing, roleTable: rt, world, simulationClock: true, onFrame() {} });
+  const la = make(a.obj, bodyA),
+    lb = make(b.obj, bodyB);
+  la.frameOnce(0);
+  lb.frameOnce(0);
+  const initial = bodyA.pose();
+  la.frameOnce(500);
+  expect(bodyA.pose()).toEqual(initial);
+  for (let tick = 1; tick <= 20; tick++) {
+    a.state.tick = tick;
+    la.frameOnce(500 + tick * 10);
+  }
+  b.state.tick = 20;
+  lb.frameOnce(1000);
+  expect(bodyA.pose()).toEqual(bodyB.pose());
+});

@@ -20,6 +20,16 @@ const R = (o: Partial<Readouts>): Readouts => ({
   escape: 0,
   ...o,
 });
+test("separate motor decoder isolates power from steering and ignores legacy thrust", () => {
+  const map = (r: Readouts) =>
+    mapReadouts(r, pose, initEscapeState(), 0.005, noNoise, 0, true).wrench;
+  const base = { power_l: 0.5, power_r: 0.5, steer_l: 0, steer_r: 0 };
+  expect(map({ ...base, thrust: 1 })).toEqual(map(base));
+  expect(map({ ...base, steer_l: 0.3 }).force).toEqual(map(base).force);
+  expect(map({ ...base, power_l: 0.8 }).torque).toEqual(map(base).torque);
+  expect(map({ ...base, steer_l: 0.3 }).torque.y).toBeGreaterThan(0);
+  expect(map({ ...base, steer_r: 0.3 }).torque.y).toBeLessThan(0);
+});
 
 test("hover: symmetric wing at HOVER_S cancels gravity in the vertical force", () => {
   const { wrench } = mapReadouts(

@@ -80,3 +80,8 @@ test("receding object yields zero looming (clamped at 0)", () => {
   r = sample(pose(1), world, 0.1, r.state, rt); // now receding
   expect(r.stimulus[rt.input.looming]).toBeGreaterThanOrEqual(0);
 });
+
+test("resetting sensors does not invent a looming event at a stationary scene", () => {
+  const result = sample(pose(0), world, 0.016, initSensingState(), rt);
+  expect(result.stimulus[rt.input.looming]).toBe(0);
+});

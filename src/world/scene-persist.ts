@@ -48,12 +48,35 @@ export function deserializeScene(json: string): SceneConfig | null {
       return (
         typeof rec.id === "string" &&
         typeof rec.kind === "string" &&
+        ["box", "sphere", "torus", "flower"].includes(rec.kind) &&
+        typeof rec.material === "string" &&
         isVec3(rec.position) &&
         isVec3(rec.scale) &&
         isVec3(rec.rotation)
       );
     });
     if (!objectsOk) return null;
+    const bounds = scene.bounds as Record<string, unknown>;
+    const fly = scene.fly as Record<string, unknown>;
+    if (
+      !isVec3(bounds.min) ||
+      !isVec3(bounds.max) ||
+      !isVec3(fly.start) ||
+      typeof fly.heading !== "number" ||
+      !Number.isFinite(fly.heading)
+    )
+      return null;
+    if (
+      !scene.lights.every(
+        (light) =>
+          light &&
+          isVec3(light.position) &&
+          Number.isFinite(light.color) &&
+          Number.isFinite(light.intensity) &&
+          light.intensity >= 0,
+      )
+    )
+      return null;
 
     return scene as unknown as SceneConfig;
   } catch {

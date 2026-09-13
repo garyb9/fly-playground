@@ -15,3 +15,5 @@ __pycache__/
 
 # Claude Code worktrees + local session state
 .claude/
+
+pipeline/raw/

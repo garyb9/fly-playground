@@ -1,0 +1,33 @@
+{
+  "reviewed": "2026-09-10",
+  "method": "GLB JSON accessor counts; triangle primitives only, unique mesh definitions, before any instance multiplication; no GPU profiling",
+  "assets": [
+    {
+      "url": "https://whatisabrain.com/fly/meshes/fly/fly.glb",
+      "sha256": "ebd1b0de70c6613d4e407c8f77dc3e8892624691dd2c59e8021653c98cccac04",
+      "bytes": 383496,
+      "meshes": 69,
+      "nodes": 139,
+      "triangles": 115032,
+      "animations": [],
+      "requiredExtensions": [
+        "KHR_draco_mesh_compression"
+      ]
+    },
+    {
+      "url": "https://raw.githubusercontent.com/dzhng/fly-escape/06540138d55127f87e69f8cca9982c4f1328be90/assets/fly/fly.glb",
+      "sha256": "2c7a3398c2b0f9fdae6f62351379b4ea5a01d7fcf6f3a1d582d4c5106ab75b57",
+      "bytes": 307672,
+      "meshes": 40,
+      "nodes": 65,
+      "triangles": 5166,
+      "animations": [
+        "Walk",
+        "Fly",
+        "Land",
+        "Feed"
+      ],
+      "requiredExtensions": []
+    }
+  ]
+}

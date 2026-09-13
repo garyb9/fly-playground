@@ -118,3 +118,50 @@ Run on a 500-neuron slice of the real data (or the fixture):
 - non-core importance scores are non-increasing.
 - positions are finite and within the recentred bounding box.
 - round-trip: parse the emitted binary back, compare to the source DataFrame.
+
+## Implemented Plan 03 pipeline (2026-09-10)
+
+The five-script sequence above is the original design. The current reproducible
+implementation is `fetch.py → build_real.py → build_full.py → stamp_assets.py`;
+run it with `yarn data:build` after installing `pipeline[real,dev]` in
+`pipeline/.venv`. Source downloads are atomically cached in gitignored
+`pipeline/raw`; prepared browser data lives in `public/data/malecns`.
+
+- `build_real.py`: selects named LC4/LPLC2/DNp01 and wing/escape motor cells
+  with measured somata plus their 1,200 strongest partners. It retains 1,585
+  neurons and 76,027 edges, including 308 direct looming→GF edges.
+- `build_full.py`: selects **all 166,700 non-null-superclass neurons** from the
+  annotation file, including cells without a type or soma. The compact set is
+  the prefix; the remainder is ranked by weighted degree. The ≥3-contact floor
+  retains 10,520,431 directed edges. This is the full neuron set with pruned
+  connectivity, not the unfiltered edge table.
+- 139,662 of those neurons have measured somata. Flag bit 16 means missing
+  position: the record remains in simulation and is excluded from the point
+  index. Zero placeholders in those records are not rendered as anatomy.
+- The 90 public ROI surfaces use Neuroglancer's legacy mesh format. Vertex
+  clustering at 4096 nm reduces the raw 139 MB to about 6.3 MB. Source positions
+  are nm; divide by 8 before applying the shared soma/SWC transform. Six SWCs
+  provide detailed GF/LC4/LPLC2 arbors. These are neuropil boundaries, not an
+  invented tissue shell or a hull of the fixture.
+- Sources and transforms are recorded with hashes; `stamp_assets.py` creates
+  the browser content manifest. Re-run it whenever any shipped asset changes.
+  IndexedDB cache keys include its version, and loaded bytes must match hashes.
+- Neural input: LC4/LPLC2 looming. Other legacy sensory channels are present as
+  readouts of the sensing code but their input-role lists are empty until a
+  validated real mapping exists. The UI states this limitation.
+- Current sign hypothesis: ACh positive, GABA/Glu negative; unresolved or
+  modulatory sources have zero direct current. Raw contacts remain in source
+  data; quantized graph weights reflect the declared sign/current hypothesis.
+
+`yarn data:verify` exercises the actual full graph through optimized WASM:
+looming stimulation, GF silencing, removal of looming-cell outgoing edges,
+full-depth propagation and deterministic replay. `pipeline/tests/test_real_assets.py`
+checks identity, CSR ranges, missing-coordinate flags and region geometry using
+only the prepared assets; it needs no network or pandas.
+
+Plan 03 extensions: build_extensions.py adds native sensory identities and 24
+SWC arbors. fetch_regions.py reads only selected Arrow columns from the public
+neuPrint neuron table, retaining pre/post ROI membership for shipped IDs. The
+prepared membership is cached against the cell-order hash. Both run before
+stamp_assets.py in data:build. Browser data tests validate indices, counts and
+skeleton identity without downloading raw tables.

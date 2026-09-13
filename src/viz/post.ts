@@ -97,6 +97,13 @@ export function buildComposer(
   camera: THREE.Camera,
 ): PostStack {
   const { BLOOM, VIGNETTE, GRAIN, theme: initialTheme } = CONFIG.aesthetic;
+  // SwiftShader can blank the entire scene in the bloom pass. The other passes
+  // render correctly; keep them while avoiding that software-driver failure.
+  const gl = renderer.getContext();
+  const debug = gl.getExtension("WEBGL_debug_renderer_info");
+  const softwareRenderer = debug
+    ? /SwiftShader|llvmpipe/i.test(String(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL)))
+    : false;
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
 
@@ -107,7 +114,7 @@ export function buildComposer(
     b.RADIUS,
     b.THRESHOLD,
   );
-  bloom.enabled = b.STRENGTH > 0;
+  bloom.enabled = b.STRENGTH > 0 && !softwareRenderer;
   composer.addPass(bloom);
 
   // `ShaderPass` clones the uniform definitions, so grab the live objects once.
@@ -142,7 +149,7 @@ export function buildComposer(
       bloom.strength = p.STRENGTH;
       bloom.radius = p.RADIUS;
       bloom.threshold = p.THRESHOLD;
-      bloom.enabled = p.STRENGTH > 0;
+      bloom.enabled = p.STRENGTH > 0 && !softwareRenderer;
       vignetteAmount.value = VIGNETTE[theme];
       grainAmount.value = GRAIN[theme];
     },

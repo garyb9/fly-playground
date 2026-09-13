@@ -59,3 +59,29 @@ test("cruise carries the fly forward (+X) over time", () => {
   for (let i = 0; i < 120; i++) b.step(1 / 60, hoverR(), world);
   expect(b.pose().position.x).toBeGreaterThan(0.2);
 });
+
+test("neural flight loses lift when motor readouts are silenced", () => {
+  const w = { aabbs: [], lights: [], bounds: { min: v(-100, -100, -100), max: v(100, 100, 100) } };
+  const driven = new Body(v(0, 4, 0), 0, true),
+    silent = new Body(v(0, 4, 0), 0, true);
+  for (let i = 0; i < 100; i++) {
+    driven.step(0.01, { wing_l: 0.5, wing_r: 0.5, thrust: 0.5 }, w);
+    silent.step(0.01, {}, w);
+  }
+  expect(driven.pose().position.y).toBeGreaterThan(silent.pose().position.y + 1);
+  expect(driven.pose().position.x).toBeGreaterThan(silent.pose().position.x + 0.2);
+});
+test("independent body seeds diverge and reset replays the same seed", () => {
+  const start = v(0, 5, 0),
+    a = new Body(start, 0, false, 101),
+    b = new Body(start, 0, false, 202);
+  for (let i = 0; i < 120; i++) {
+    a.step(1 / 60, hoverR(), world);
+    b.step(1 / 60, hoverR(), world);
+  }
+  const before = a.pose();
+  expect(b.pose()).not.toEqual(before);
+  a.reset(start, 0);
+  for (let i = 0; i < 120; i++) a.step(1 / 60, hoverR(), world);
+  expect(a.pose()).toEqual(before);
+});

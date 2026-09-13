@@ -1,5 +1,6 @@
 export const CONFIG = {
-  sim: { seed: 0xf1a7, snapMax: 8192, coreFloor: 48 },
+  flight: { tonicDrive: 0.85 },
+  sim: { seed: 0xf1a7, snapMax: 8192, coreFloor: 48, defaultActiveCount: 50_000 },
   worker: { TICK_MS: 5, MAX_CATCHUP_MS: 20, hzEmaTau: 0.5 },
   loop: { MAX_FRAME_DT: 0.05 },
   physics: {

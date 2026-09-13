@@ -9,6 +9,7 @@ import type { HudControls, HudFrame, HudModel, Theme } from "./controls";
 import type { SceneConfig, SceneObject } from "../scene.config";
 import type { LifParams } from "../bridge/sim-bridge";
 import { v } from "../body/types";
+import { explainParameter } from "./parameter-help";
 import {
   countToSlider,
   lifSlider,
@@ -33,8 +34,10 @@ interface MeterSpec {
 const METERS: readonly MeterSpec[] = [
   { label: "looming", source: "sensory", key: "looming", kind: "looming" },
   { label: "escape", source: "readouts", key: "escape", kind: "escape" },
-  { label: "thrust", source: "readouts", key: "thrust", kind: "thrust" },
-  { label: "yaw", source: "readouts", key: "yaw_torque", kind: "yaw" },
+  { label: "power L", source: "readouts", key: "power_l", kind: "thrust" },
+  { label: "power R", source: "readouts", key: "power_r", kind: "thrust" },
+  { label: "steer L", source: "readouts", key: "steer_l", kind: "thrust" },
+  { label: "steer R", source: "readouts", key: "steer_r", kind: "thrust" },
   { label: "proximity", source: "sensory", key: "proximity", kind: "proximity" },
   { label: "light L", source: "sensory", key: "light_l", kind: "light" },
   { label: "light R", source: "sensory", key: "light_r", kind: "light" },
@@ -99,6 +102,7 @@ export class Hud {
   private readonly body: HTMLElement;
   private readonly hzSpan: HTMLElement;
   private readonly depthLabel: HTMLElement;
+  private readonly depthInput: HTMLInputElement;
   private readonly pauseButton: HTMLButtonElement;
   private readonly meters: MeterRefs[] = [];
   private readonly onKeyDown: (e: KeyboardEvent) => void;
@@ -117,7 +121,11 @@ export class Hud {
   private objSel: HTMLSelectElement | null = null;
   private lightSel: HTMLSelectElement | null = null;
 
-  constructor(root: HTMLElement, controls: HudControls, model: HudModel) {
+  constructor(
+    root: HTMLElement,
+    controls: HudControls,
+    private readonly model: HudModel,
+  ) {
     this.root = root;
     this.controls = controls;
     root.id = "hud";
@@ -147,9 +155,10 @@ export class Hud {
 
     // --- left-edge vertical "depth" control (log scale via scale.ts) ----
     const depth = el("div", "hud-depth");
-    depth.append(el("span", "hud-depth__caption", "depth"));
+    depth.append(el("span", "hud-depth__caption", "Neurons"));
     this.depthLabel = el("span", "hud-depth__label", String(model.nNeurons));
     const depthInput = el("input", "hud-depth__input");
+    this.depthInput = depthInput;
     depthInput.type = "range";
     depthInput.min = "0";
     depthInput.max = "1";
@@ -167,6 +176,7 @@ export class Hud {
     const meters = el("div", "hud-meters");
     for (const spec of METERS) {
       const meter = el("div", "hud-meter");
+      explainParameter(meter, spec.key);
       const track = el("div", "hud-meter__track");
       const fill = el("div", "hud-meter__fill");
       track.append(fill);
@@ -223,9 +233,11 @@ export class Hud {
 
     for (const param of LIF_KEYS) {
       const row = el("div", "hud-lif__row");
+      explainParameter(row, param);
       const label = el("label", "hud-lif__label", param);
       const input = el("input", "hud-lif__input");
       input.type = "range";
+      if (param === "dtMs") input.disabled = true;
       input.min = "0";
       input.max = "1";
       input.step = "0.001";
@@ -318,10 +330,18 @@ export class Hud {
     // `worker-core.frame(0)` skips the Hz EMA while paused, so `frame.simHz`
     // freezes at its last live value — show "paused" instead of a stale number.
     this.hzSpan.textContent = frame.paused ? "paused" : `${frame.simHz.toFixed(0)} hz`;
-    this.depthLabel.textContent = String(frame.activeCount);
+    this.depthLabel.textContent = frame.activeCount.toLocaleString();
+    const depth = this.depthInput;
+    if (depth && document.activeElement !== depth)
+      depth.value = String(
+        countToSlider(frame.activeCount, this.model.coreCount, this.model.nNeurons),
+      );
     for (const { fill, value, spec } of this.meters) {
       const src = spec.source === "readouts" ? frame.readouts : frame.sensory;
-      const raw = src[spec.key] ?? 0;
+      const raw =
+        spec.key === "looming"
+          ? Math.max(src.looming ?? 0, src.looming_l ?? 0, src.looming_r ?? 0)
+          : (src[spec.key] ?? 0);
       const frac = meterFraction(raw, spec.kind);
       fill.style.inlineSize = `${frac * 100}%`;
       // The looming meter warns as the fraction climbs toward ESCAPE_TH
@@ -410,7 +430,7 @@ export class Hud {
     const refreshers: (() => void)[] = [];
 
     // --- add row: kind + material + "add at fly" -------------------------------
-    const kindSel = select(["box", "sphere", "torus"]);
+    const kindSel = select(["box", "sphere", "torus", "flower"]);
     const matSel = select(["buoy-a", "buoy-b", "buoy-c"]);
     const addBtn = el("button", "hud-scene__btn", "add at fly");
     addBtn.type = "button";

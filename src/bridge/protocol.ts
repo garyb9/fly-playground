@@ -1,4 +1,5 @@
 export interface StatePayload {
+  embodied?: import("./embodied").EmbodiedSnapshot;
   readouts: Float32Array;
   activity: Float32Array;
   simHz: number;
@@ -7,6 +8,10 @@ export interface StatePayload {
 }
 
 export type ToWorker =
+  | { t: "world"; world: import("../body/types").WorldQuery }
+  | { t: "inputs"; modalities: boolean; flow: boolean }
+  | { t: "movement"; command: import("../body/movement").MovementCommand }
+  | { t: "resetBody"; start: import("../body/types").Vec3; heading: number }
   | {
       t: "init";
       assets: { neurons: ArrayBuffer; graph: ArrayBuffer; groups: unknown };
@@ -14,6 +19,7 @@ export type ToWorker =
     }
   | { t: "setActiveCount"; n: number }
   | { t: "setParams"; p: Partial<import("./sim-bridge").LifParams> }
+  | { t: "intervene"; command: import("./sim-bridge").Intervention }
   | { t: "pause" }
   | { t: "resume" }
   | { t: "reset" }
@@ -24,6 +30,7 @@ export type FromWorker =
   | { t: "ready"; nNeurons: number; coreCount: number; groups: unknown }
   | {
       t: "state";
+      embodied?: import("./embodied").EmbodiedSnapshot;
       readouts: Float32Array;
       activity: Float32Array;
       simHz: number;
@@ -39,12 +46,21 @@ export function encodeState(s: StatePayload): {
   const readouts = s.readouts.slice();
   const activity = s.activity.slice();
   return {
-    payload: { t: "state", readouts, activity, simHz: s.simHz, tick: s.tick, paused: s.paused },
+    payload: {
+      t: "state",
+      embodied: s.embodied,
+      readouts,
+      activity,
+      simHz: s.simHz,
+      tick: s.tick,
+      paused: s.paused,
+    },
     transfer: [readouts.buffer, activity.buffer],
   };
 }
 export function decodeState(p: FromWorker & { t: "state" }): StatePayload {
   return {
+    embodied: p.embodied,
     readouts: p.readouts,
     activity: p.activity,
     simHz: p.simHz,

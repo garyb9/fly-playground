@@ -5,6 +5,7 @@ import { nearestHit } from "./raycast";
 import { CONFIG } from "../app/config";
 
 export interface SensingState {
+  initialized?: boolean;
   loomTheta: number;
   prox: number;
   loom: number;
@@ -104,18 +105,33 @@ export function sample(
       theta = 2 * Math.atan(r / Math.max(d, 1e-3));
     }
   }
-  const loomRaw = Math.max(0, (theta - prev.loomTheta) / Math.max(dt, 1e-6));
+  const loomRaw = prev.initialized ? Math.max(0, (theta - prev.loomTheta) / Math.max(dt, 1e-6)) : 0;
   const loom = onePole(prev.loom, loomRaw, dt, TAU_LOOM);
 
   const stimulus = new Float32Array(rt.inputOrder.length);
-  stimulus[rt.input.proximity!] = prox;
-  stimulus[rt.input.looming!] = loom;
-  stimulus[rt.input.light_l!] = lightL;
-  stimulus[rt.input.light_r!] = lightR;
-  stimulus[rt.input.wind_l!] = windL;
-  stimulus[rt.input.wind_r!] = windR;
+  for (const [name, value] of Object.entries({
+    proximity: prox,
+    looming: loom,
+    light_l: lightL,
+    light_r: lightR,
+    wind_l: windL,
+    wind_r: windR,
+  })) {
+    const id = rt.input[name];
+    if (id !== undefined) stimulus[id] = value;
+  }
   return {
     stimulus,
-    state: { loomTheta: theta, prox, loom, lightL, lightR, windL, windR, windPhase },
+    state: {
+      initialized: true,
+      loomTheta: theta,
+      prox,
+      loom,
+      lightL,
+      lightR,
+      windL,
+      windR,
+      windPhase,
+    },
   };
 }

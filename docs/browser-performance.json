@@ -1,0 +1,136 @@
+{
+  "date": "2026-09-10T07:43:33.444Z",
+  "renderer": {
+    "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/152.0.0.0 Safari/537.36"
+  },
+  "results": [
+    {
+      "label": "3 flies / compact",
+      "transport": "SAB",
+      "seconds": 10.004304999992252,
+      "fps": 4.19819267805535,
+      "flies": [
+        {
+          "active": 1585,
+          "ticksPerSecond": 197.9147976797522,
+          "reportedHz": 197.075
+        },
+        {
+          "active": 1585,
+          "ticksPerSecond": 198.31462555385272,
+          "reportedHz": 198.064
+        },
+        {
+          "active": 1585,
+          "ticksPerSecond": 197.9147976797522,
+          "reportedHz": 197.861
+        }
+      ],
+      "jsHeapBytes": 374202150
+    },
+    {
+      "label": "3 flies / full",
+      "transport": "SAB",
+      "seconds": 10.005810000002384,
+      "fps": 4.897154753087289,
+      "flies": [
+        {
+          "active": 166700,
+          "ticksPerSecond": 128.72521065258016,
+          "reportedHz": 128.291
+        },
+        {
+          "active": 166700,
+          "ticksPerSecond": 129.12497838752606,
+          "reportedHz": 129.534
+        },
+        {
+          "active": 166700,
+          "ticksPerSecond": 129.12497838752606,
+          "reportedHz": 128.458
+        }
+      ],
+      "jsHeapBytes": 418884050
+    },
+    {
+      "label": "6 flies / full",
+      "transport": "SAB",
+      "seconds": 10.012055000007152,
+      "fps": 3.7954246156231517,
+      "flies": [
+        {
+          "active": 166700,
+          "ticksPerSecond": 126.2478082670438,
+          "reportedHz": 123.485
+        },
+        {
+          "active": 166700,
+          "ticksPerSecond": 127.04684502822761,
+          "reportedHz": 127.084
+        },
+        {
+          "active": 166700,
+          "ticksPerSecond": 126.6473266476357,
+          "reportedHz": 123.169
+        },
+        {
+          "active": 166700,
+          "ticksPerSecond": 127.04684502822761,
+          "reportedHz": 126.586
+        },
+        {
+          "active": 166700,
+          "ticksPerSecond": 126.6473266476357,
+          "reportedHz": 126.815
+        },
+        {
+          "active": 166700,
+          "ticksPerSecond": 126.6473266476357,
+          "reportedHz": 127.004
+        }
+      ],
+      "jsHeapBytes": 396495267
+    },
+    {
+      "label": "6 flies / full / membrane noise disabled",
+      "transport": "SAB",
+      "seconds": 10.012119999989867,
+      "fps": 2.896489454783737,
+      "flies": [
+        {
+          "active": 166700,
+          "ticksPerSecond": 116.65860976508293,
+          "reportedHz": 114.288
+        },
+        {
+          "active": 166700,
+          "ticksPerSecond": 89.09202047127908,
+          "reportedHz": 89.307
+        },
+        {
+          "active": 166700,
+          "ticksPerSecond": 103.07507301161436,
+          "reportedHz": 115.859
+        },
+        {
+          "active": 166700,
+          "ticksPerSecond": 91.0895994056127,
+          "reportedHz": 90.682
+        },
+        {
+          "active": 166700,
+          "ticksPerSecond": 87.89347311067891,
+          "reportedHz": 86.053
+        },
+        {
+          "active": 166700,
+          "ticksPerSecond": 89.09202047127908,
+          "reportedHz": 92.167
+        }
+      ],
+      "jsHeapBytes": 396682376
+    }
+  ],
+  "note": "JS heap is not total process/GPU/WASM memory. Live bodies follow neural tick time using held snapshots; assays step body and brain together. Noise-disabled stage changes the model setting explicitly."
+}

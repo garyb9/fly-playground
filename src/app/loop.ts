@@ -7,9 +7,11 @@ import type { Body } from "../body/body";
 import type { Pose, WorldQuery, Readouts } from "../body/types";
 import type { RoleTable } from "../sim/roles";
 import { sample, initSensingState, type SensingState } from "../sensing/sensing";
+import { encodeModalities, initEncoderState } from "../sensing/encoders";
 import { CONFIG } from "./config";
 
 export interface FrameView {
+  movementMode?: import("../body/movement").MovementMode;
   pose: Pose;
   readouts: Readouts;
   sensory: Readouts;
@@ -24,6 +26,8 @@ export interface LoopDeps {
   sensing: { sample: typeof sample };
   roleTable: RoleTable;
   world: WorldQuery;
+  nativeEncoders?: boolean;
+  simulationClock?: boolean;
   onFrame(view: FrameView): void;
 }
 
@@ -31,11 +35,18 @@ export class Loop {
   private readonly deps: LoopDeps;
   private world: WorldQuery;
   private last = 0;
+  private lastTick = 0;
   private seeded = false;
   private sensingState: SensingState = initSensingState();
   private pendingStartle = 0;
   private lastSensory: Readouts = {};
   private raf = 0;
+  private modalities = false;
+  private encoder = initEncoderState();
+  setModalities(enabled: boolean) {
+    this.modalities = enabled;
+    this.encoder = initEncoderState();
+  }
 
   constructor(deps: LoopDeps) {
     this.deps = deps;
@@ -45,6 +56,7 @@ export class Loop {
   // Runtime scene edits (Task 10) land here and take effect on the next frame.
   setWorld(w: WorldQuery): void {
     this.world = w;
+    this.deps.bridge.setWorld?.(w);
   }
 
   frameOnce(nowMs: number): void {
@@ -52,26 +64,50 @@ export class Loop {
     if (!this.seeded) {
       this.seeded = true;
       this.last = nowMs;
+      this.lastTick = this.deps.bridge.readState().tick;
       return;
     }
 
-    const dt = Math.min((nowMs - this.last) / 1000, CONFIG.loop.MAX_FRAME_DT);
+    let dt = Math.min((nowMs - this.last) / 1000, CONFIG.loop.MAX_FRAME_DT);
     this.last = nowMs;
 
     const { bridge, body, sensing, roleTable, onFrame } = this.deps;
     const world = this.world;
     const raw = bridge.readState();
+    if (raw.embodied) {
+      body.restoreState(raw.embodied.state);
+      onFrame({
+        pose: body.pose(),
+        readouts: Object.fromEntries(
+          roleTable.readoutOrder.map((name, i) => [name, raw.readouts[i] ?? 0]),
+        ),
+        sensory: Object.fromEntries(
+          roleTable.inputOrder.map((name, i) => [name, raw.embodied!.stimulus[i] ?? 0]),
+        ),
+        activity: raw.activity,
+        simHz: raw.simHz,
+        paused: raw.paused,
+        movementMode: raw.embodied.mode,
+      });
+      return;
+    }
+    if (this.deps.simulationClock) {
+      // Snapshots hold readouts between frames. Integrate their elapsed neural
+      // time in fixed substeps; cap recovery from background tabs at one second.
+      dt = Math.min(1, (Math.max(0, raw.tick - this.lastTick) * CONFIG.worker.TICK_MS) / 1000);
+      this.lastTick = raw.tick;
+    }
     const readouts: Readouts = Object.fromEntries(
       roleTable.readoutOrder.map((name, i) => [name, raw.readouts[i] ?? 0]),
     );
-    if (raw.paused) {
+    if (raw.paused || (this.deps.simulationClock && dt === 0)) {
       onFrame({
         pose: body.pose(),
         readouts,
         sensory: this.lastSensory,
         activity: raw.activity,
         simHz: raw.simHz,
-        paused: true,
+        paused: raw.paused,
       });
       return;
     }
@@ -85,6 +121,22 @@ export class Loop {
       (stimulus[roleTable.input.proximity!] ?? 0) + this.pendingStartle;
     this.pendingStartle = 0;
 
+    if (this.deps.nativeEncoders) {
+      const read = (name: string) => stimulus[roleTable.input[name]!] ?? 0;
+      const encoded = encodeModalities(
+        read("light_l"),
+        read("light_r"),
+        read("wind_l"),
+        read("wind_r"),
+        dt,
+        this.encoder,
+      );
+      this.encoder = encoded.state;
+      for (const name of ["light_l", "light_r", "wind_l", "wind_r"] as const) {
+        const id = roleTable.input[name];
+        if (id !== undefined) stimulus[id] = this.modalities ? encoded[name] : 0;
+      }
+    }
     bridge.setStimulus(stimulus);
 
     // Named view of the stimulus actually injected this frame (post startle add).
@@ -93,8 +145,13 @@ export class Loop {
     );
     this.lastSensory = sensory;
 
-    const { contact } = body.step(dt, readouts, world);
-    if (contact) this.pendingStartle = CONFIG.physics.CONTACT_STARTLE;
+    const steps = this.deps.simulationClock
+      ? Math.max(1, Math.round((dt * 1000) / CONFIG.worker.TICK_MS))
+      : 1;
+    for (let step = 0; step < steps; step++) {
+      if (body.step(dt / steps, readouts, world).contact)
+        this.pendingStartle = CONFIG.physics.CONTACT_STARTLE;
+    }
 
     onFrame({
       pose: body.pose(),
@@ -104,6 +161,14 @@ export class Loop {
       simHz: raw.simHz,
       paused: raw.paused,
     });
+  }
+
+  reset(): void {
+    this.seeded = false;
+    this.sensingState = initSensingState();
+    this.pendingStartle = 0;
+    this.lastSensory = {};
+    this.encoder = initEncoderState();
   }
 
   start(): void {

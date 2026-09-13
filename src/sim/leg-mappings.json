@@ -1,0 +1,2677 @@
+{
+  "dataset": "MaleCNS v1.0",
+  "license": "CC-BY-4.0",
+  "credit": "FlyEM / University of Cambridge / MRC LMB / Google Research",
+  "source": "https://storage.googleapis.com/flyem-male-cns/v1.0/connectome-data/flat-connectome/body-annotations-male-cns-v1.0-minconf-0.5.feather",
+  "sha256": "2177e246113e4cfbf1e7772ec37c6da1955ff22e8063d0b1f833101f99a9a3b2",
+  "laterality": "somaSide proxy; target-side physiology not validated",
+  "cells": [
+    {
+      "id": "800061",
+      "leg": "lf",
+      "type": "Tergopleural/Pleural promotor MN",
+      "subclass": "fl",
+      "exitNerve": "DProN"
+    },
+    {
+      "id": "800158",
+      "leg": "rh",
+      "type": "Ti extensor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "800175",
+      "leg": "lh",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "800230",
+      "leg": "rm",
+      "type": "MNml82",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "800290",
+      "leg": "rh",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "800316",
+      "leg": "rh",
+      "type": "Sternal anterior rotator MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "800358",
+      "leg": "rh",
+      "type": "MNhl64",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "800504",
+      "leg": "lh",
+      "type": "Sternotrochanter MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "800541",
+      "leg": "lm",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "800553",
+      "leg": "rh",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "800578",
+      "leg": "lh",
+      "type": "Fe reductor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "800589",
+      "leg": "lm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "800621",
+      "leg": "lh",
+      "type": "Ti extensor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "800636",
+      "leg": "lf",
+      "type": "Ti extensor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "800776",
+      "leg": "rm",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "800851",
+      "leg": "lh",
+      "type": "Sternotrochanter MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "800911",
+      "leg": "lm",
+      "type": "Ti extensor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "800962",
+      "leg": "rm",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "801057",
+      "leg": "rm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "801058",
+      "leg": "rm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "801079",
+      "leg": "rf",
+      "type": "Sternotrochanter MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "801090",
+      "leg": "rh",
+      "type": "Sternotrochanter MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "801148",
+      "leg": "rh",
+      "type": "Sternotrochanter MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "801173",
+      "leg": "lf",
+      "type": "Tergopleural/Pleural promotor MN",
+      "subclass": "fl",
+      "exitNerve": "DProN"
+    },
+    {
+      "id": "801234",
+      "leg": "lm",
+      "type": "Ti extensor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "801267",
+      "leg": "rh",
+      "type": "MNhl02",
+      "subclass": "hl",
+      "exitNerve": "AbN1"
+    },
+    {
+      "id": "801335",
+      "leg": "rh",
+      "type": "MNhl59",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "801375",
+      "leg": "rh",
+      "type": "Sternotrochanter MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "801469",
+      "leg": "rf",
+      "type": "Sternal anterior rotator MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "801477",
+      "leg": "rm",
+      "type": "MNml81",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "801492",
+      "leg": "lh",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "801548",
+      "leg": "lh",
+      "type": "Sternal anterior rotator MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "801637",
+      "leg": "rh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "801685",
+      "leg": "lf",
+      "type": "Sternotrochanter MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "801693",
+      "leg": "rh",
+      "type": "Fe reductor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "801715",
+      "leg": "lh",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "801721",
+      "leg": "rh",
+      "type": "Tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "801736",
+      "leg": "lh",
+      "type": "MNhl62",
+      "subclass": "hl",
+      "exitNerve": "AbN1"
+    },
+    {
+      "id": "801761",
+      "leg": "rm",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "801768",
+      "leg": "lm",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "801813",
+      "leg": "rm",
+      "type": "Sternal anterior rotator MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "801824",
+      "leg": "rf",
+      "type": "Tergopleural/Pleural promotor MN",
+      "subclass": "fl",
+      "exitNerve": "DProN"
+    },
+    {
+      "id": "801915",
+      "leg": "lf",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "801918",
+      "leg": "rf",
+      "type": "Sternal anterior rotator MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "801932",
+      "leg": "rh",
+      "type": null,
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "801946",
+      "leg": "rm",
+      "type": "Sternal anterior rotator MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "802072",
+      "leg": "rf",
+      "type": "Tergopleural/Pleural promotor MN",
+      "subclass": "fl",
+      "exitNerve": "DProN"
+    },
+    {
+      "id": "802215",
+      "leg": "lh",
+      "type": "Sternal anterior rotator MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "802232",
+      "leg": "lm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "802295",
+      "leg": "lm",
+      "type": "Ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "802361",
+      "leg": "lf",
+      "type": "Sternotrochanter MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "802407",
+      "leg": "lm",
+      "type": "Sternotrochanter MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "802509",
+      "leg": "lf",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "802521",
+      "leg": "rm",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "802552",
+      "leg": "lf",
+      "type": "Tergotr. MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "802731",
+      "leg": "lh",
+      "type": "MNhl59",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "802864",
+      "leg": "rm",
+      "type": "Sternotrochanter MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "802964",
+      "leg": "lh",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "803072",
+      "leg": "rh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "803086",
+      "leg": "lm",
+      "type": "MNml29",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "803147",
+      "leg": "lh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "803226",
+      "leg": "lm",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "803237",
+      "leg": "lf",
+      "type": "Tergotr. MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "803314",
+      "leg": "rf",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "803412",
+      "leg": "lf",
+      "type": "Tr extensor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "803480",
+      "leg": "lm",
+      "type": "MNml82",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "803499",
+      "leg": "rm",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "803523",
+      "leg": "rm",
+      "type": "ltm1-tibia MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "803698",
+      "leg": "rf",
+      "type": "Sternotrochanter MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "803704",
+      "leg": "lm",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "803803",
+      "leg": "lf",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "803829",
+      "leg": "lm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "803830",
+      "leg": "rf",
+      "type": "Fe reductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "804025",
+      "leg": "lm",
+      "type": "Fe reductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "804078",
+      "leg": "lh",
+      "type": "MNhl29",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "804257",
+      "leg": "rf",
+      "type": "Ti extensor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "804405",
+      "leg": "rm",
+      "type": "Ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "804465",
+      "leg": "lf",
+      "type": "Tergotr. MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "804514",
+      "leg": "lh",
+      "type": "Tergotr. MN",
+      "subclass": "hl",
+      "exitNerve": "AbN1"
+    },
+    {
+      "id": "804741",
+      "leg": "rh",
+      "type": "ltm1-tibia MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "804847",
+      "leg": "lh",
+      "type": "MNhl88",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "804851",
+      "leg": "lf",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "804866",
+      "leg": "rf",
+      "type": "Tergotr. MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "804919",
+      "leg": "lh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "804941",
+      "leg": "lf",
+      "type": "Fe reductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "805010",
+      "leg": "rm",
+      "type": "Ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "805309",
+      "leg": "lf",
+      "type": "ltm2-femur MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "805313",
+      "leg": "rf",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "805410",
+      "leg": "rf",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "805477",
+      "leg": "lm",
+      "type": "Tr extensor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "805568",
+      "leg": "rm",
+      "type": "Acc. ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "805598",
+      "leg": "lf",
+      "type": "Fe reductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "805741",
+      "leg": "lf",
+      "type": "Tergotr. MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "805745",
+      "leg": "rf",
+      "type": "Tergopleural/Pleural promotor MN",
+      "subclass": "fl",
+      "exitNerve": "DProN"
+    },
+    {
+      "id": "806204",
+      "leg": "rm",
+      "type": "Tergotr. MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "806599",
+      "leg": "lf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "806898",
+      "leg": "rf",
+      "type": "Fe reductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "806923",
+      "leg": "lf",
+      "type": "Sternal anterior rotator MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "807160",
+      "leg": "lh",
+      "type": "MNhl01",
+      "subclass": "hl",
+      "exitNerve": "AbN1"
+    },
+    {
+      "id": "807165",
+      "leg": "lf",
+      "type": "Ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "807281",
+      "leg": "lf",
+      "type": "Tergopleural/Pleural promotor MN",
+      "subclass": "fl",
+      "exitNerve": "DProN"
+    },
+    {
+      "id": "807395",
+      "leg": "rm",
+      "type": "MNml29",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "807640",
+      "leg": "rh",
+      "type": "Tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "807854",
+      "leg": "rh",
+      "type": "Sternal adductor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "807873",
+      "leg": "rf",
+      "type": "Acc. tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "807906",
+      "leg": "lf",
+      "type": "Tr extensor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "807972",
+      "leg": "lm",
+      "type": "ltm2-femur MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "808011",
+      "leg": "rf",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "808453",
+      "leg": "rh",
+      "type": "Tr extensor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "808640",
+      "leg": "lf",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "808685",
+      "leg": "rh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "809055",
+      "leg": "rh",
+      "type": "MNhl88",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "809604",
+      "leg": "lh",
+      "type": "Acc. tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "809670",
+      "leg": "lm",
+      "type": "Acc. ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "809912",
+      "leg": "lf",
+      "type": "Ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "809935",
+      "leg": "rh",
+      "type": "Ti extensor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "810098",
+      "leg": "rf",
+      "type": "Ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "810535",
+      "leg": "rf",
+      "type": "Tergopleural/Pleural promotor MN",
+      "subclass": "fl",
+      "exitNerve": "DProN"
+    },
+    {
+      "id": "810541",
+      "leg": "lf",
+      "type": "Ta levator MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "810639",
+      "leg": "lf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "810720",
+      "leg": "rm",
+      "type": "Acc. tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "811137",
+      "leg": "lh",
+      "type": "MNhl87",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "811652",
+      "leg": "rf",
+      "type": "Fe reductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "812111",
+      "leg": "lf",
+      "type": "Fe reductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "812531",
+      "leg": "rm",
+      "type": "Acc. ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "812872",
+      "leg": "rm",
+      "type": "ltm MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "812899",
+      "leg": "rh",
+      "type": "MNhl87",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "812953",
+      "leg": "lh",
+      "type": "Ti extensor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "813480",
+      "leg": "lf",
+      "type": "Sternal adductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "813566",
+      "leg": "rf",
+      "type": "Fe reductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "813603",
+      "leg": "lm",
+      "type": "ltm MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "813629",
+      "leg": "rh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "813755",
+      "leg": "lm",
+      "type": "Tergotr. MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "814163",
+      "leg": "lf",
+      "type": "Fe reductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "814489",
+      "leg": "lf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "814942",
+      "leg": "rm",
+      "type": "Tr extensor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "814983",
+      "leg": "rm",
+      "type": "MNml78",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "815097",
+      "leg": "rh",
+      "type": "ltm MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "815246",
+      "leg": "lf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "815344",
+      "leg": "lf",
+      "type": "Ti extensor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "815498",
+      "leg": "lh",
+      "type": "ltm2-femur MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "815678",
+      "leg": "rf",
+      "type": "Ti extensor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "815854",
+      "leg": "rf",
+      "type": "Sternal adductor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "815958",
+      "leg": "rh",
+      "type": "Acc. tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "816018",
+      "leg": "lm",
+      "type": "Sternal adductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "816022",
+      "leg": "rh",
+      "type": "MNhl29",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "816215",
+      "leg": "lf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "816222",
+      "leg": "rm",
+      "type": "Ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "816404",
+      "leg": "lf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "816501",
+      "leg": "lh",
+      "type": "MNhl02",
+      "subclass": "hl",
+      "exitNerve": "AbN1"
+    },
+    {
+      "id": "816648",
+      "leg": "rf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "817210",
+      "leg": "rf",
+      "type": "Ta levator MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "817283",
+      "leg": "lf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "817347",
+      "leg": "rf",
+      "type": "Tergotr. MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "817374",
+      "leg": "lh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "817509",
+      "leg": "rf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "817595",
+      "leg": "rf",
+      "type": "Fe reductor MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "817640",
+      "leg": "rf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "817655",
+      "leg": "lf",
+      "type": "Ta depressor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "817681",
+      "leg": "rm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "817990",
+      "leg": "rm",
+      "type": "MNml78",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "818057",
+      "leg": "lf",
+      "type": "Ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "818295",
+      "leg": "lm",
+      "type": "Ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "818389",
+      "leg": "lf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "818399",
+      "leg": "lh",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "818553",
+      "leg": "lf",
+      "type": "ltm1-tibia MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "818719",
+      "leg": "rf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "818842",
+      "leg": "rf",
+      "type": "Tr extensor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "818996",
+      "leg": "rm",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "819112",
+      "leg": "lh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "819203",
+      "leg": "rm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "819278",
+      "leg": "lf",
+      "type": "Ta depressor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "819384",
+      "leg": "lf",
+      "type": "Ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "819674",
+      "leg": "lm",
+      "type": "Acc. ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "819869",
+      "leg": "lf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "820110",
+      "leg": "rf",
+      "type": "Ta levator MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "820130",
+      "leg": "rf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "820350",
+      "leg": "lh",
+      "type": "Fe reductor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "820574",
+      "leg": "rm",
+      "type": "MNml83",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "820632",
+      "leg": "lm",
+      "type": "MNml80",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "820668",
+      "leg": "rf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "820764",
+      "leg": "lm",
+      "type": "Fe reductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "820896",
+      "leg": "rf",
+      "type": "Ta levator MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "821154",
+      "leg": "lh",
+      "type": "Acc. tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "821291",
+      "leg": "lf",
+      "type": "Acc. tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "821375",
+      "leg": "lm",
+      "type": "Acc. tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "821449",
+      "leg": "rh",
+      "type": "ltm2-femur MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "821494",
+      "leg": "lm",
+      "type": "MNml79",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "821635",
+      "leg": "rf",
+      "type": "Ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "821769",
+      "leg": "rm",
+      "type": "Fe reductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "822013",
+      "leg": "rm",
+      "type": "Ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "822047",
+      "leg": "lf",
+      "type": "ltm1-tibia MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "822092",
+      "leg": "lf",
+      "type": "ltm MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "822185",
+      "leg": "lm",
+      "type": "MNml77",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "822252",
+      "leg": "lh",
+      "type": "MNhl64",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "822274",
+      "leg": "lf",
+      "type": "ltm MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "822742",
+      "leg": "lm",
+      "type": "MNml80",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "822945",
+      "leg": "lh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "823132",
+      "leg": "rm",
+      "type": "Fe reductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "823168",
+      "leg": "lf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "823281",
+      "leg": "lf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "823405",
+      "leg": "lh",
+      "type": "ltm MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "823665",
+      "leg": "rh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "823739",
+      "leg": "lm",
+      "type": "Ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "824041",
+      "leg": "lm",
+      "type": "Ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "824104",
+      "leg": "lh",
+      "type": "ltm MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "824315",
+      "leg": "rm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "824689",
+      "leg": "lm",
+      "type": "ltm MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "824997",
+      "leg": "rm",
+      "type": "ltm MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "825485",
+      "leg": "lm",
+      "type": "Acc. ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "825516",
+      "leg": "lf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "825681",
+      "leg": "lm",
+      "type": "ltm MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "825721",
+      "leg": "rf",
+      "type": "Ta depressor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "826996",
+      "leg": "lm",
+      "type": "ltm2-femur MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "827188",
+      "leg": "rf",
+      "type": "Ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "827968",
+      "leg": "rh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "828238",
+      "leg": "rh",
+      "type": null,
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "828939",
+      "leg": "lf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "828978",
+      "leg": "lh",
+      "type": "Sternotrochanter MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "829873",
+      "leg": "lh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "830039",
+      "leg": "rf",
+      "type": "ltm2-femur MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "830480",
+      "leg": "lm",
+      "type": "Acc. ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "830514",
+      "leg": "rm",
+      "type": "Ti extensor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "832490",
+      "leg": "lm",
+      "type": "Sternal anterior rotator MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "833140",
+      "leg": "rf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "835074",
+      "leg": "rf",
+      "type": "Fe reductor MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "837745",
+      "leg": "rf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "838321",
+      "leg": "rf",
+      "type": "Tr extensor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "840530",
+      "leg": "rm",
+      "type": "Tr extensor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "840740",
+      "leg": "rh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "840981",
+      "leg": "lh",
+      "type": "Tr extensor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "843389",
+      "leg": "lh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "852673",
+      "leg": "rm",
+      "type": "ltm2-femur MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "852881",
+      "leg": "rh",
+      "type": null,
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "856359",
+      "leg": "rm",
+      "type": "Sternotrochanter MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "857751",
+      "leg": "lh",
+      "type": "ltm2-femur MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "858248",
+      "leg": "lh",
+      "type": "ltm1-tibia MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "860084",
+      "leg": "rf",
+      "type": "ltm MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "867630",
+      "leg": "lf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "867926",
+      "leg": "rm",
+      "type": "Acc. tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "869369",
+      "leg": "rh",
+      "type": "MNhl65",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "876504",
+      "leg": "lh",
+      "type": null,
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "890541",
+      "leg": "lh",
+      "type": "ltm MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "895449",
+      "leg": "lm",
+      "type": "MNml78",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "896719",
+      "leg": "lh",
+      "type": "Acc. tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "902310",
+      "leg": "lh",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "902492",
+      "leg": "lm",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "902719",
+      "leg": "rm",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "902962",
+      "leg": "rh",
+      "type": "Fe reductor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "903010",
+      "leg": "rf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "903090",
+      "leg": "rh",
+      "type": "MNhl62",
+      "subclass": "hl",
+      "exitNerve": "AbN1"
+    },
+    {
+      "id": "903158",
+      "leg": "lm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "903159",
+      "leg": "lm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "903298",
+      "leg": "lf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "903363",
+      "leg": "rm",
+      "type": "Ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "903508",
+      "leg": "lm",
+      "type": "MNml81",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "903579",
+      "leg": "lm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "903642",
+      "leg": "rh",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "903643",
+      "leg": "rh",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "903689",
+      "leg": "lm",
+      "type": "Sternal anterior rotator MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "903844",
+      "leg": "rm",
+      "type": "MNml80",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "904184",
+      "leg": "lh",
+      "type": "Sternal adductor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "904657",
+      "leg": "lm",
+      "type": "Sternotrochanter MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "905145",
+      "leg": "rm",
+      "type": "Fe reductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "905235",
+      "leg": "rm",
+      "type": "Acc. ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "905236",
+      "leg": "rm",
+      "type": "MNml80",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "905421",
+      "leg": "lm",
+      "type": "Pleural remotor/abductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "905487",
+      "leg": "rm",
+      "type": "ltm MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "905559",
+      "leg": "rm",
+      "type": "MNml79",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "905586",
+      "leg": "rh",
+      "type": "Acc. tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "905661",
+      "leg": "rh",
+      "type": "Tr extensor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "905792",
+      "leg": "rh",
+      "type": "MNhl01",
+      "subclass": "hl",
+      "exitNerve": "AbN1"
+    },
+    {
+      "id": "905849",
+      "leg": "rh",
+      "type": "Tergotr. MN",
+      "subclass": "hl",
+      "exitNerve": "AbN1"
+    },
+    {
+      "id": "905928",
+      "leg": "rh",
+      "type": "Tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "906235",
+      "leg": "rh",
+      "type": "Sternal anterior rotator MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "907256",
+      "leg": "rh",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "907387",
+      "leg": "rm",
+      "type": "MNml77",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "907422",
+      "leg": "lm",
+      "type": "MNml78",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "907443",
+      "leg": "lm",
+      "type": "ltm1-tibia MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "907848",
+      "leg": "rm",
+      "type": "Acc. ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "908094",
+      "leg": "lm",
+      "type": "Acc. ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "908673",
+      "leg": "rm",
+      "type": "ltm2-femur MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "908762",
+      "leg": "lh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "909078",
+      "leg": "lm",
+      "type": "Tr extensor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "909255",
+      "leg": "rm",
+      "type": "Acc. ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "909371",
+      "leg": "rm",
+      "type": "Sternal adductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "909521",
+      "leg": "rf",
+      "type": "Tergotr. MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "909618",
+      "leg": "lf",
+      "type": "Acc. tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "909713",
+      "leg": "rf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "909831",
+      "leg": "lf",
+      "type": "Ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "910095",
+      "leg": "rm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "910178",
+      "leg": "rh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "910296",
+      "leg": "rh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "910334",
+      "leg": "lf",
+      "type": "ltm MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "911134",
+      "leg": "lf",
+      "type": "Acc. tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "911453",
+      "leg": "lf",
+      "type": "ltm MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "912694",
+      "leg": "lh",
+      "type": "ltm1-tibia MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "914655",
+      "leg": "rf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "914837",
+      "leg": "rh",
+      "type": "ltm1-tibia MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "914852",
+      "leg": "rh",
+      "type": "Acc. tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "919509",
+      "leg": "lf",
+      "type": "Sternal anterior rotator MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "924142",
+      "leg": "rm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "924189",
+      "leg": "rf",
+      "type": "ltm MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "924716",
+      "leg": "rf",
+      "type": "Tergotr. MN",
+      "subclass": "fl",
+      "exitNerve": "VProN"
+    },
+    {
+      "id": "927808",
+      "leg": "lm",
+      "type": "Ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "927828",
+      "leg": "lm",
+      "type": "Acc. tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "928579",
+      "leg": "rm",
+      "type": "Ti extensor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "929376",
+      "leg": "lh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "934091",
+      "leg": "lf",
+      "type": "Tergopleural/Pleural promotor MN",
+      "subclass": "fl",
+      "exitNerve": "DProN"
+    },
+    {
+      "id": "934519",
+      "leg": "lh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "936696",
+      "leg": "lh",
+      "type": "MNhl65",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "939950",
+      "leg": "rh",
+      "type": "MNhl60",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050003192",
+      "leg": "lh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050005026",
+      "leg": "rf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050013311",
+      "leg": "rh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050013851",
+      "leg": "rf",
+      "type": "ltm MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050015101",
+      "leg": "rf",
+      "type": "ltm MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050031705",
+      "leg": "rf",
+      "type": "Ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050032839",
+      "leg": "rh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050038433",
+      "leg": "lh",
+      "type": "Acc. tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050046221",
+      "leg": "lm",
+      "type": "MNml80",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "1050080384",
+      "leg": "lh",
+      "type": "ltm MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050088257",
+      "leg": "lh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050091102",
+      "leg": "rh",
+      "type": "ltm MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050091581",
+      "leg": "rf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050098047",
+      "leg": "rh",
+      "type": "Tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050100010",
+      "leg": "lh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050102118",
+      "leg": "rh",
+      "type": "Acc. tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050111955",
+      "leg": "lf",
+      "type": "Ta levator MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050115387",
+      "leg": "lf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050119039",
+      "leg": "lm",
+      "type": "MNml78",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "1050123559",
+      "leg": "lh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050126678",
+      "leg": "rf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050139141",
+      "leg": "lh",
+      "type": "Acc. tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050151215",
+      "leg": "lm",
+      "type": "MNml78",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "1050156705",
+      "leg": "rf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050160514",
+      "leg": "rh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050160593",
+      "leg": "rm",
+      "type": "MNml76",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "1050166426",
+      "leg": "lh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050174251",
+      "leg": "rh",
+      "type": "ltm2-femur MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050189039",
+      "leg": "rf",
+      "type": "Ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050194310",
+      "leg": "lh",
+      "type": "Tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050202259",
+      "leg": "lh",
+      "type": "MNhl65",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050202461",
+      "leg": "rh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050203465",
+      "leg": "rh",
+      "type": "ltm MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050233038",
+      "leg": "lh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050239701",
+      "leg": "lh",
+      "type": "Acc. tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050248133",
+      "leg": "rf",
+      "type": "Ta depressor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050251718",
+      "leg": "rf",
+      "type": "ltm2-femur MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050263576",
+      "leg": "lh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050268065",
+      "leg": "rf",
+      "type": "Acc. ti flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050272154",
+      "leg": "lh",
+      "type": null,
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050274189",
+      "leg": "lh",
+      "type": "MNhl60",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050303231",
+      "leg": "rh",
+      "type": "Ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050306082",
+      "leg": "rf",
+      "type": "Acc. tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050335829",
+      "leg": "lf",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "1050340850",
+      "leg": "rf",
+      "type": null,
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050349786",
+      "leg": "rf",
+      "type": "Acc. tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050380236",
+      "leg": "rf",
+      "type": "Ta depressor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050403926",
+      "leg": "lf",
+      "type": "Ta depressor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050460102",
+      "leg": "rh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050493413",
+      "leg": "rh",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050607195",
+      "leg": "lm",
+      "type": "Fe reductor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "1050615112",
+      "leg": "lf",
+      "type": "ltm2-femur MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050660827",
+      "leg": "lf",
+      "type": "Ta depressor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050669248",
+      "leg": "lm",
+      "type": "Tr flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "1050673969",
+      "leg": "rm",
+      "type": "MNml80",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "1050730563",
+      "leg": "lh",
+      "type": "Acc. tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1050815462",
+      "leg": "rf",
+      "type": "Ta depressor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1050938258",
+      "leg": "rh",
+      "type": "Tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1051054875",
+      "leg": "lm",
+      "type": "Sternal posterior rotator MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "1051062549",
+      "leg": "lf",
+      "type": "Ta depressor MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1051236875",
+      "leg": "lh",
+      "type": "Acc. tr flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1051356801",
+      "leg": "lm",
+      "type": "Acc. ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "1051367796",
+      "leg": "lf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "1051670893",
+      "leg": "lf",
+      "type": "Tr flexor MN",
+      "subclass": "fl",
+      "exitNerve": "ProAN"
+    },
+    {
+      "id": "1051680335",
+      "leg": "lh",
+      "type": null,
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    },
+    {
+      "id": "1052407897",
+      "leg": "rf",
+      "type": null,
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1052521030",
+      "leg": "rm",
+      "type": "Acc. ti flexor MN",
+      "subclass": "ml",
+      "exitNerve": "MesoLN"
+    },
+    {
+      "id": "1057471940",
+      "leg": "rf",
+      "type": "ltm1-tibia MN",
+      "subclass": "fl",
+      "exitNerve": "ProLN"
+    },
+    {
+      "id": "1059707690",
+      "leg": "rh",
+      "type": "Acc. ti flexor MN",
+      "subclass": "hl",
+      "exitNerve": "MetaLN"
+    }
+  ]
+}

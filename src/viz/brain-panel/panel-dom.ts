@@ -1,4 +1,5 @@
 import { ROLE_NAMES, type RoleFiring } from "./role-monitor";
+import { explainParameter } from "../../ui/parameter-help";
 import { roleBarStyle, regionBarOpacity } from "./panel-view";
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -57,6 +58,7 @@ export function createPanelDom(groups: number[], onGroup: (g: number, visible: b
   const rows = ROLE_NAMES.map((name) => {
     const row = el("div", "brain-panel__row");
     row.dataset.role = name;
+    explainParameter(row, name);
     const label = el("span", "", name.replace("_", " "));
     const track = el("span", "brain-panel__track");
     const fill = el("span", "brain-panel__fill");

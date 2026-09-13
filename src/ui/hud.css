@@ -622,3 +622,15 @@
     bottom: 220px;
   }
 }
+.hud-camera__hint { position: relative; pointer-events: auto; }
+.hud-camera__hint summary { cursor: pointer; }
+.hud-camera__legend {
+  position: absolute; right: 0; top: 22px; width: 230px;
+  padding: 10px; border: 1px solid var(--hud-text);
+  background: var(--hud-bg, #141a21); color: var(--hud-bright);
+  line-height: 1.8; text-align: left; z-index: 10;
+}
+@media (max-width: 599px) {
+  .hud-camera__legend { top: auto; bottom: 24px; right: -70px; width: 210px; }
+}
+#hud[data-theme="light"] .hud-camera__legend { background: #f0f1e9; }

@@ -11,6 +11,8 @@ import type { SceneConfig, SceneObject } from "../scene.config";
 function halfExtents(obj: SceneObject): Vec3 {
   const s = obj.scale;
   switch (obj.kind) {
+    case "flower":
+      return v(s.x, s.y + 0.25 * s.x, s.x);
     case "box":
       return v(s.x, s.y, s.z);
     case "sphere":

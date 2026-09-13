@@ -7,7 +7,7 @@ import { v } from "./body/types";
 
 export interface SceneObject {
   id: string;
-  kind: "box" | "sphere" | "torus";
+  kind: "box" | "sphere" | "torus" | "flower";
   position: Vec3;
   rotation: Vec3;
   scale: Vec3;

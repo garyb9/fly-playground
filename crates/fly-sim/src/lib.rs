@@ -84,6 +84,21 @@ impl Sim {
     pub fn step(&mut self, ticks: u32) {
         self.inner.step(ticks);
     }
+    pub fn inject_cells(&mut self, ids: &[u32], value: f32) {
+        self.inner.inject_cells(ids, value);
+    }
+    pub fn set_bias(&mut self, ids: &[u32], value: f32) {
+        self.inner.set_bias(ids, value);
+    }
+    pub fn silence_cells(&mut self, ids: &[u32], value: bool) {
+        self.inner.silence_cells(ids, value);
+    }
+    pub fn clear_interventions(&mut self) {
+        self.inner.clear_interventions();
+    }
+    pub fn reset(&mut self, seed: u64) {
+        self.inner.reset(seed);
+    }
     pub fn readout(&self, role_id: u32) -> f32 {
         self.inner.readout(role_id)
     }

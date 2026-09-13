@@ -18,13 +18,16 @@
     "rs:fmt:check": "cargo fmt --check",
     "rs:lint": "cargo clippy -p fly-sim --all-targets -- -D warnings",
     "rs:test": "cargo test -p fly-sim",
-    "rs:wasm": "wasm-pack build crates/fly-sim --target web --dev",
-    "rs:wasm:node": "wasm-pack build crates/fly-sim --target nodejs --dev --out-dir pkg-node",
+    "rs:wasm": "wasm-pack build crates/fly-sim --target web --release",
+    "rs:wasm:node": "wasm-pack build crates/fly-sim --target nodejs --release --out-dir pkg-node",
     "rs:smoke": "yarn rs:wasm:node && node examples/smoke.mjs",
     "py:test": "python3 -m pytest pipeline -q || [ $? -eq 5 ]",
     "py:fixture-check": "python3 pipeline/gen_fixture.py && git diff --exit-code pipeline/out/fixture",
     "prep": "yarn format && yarn lint:fix && yarn rs:fmt && yarn rs:wasm && yarn typecheck && yarn rs:lint && yarn rs:wasm:node && yarn build",
-    "ci": "yarn format:check && yarn lint && yarn rs:fmt:check && yarn rs:wasm && yarn typecheck && yarn rs:lint && yarn rs:test && yarn rs:wasm:node && yarn test && yarn build && yarn py:test && yarn py:fixture-check"
+    "ci": "yarn format:check && yarn lint && yarn rs:fmt:check && yarn rs:wasm && yarn typecheck && yarn rs:lint && yarn rs:test && yarn rs:wasm:node && yarn test && yarn build && yarn py:test && yarn py:fixture-check",
+    "data:build": "pipeline/.venv/bin/python pipeline/fetch.py && pipeline/.venv/bin/python pipeline/build_real.py && pipeline/.venv/bin/python pipeline/build_full.py && pipeline/.venv/bin/python pipeline/build_extensions.py && pipeline/.venv/bin/python pipeline/build_leg_mappings.py && pipeline/.venv/bin/python pipeline/fetch_regions.py && python3 pipeline/stamp_assets.py",
+    "data:verify": "yarn rs:wasm:node && node examples/verify-malecns.mjs",
+    "data:verify:sensory": "yarn rs:wasm:node && node examples/verify-sensory.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9",

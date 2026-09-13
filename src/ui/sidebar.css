@@ -1,0 +1,401 @@
+.workspace-sidebar {
+  position: fixed;
+  left: 16px;
+  top: 16px;
+  bottom: 70px;
+  width: 350px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background: #0c1921f5;
+  border: 1px solid #38505b;
+  border-radius: 16px;
+  color: #bdd5d9;
+  box-shadow: 0 18px 60px #0004;
+  font:
+    12px "IBM Plex Sans",
+    sans-serif;
+  overflow: hidden;
+  pointer-events: auto;
+}
+.workspace-sidebar header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+}
+.workspace-sidebar button,
+.workspace-sidebar select,
+.workspace-sidebar input {
+  font: inherit;
+  color: inherit;
+  background: #172c36;
+  border: 1px solid #3b555f;
+  border-radius: 7px;
+  padding: 6px;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+.workspace-sidebar button {
+  cursor: pointer;
+}
+.workspace-sidebar button:focus-visible {
+  outline: 2px solid #79c9c3;
+  outline-offset: 2px;
+}
+.workspace-sidebar nav {
+  display: flex;
+  gap: 4px;
+  padding: 0 10px 10px;
+  border-bottom: 1px solid #38505b;
+}
+.workspace-sidebar [role="tab"] {
+  flex: 1;
+  padding: 9px 4px;
+}
+.workspace-sidebar [aria-selected="true"] {
+  background: #29464f;
+  color: #f4d29c;
+  border-color: #81aaa9;
+}
+.workspace-sidebar [hidden] {
+  display: none !important;
+}
+.sidebar-content {
+  overflow: auto;
+  min-height: 0;
+  padding: 12px;
+  scrollbar-width: thin;
+}
+.workspace-sidebar:has(.sidebar-content[hidden]) {
+  bottom: auto;
+}
+.workspace-sidebar .experiment-ui,
+.workspace-sidebar .fly-roster,
+.workspace-sidebar .anatomy-panel,
+.workspace-sidebar .hud-depth,
+.workspace-sidebar .hud-meters {
+  position: static;
+  inset: auto;
+  width: 100%;
+  max-height: none;
+  margin: 0;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+.workspace-sidebar .experiment-ui {
+  font-size: 12px;
+}
+.workspace-sidebar .fly-roster {
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  background: transparent;
+}
+.workspace-sidebar .experiment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.workspace-sidebar .experiment-actions label {
+  width: 100%;
+}
+.workspace-sidebar .experiment-depth {
+  flex-wrap: wrap;
+  width: auto;
+}
+.workspace-sidebar .experimental-inputs {
+  line-height: 1.6;
+}
+.workspace-sidebar .experiment-console {
+  max-height: none;
+  padding: 10px;
+  margin-top: 12px;
+}
+.workspace-sidebar .experiment-tools select {
+  max-width: 100%;
+}
+.workspace-sidebar .anatomy-panel {
+  border: 0;
+  padding: 4px;
+  background: transparent;
+  overflow: visible;
+}
+.workspace-sidebar .anatomy-panel .anatomy-search,
+.workspace-sidebar .anatomy-panel .anatomy-results,
+.workspace-sidebar .anatomy-panel .anatomy-cell,
+.workspace-sidebar .anatomy-panel details {
+  display: revert;
+}
+.workspace-sidebar .anatomy-panel.expanded {
+  width: 100%;
+}
+.workspace-sidebar .anatomy-panel canvas {
+  height: 230px;
+}
+.workspace-sidebar .hud-depth {
+  margin: 4px 0 0;
+  padding: 2px 0;
+  gap: 4px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  height: auto;
+}
+.workspace-sidebar .hud-depth__input {
+  writing-mode: horizontal-tb;
+  direction: ltr;
+  inline-size: 100%;
+  block-size: 24px;
+  grid-column: 1 / -1;
+}
+.workspace-sidebar .hud-meters {
+  display: grid;
+  gap: 8px;
+  margin-top: 20px;
+}
+.workspace-sidebar .hud-meter__track {
+  inline-size: 120px;
+}
+.workspace-sidebar .hud-scene,
+.workspace-sidebar .hud-lif {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin-top: 14px;
+}
+.workspace-sidebar .hud-scene__row {
+  flex-wrap: wrap;
+}
+.workspace-sidebar .hud-scene__range {
+  max-width: 150px;
+}
+.workspace-sidebar .hud-scene__select {
+  max-width: 170px;
+}
+.habitat-controls {
+  display: grid;
+  gap: 12px;
+}
+.habitat-controls h2 {
+  font-size: 21px;
+  font-weight: 400;
+  margin: 4px 0;
+}
+.habitat-controls p {
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 0;
+  color: #90afb4;
+}
+.habitat-controls label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.habitat-controls input {
+  width: 135px;
+}
+.habitat-controls .habitat-status {
+  color: #f0cf99;
+}
+body:has(.anatomy-panel[data-theme="light"]) .workspace-sidebar {
+  background: #f0f1e9f5;
+  color: #354e51;
+  border-color: #a3b5ac;
+}
+body:has(.anatomy-panel[data-theme="light"]) .workspace-sidebar button,
+body:has(.anatomy-panel[data-theme="light"]) .workspace-sidebar input,
+body:has(.anatomy-panel[data-theme="light"]) .workspace-sidebar select {
+  background: #e4eade;
+  color: #354e51;
+}
+body:has(.anatomy-panel[data-theme="light"]) .habitat-controls p {
+  color: #49666a;
+}
+@media (max-width: 600px) {
+  .workspace-sidebar {
+    left: 8px;
+    top: 44px;
+    bottom: 70px;
+    width: min(320px, calc(100vw - 24px));
+  }
+  .workspace-sidebar:has(.sidebar-content[hidden]) {
+    width: 180px;
+  }
+  .hud-camera {
+    z-index: 35;
+  }
+  .hud-left-stack {
+    display: none;
+  }
+}
+/* Fly names stay above the world; controls live in a separate lower dock. */
+.fly-controls-dock {
+  pointer-events: auto;
+  background: #0c1921f5;
+  border: 1px solid #38505b;
+  border-radius: 12px;
+  padding: 10px 12px;
+  max-height: 34dvh;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.fly-controls-dock > summary {
+  cursor: pointer;
+  color: #eed1a0;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.fly-controls-dock:not([open]) > summary {
+  margin-bottom: 0;
+}
+.fly-controls-dock .experiment-console {
+  margin-top: 8px;
+}
+.experiment-ui .fly-roster {
+  left: 385px;
+  right: 230px;
+  top: 16px;
+  flex-wrap: wrap;
+  max-height: 75px;
+}
+.experiment-ui[data-theme="light"] .fly-controls-dock {
+  background: #edf0e5f5;
+  color: #354e51;
+}
+.experiment-ui[data-theme="light"] .fly-controls-dock > summary {
+  color: #695634;
+}
+@media (min-width: 601px) and (max-width: 1099px) {
+  .experiment-ui {
+    left: 385px;
+    right: 16px;
+  }
+  .experiment-ui .fly-roster {
+    left: 385px;
+    right: 16px;
+  }
+  .hud-camera {
+    left: 385px;
+    right: 16px;
+    width: auto;
+  }
+}
+@media (max-width: 600px) {
+  .workspace-sidebar {
+    bottom: 310px;
+    width: min(320px, calc(100vw - 24px));
+  }
+  .experiment-ui {
+    left: 8px;
+    right: 8px;
+    bottom: 60px;
+  }
+  .experiment-ui .fly-roster {
+    left: 8px;
+    right: 8px;
+    top: 6px;
+    max-height: 30px;
+    flex-wrap: nowrap;
+  }
+  .fly-controls-dock {
+    max-height: 220px;
+  }
+  .hud-camera {
+    top: auto;
+    bottom: 8px;
+    right: 8px;
+    left: auto;
+  }
+  .hud-cluster {
+    display: none;
+  }
+  .hud-pause {
+    top: auto;
+    bottom: 12px;
+    left: 8px;
+    right: auto;
+  }
+}
+
+.workspace-sidebar {
+  --hud-line: #38505b;
+  --hud-text: #bdd5d9;
+  --hud-bright: #eff3e9;
+  --hud-fill: #79c9c3;
+}
+body:has(.anatomy-panel[data-theme="light"]) .workspace-sidebar {
+  --hud-line: #a3b5ac;
+  --hud-text: #354e51;
+  --hud-bright: #263d3c;
+  --hud-fill: #3a7f98;
+}
+.fly-controls-dock .experiment-actions,
+.fly-settings-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 3px;
+  margin-bottom: 3px;
+}
+.fly-controls-dock .experiment-actions > * {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.fly-controls-dock .experiment-actions button {
+  padding: 5px 7px;
+}
+.fly-controls-dock .experiment-actions label {
+  font-size: 10px;
+  padding: 3px;
+  white-space: nowrap;
+}
+.fly-settings-row > label {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  margin: 0;
+  padding: 3px 5px;
+  font-size: 10px;
+}
+.fly-settings-row .flight-drive {
+  width: 85px;
+  padding: 0;
+}
+.fly-settings-row select {
+  max-width: 170px;
+  padding: 4px;
+}
+.fly-controls-dock .experiment-console {
+  padding: 6px 9px;
+  margin-top: 5px;
+}
+.fly-controls-dock > summary {
+  margin-bottom: 5px;
+}
+@media (max-width: 600px) {
+  .workspace-sidebar {
+    bottom: 245px;
+  }
+  .fly-controls-dock {
+    max-height: 170px;
+  }
+}
+.workspace-sidebar:has(.anatomy-panel.expanded) {
+  width: min(700px, calc(100vw - 32px));
+}
+.workspace-sidebar .anatomy-panel.expanded canvas {
+  height: 48dvh;
+}
+@media (max-width: 600px) {
+  .workspace-sidebar:has(.anatomy-panel.expanded) {
+    width: calc(100vw - 24px);
+  }
+}
